@@ -31,12 +31,12 @@ namespace Graphene.Tracking
 
         T Filter{ get; set; }       
 
-        public void IncrementTracker(long by)
+        public void IncrementBy(long by)
         {
             try
             {
                 if (Container != null)
-                    Container.IncrementTracker(by, Filter);
+                    Container.IncrementBy(by, Filter);
             }
             catch (Exception ex)
             {
@@ -147,7 +147,7 @@ namespace Graphene.Tracking
                         {
                             Min = counter.MinValue,
                             Max = counter.MaxValue,
-                            Occurance = counter.Occurance,
+                            Occurrence = counter.Occurrence,
                             Total = counter.Total
                         }
                     };
@@ -208,7 +208,7 @@ namespace Graphene.Tracking
             }
         }
 
-        public static void IncrementTracker(long by)
+        public static void IncrementBy(long by)
         {
             try
             {
@@ -221,7 +221,7 @@ namespace Graphene.Tracking
             }
         }
 
-        internal void IncrementTracker(long by, object filter)
+        internal void IncrementBy(long by, object filter)
         {
             var bucket = getBucket();
             bucket.IncrementCounter(by, filter);

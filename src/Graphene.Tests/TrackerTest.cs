@@ -35,7 +35,7 @@ namespace Graphene.Tests
                         td.Measurement.Max = Math.Max(td.Measurement.Max, trackerData.Measurement.Max);
                         td.Measurement.Min = Math.Max(td.Measurement.Min, trackerData.Measurement.Min);
                         td.Measurement.Total += trackerData.Measurement.Total;
-                        td.Measurement.Occurance += trackerData.Measurement.Occurance;
+                        td.Measurement.Occurrence += trackerData.Measurement.Occurrence;
                     }
                     else
                         _trackingDate.Add(trackerData);
@@ -90,7 +90,7 @@ namespace Graphene.Tests
             {
                 while (!ct.IsCancellationRequested)
                 {
-                    //Graphene.Tracking.Container<PatientLinkValidationTracker>.IncrementTracker(1);
+                    //Graphene.Tracking.Container<PatientLinkValidationTracker>.IncrementBy(1);
                     Graphene.Tracking.Container<CustomerVisitTracker>
                         .Where<CustomerFilter>(
                             new CustomerFilter
@@ -98,7 +98,7 @@ namespace Graphene.Tests
                                 State = "CA",
                                 StoreID = "3234",
                                 Environment_ServerName = "Server1"
-                            }).IncrementTracker(1);
+                            }).IncrementBy(1);
                     _task1Count++;
                     System.Threading.Thread.Sleep(500);
                 }
@@ -115,7 +115,7 @@ namespace Graphene.Tests
                                 State = "MN",
                                 StoreID = "334",
                                 Environment_ServerName = "Server2"
-                            }).IncrementTracker(1);
+                            }).IncrementBy(1);
                     _task2Count++;
                     System.Threading.Thread.Sleep(100);
                 }
@@ -125,7 +125,7 @@ namespace Graphene.Tests
             {
                 while (!ct.IsCancellationRequested)
                 {
-                    Tracking.Container<CustomerVisitTracker>.IncrementTracker(3);
+                    Tracking.Container<CustomerVisitTracker>.IncrementBy(3);
                     _task3Count++;
                     System.Threading.Thread.Sleep(500);
                 }

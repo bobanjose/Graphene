@@ -23,7 +23,7 @@ namespace Graphene.Tracking
 
         object syncLock = new object();
 
-        internal long Occurance { get; private set; }
+        internal long Occurrence { get; private set; }
 
         internal long Total { get; private set; }
 
@@ -35,7 +35,7 @@ namespace Graphene.Tracking
         {
             lock (syncLock)
             {
-                Occurance++;
+                Occurrence++;
                 Total = Total + by;
                 if (MinValue > by)
                     MinValue = by;

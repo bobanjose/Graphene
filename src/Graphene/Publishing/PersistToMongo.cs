@@ -34,7 +34,7 @@ namespace Graphene.Publishing
             try
             {
                 var update = Update<TrackerData>.Inc(e => e.Measurement.Total, trackerData.Measurement.Total)
-                                                .Inc(e => e.Measurement.Occurance, trackerData.Measurement.Occurance)
+                                                .Inc(e => e.Measurement.Occurrence, trackerData.Measurement.Occurrence)
                                                 .SetOnInsert(e => e.KeyFilter, trackerData.KeyFilter)                                                
                                                 .SetOnInsert(e => e.Name, trackerData.Name)
                                                 .SetOnInsert(e => e.SearchFilters, trackerData.SearchFilters)
