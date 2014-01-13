@@ -42,7 +42,7 @@ The higher the resolution the better Graphene can pre-compute the data and bette
 The line below increments the tracker by 1
 
 ```c#
-Tracking.Container<CustomerVisitTracker>.IncrementBy(3);
+Tracking.Container<CustomerVisitTracker>.IncrementBy(1);
 ```
 
 ### Adding filters
