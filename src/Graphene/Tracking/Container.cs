@@ -137,7 +137,7 @@ namespace Graphene.Tracking
                 var bucket = _queuedBucket.Dequeue();
                 foreach (var counter in bucket.Counters.Values)
                 {
-                    yield return new Data.TrackerData((typeof(T1)).Name)
+                    yield return new Data.TrackerData((typeof(T1)).FullName)
                     {
                         KeyFilter = counter.KeyFilter,
                         Name = _tracker.Name,
