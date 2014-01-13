@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>$id$</id>
-    <version>$version$</version>
-    <title>$title$</title>
-    <authors>$author$</authors>
-    <owners>$author$</owners>
+    <id>Graphene</id>
+    <version>0.1</version>
+    <title>Graphene Framework</title>
+    <authors>Boban Jose</authors>
+    <owners>Boban Jose</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>$description$</description>
+    <description>A highly saleable BI framework writing in C#. Graphene can be used to track various Metrics similar to Graphite framework. It pre-aggregates the data and uses a document store (like MongoDB/RavenDB) to store the pre-aggregated data. Graphene also supports adding filters to a Metrics.</description>
     <releaseNotes>Pre release.</releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>Graphene Graphite BI Aggregation Aggregator</tags>
