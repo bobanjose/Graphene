@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene", "Graphene\Graphene.csproj", "{DF87EB29-8E53-4FED-A524-867AB76D71CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Tests", "Graphene.Tests\Graphene.Tests.csproj", "{21F625E1-02C6-49F9-B26E-C9451209213F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DF87EB29-8E53-4FED-A524-867AB76D71CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF87EB29-8E53-4FED-A524-867AB76D71CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF87EB29-8E53-4FED-A524-867AB76D71CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF87EB29-8E53-4FED-A524-867AB76D71CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21F625E1-02C6-49F9-B26E-C9451209213F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21F625E1-02C6-49F9-B26E-C9451209213F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21F625E1-02C6-49F9-B26E-C9451209213F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21F625E1-02C6-49F9-B26E-C9451209213F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
