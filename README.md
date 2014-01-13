@@ -105,4 +105,9 @@ Below is how the generated data looks like when using MongoDB as the data store.
 }
 ```
 
-So the above can be read as: The "Customer Visit Tracker" was incremented Measurement.Occurrence times and the total sum Measurement.Total for the TimeSlot of 2014-01-13, 02:00. There will be a document for every TimeSlot and if the MinResolution is 1 hour the next TimeSlot would be 2014-01-13, 04:00. Also there will be a document for every unique combination of the filters. Measurement.SearchFilters are the tags to for every possible combination of the filters delimited by ",,". 
+So the above can be read as: The "Customer Visit Tracker" was incremented Measurement.Occurrence times and the total sum Measurement.Total for the TimeSlot of 2014-01-13, 02:00. There will be a document for every TimeSlot and if the MinResolution is 1 hour the next TimeSlot would be 2014-01-13, 04:00. Also there will be a document for every unique combination of the filters. Measurement.SearchFilters are the tags to for every possible combination of the filters delimited by ",,". To find all customer visits for the state of MN and store ID of 334 add the following to the query
+
+```json
+{ SearchFilters: { $in: ['STATE::MN,,STOREID::334' ] } } 
+```
+
