@@ -24,24 +24,21 @@ namespace Graphene.Tests
         private object _lock = new object();
         public async void Persist(TrackerData trackerData)
         {
-            await Task.Run(() =>
-            {
-                lock (_lock)
-                {
-                    var td = _trackingDate.FirstOrDefault(td1 => td1.TimeSlot == trackerData.TimeSlot);
-
-                    if (td != null)
-                    {
-                        td.Measurement.Max = Math.Max(td.Measurement.Max, trackerData.Measurement.Max);
-                        td.Measurement.Min = Math.Max(td.Measurement.Min, trackerData.Measurement.Min);
-                        td.Measurement.Total += trackerData.Measurement.Total;
-                        td.Measurement.Occurrence += trackerData.Measurement.Occurrence;
-                    }
-                    else
-                        _trackingDate.Add(trackerData);
-                }
-            });
+            
         }
+    }
+
+    public class CustomerAgeTracker : ITrackable
+    {
+        public string Name { get { return "Customer Age Tracker"; } }
+
+        public string Description { get { return "Counts the number of customer visits"; } }
+
+        public Resolution MinResolution { get { return Resolution.Hour; } }
+
+        public long KidsCount { get; set; }
+        public long MiddleAgedCount { get; set; }
+        public long ElderlyCount { get; set; }
     }
 
     public class CustomerVisitTracker : ITrackable
@@ -77,15 +74,26 @@ namespace Graphene.Tests
         private static int _task2Count = 0;
         private static int _task3Count = 0;
 
+
+        [ClassInitialize()]
+        public static void Init(TestContext testContext) {
+            Graphene.Configurator.Initialize(
+                   new Configuration.Settings() { Persister = new Publishing.PersistToMongo("mongodb://localhost/Graphene") }
+               );
+        }
+
+        [ClassCleanup()]
+        public static void ShutDown()
+        {
+            Graphene.Configurator.ShutDown();
+        }
+
+
         [TestMethod]
         public void TestIncrement()
         {
             var ct = new System.Threading.CancellationTokenSource();
-
-
-            Graphene.Configurator.Initialize(
-                    new Configuration.Settings() { Persister = new Publishing.PersistToMongo("mongodb://localhost/Graphene") }
-                );
+           
             var task1 = Task.Run(() =>
             {
                 while (!ct.IsCancellationRequested)
@@ -100,7 +108,7 @@ namespace Graphene.Tests
                                 Environment_ServerName = "Server1"
                             }).IncrementBy(1);
                     _task1Count++;
-                    System.Threading.Thread.Sleep(500);
+                   // System.Threading.Thread.Sleep(500);
                 }
             }, ct.Token);
 
@@ -117,7 +125,7 @@ namespace Graphene.Tests
                                 Environment_ServerName = "Server2"
                             }).IncrementBy(1);
                     _task2Count++;
-                    System.Threading.Thread.Sleep(100);
+                   // System.Threading.Thread.Sleep(100);
                 }
             }, ct.Token);
 
@@ -127,17 +135,55 @@ namespace Graphene.Tests
                 {
                     Tracking.Container<CustomerVisitTracker>.IncrementBy(3);
                     _task3Count++;
-                    System.Threading.Thread.Sleep(500);
+                    //System.Threading.Thread.Sleep(500);
                 }
             }, ct.Token);
 
-            System.Threading.Thread.Sleep(1000);
-
-            Graphene.Configurator.ShutDown();
+            System.Threading.Thread.Sleep(1000);            
 
             ct.Cancel();
 
             Task.WaitAll(task1, task2, task3);
+        }
+
+        [TestMethod]
+        public void TestNamedMetrics()
+        {
+            var ct = new System.Threading.CancellationTokenSource();
+
+            var task1 = Task.Run(() =>
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    Tracking.Container<CustomerAgeTracker>
+                        .Where<CustomerFilter>(
+                            new CustomerFilter
+                            {
+                                State = "MN",
+                                StoreID = "334",
+                                Environment_ServerName = "Server2"
+                            })
+                        .Increment(e => e.MiddleAgedCount, 1)
+                        .Increment(e => e.ElderlyCount, 2);
+                }
+            }, ct.Token);
+
+            var task2 = Task.Run(() =>
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    Tracking.Container<CustomerAgeTracker>
+                        .Increment(e => e.KidsCount, 2);
+                }
+            }, ct.Token);
+                       
+
+            System.Threading.Thread.Sleep(1000);
+
+            ct.Cancel();
+
+            Task.WaitAll(task1, task2);
+            
         }
     }
 }

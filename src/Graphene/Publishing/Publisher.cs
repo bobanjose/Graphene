@@ -74,7 +74,7 @@ namespace Graphene.Publishing
                 catch (Exception ex)
                 {
                     Configurator.Configuration.Logger.Error(ex.Message, ex);
-                }
+                }                
             }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 4});
         }        
 
@@ -86,7 +86,15 @@ namespace Graphene.Publishing
         internal static void ShutDown()
         {
             _trackerBlockCancellationTokenSource.Cancel();
-            Task.WaitAll(_trackerBlock.Completion); 
+            Task.WaitAll(_trackerBlock.Completion);
+            var loopCount = 0;
+            while (_publisherBlock.InputCount > 0 && loopCount < 20)
+            {
+                System.Threading.Thread.Sleep(100);
+                loopCount++;
+            }
+            if(_publisherBlock.InputCount > 0)
+                Configurator.Configuration.Logger.Error(_publisherBlock.InputCount + " messages could not be persisted.", new Exception("Graphene couldn't persist all message to persister."));
         }
     }
 }

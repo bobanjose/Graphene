@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Specialized;
@@ -17,6 +18,33 @@ using System.Reflection;
 
 namespace Graphene.Tracking
 {
+    public class AddNamedMetric<T1>
+    {
+        Bucket _bucket;
+        object _filter;
+
+        internal AddNamedMetric(Bucket bucket, object filter)
+        {
+            _bucket = bucket;
+            _filter = filter;
+        }
+
+        public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by)
+        {
+            Bucket bucket;
+            try
+            {
+                var pi = PropertyHelper<T1>.GetProperty(incAttr);
+                _bucket.IncrementCounter(by, pi.Name, _filter);
+            }
+            catch (Exception ex)
+            {
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
+            }
+            return this;
+        }
+    }
+
     public class FilteredIncrement<T, T1> where T : struct where T1 : ITrackable
     {
         internal FilteredIncrement(Container<T1> container, T filter)
@@ -42,7 +70,22 @@ namespace Graphene.Tracking
             {
                 Configurator.Configuration.Logger.Error(ex.Message, ex);
             }
-        } 
+        }
+
+        public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by)
+        {
+            try
+            {
+                if (Container != null)
+                    Container.Increment(incAttr, by, Filter);
+                return new AddNamedMetric<T1>(Container<T1>.GetBucket(), Filter);
+            }
+            catch (Exception ex)
+            {
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
+            }
+            return null;
+        }
     }
 
     public static class Extentions
@@ -92,6 +135,26 @@ namespace Graphene.Tracking
         }
     }
 
+    public static class PropertyHelper<T>
+    {
+        public static PropertyInfo GetProperty<TValue>(
+            Expression<Func<T, TValue>> selector)
+        {
+            Expression body = selector;
+            if (body is LambdaExpression)
+            {
+                body = ((LambdaExpression)body).Body;
+            }
+            switch (body.NodeType)
+            {
+                case ExpressionType.MemberAccess:
+                    return (PropertyInfo)((MemberExpression)body).Member;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+    }
+
     public abstract class ContainerBase
     {
         internal abstract IEnumerable<Data.TrackerData> GetTrackerData(bool flushAll);
@@ -100,7 +163,7 @@ namespace Graphene.Tracking
     public class Container<T1> : ContainerBase where T1 : ITrackable
     {
         private static List<Container<T1>> _trackers = new List<Container<T1>>();
-        private static object _trackerLock = new object();
+        private static ReaderWriterLockSlim _trackerLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         private readonly Type _trackerType;
         private ITrackable _tracker;
@@ -145,11 +208,10 @@ namespace Graphene.Tracking
                         TimeSlot = bucket.TimeSlot,
                         Measurement = new Data.Measure
                         {
-                            Min = counter.MinValue,
-                            Max = counter.MaxValue,
-                            Occurrence = counter.Occurrence,
-                            Total = counter.Total
-                        }
+                            _Occurrence = counter.Occurrence,
+                            _Total = counter.Total,
+                            NamedMetrics = counter.NamedMetrics
+                        }                        
                     };
                 }
             }
@@ -158,20 +220,38 @@ namespace Graphene.Tracking
         private static Container<T1> getTracker()
         {
             var t = new Container<T1>();
-            lock (_trackerLock)
+            _trackerLock.EnterReadLock();
+            try
             {
                 t = _trackers.Where(t1 => t1.Equals(t)).FirstOrDefault();
-                if (t == null)
+            }
+            finally
+            {
+                _trackerLock.ExitReadLock();
+            }
+            if (t == null)
+            {
+                _trackerLock.EnterWriteLock();
+                try
                 {
-                    t = new Container<T1>();
-                    _trackers.Add(t);
-                    Publishing.Publisher.Register(t);
+                    t = _trackers.Where(t1 => t1.Equals(t)).FirstOrDefault();
+                    if (t == null)
+                    {
+                        t = new Container<T1>();
+                        _trackers.Add(t);
+                        Publishing.Publisher.Register(t);
+                    }
+                }
+                finally
+                {
+                    _trackerLock.ExitWriteLock();
                 }
             }
+            
             return t;
         }
 
-        private static Bucket getBucket()
+        internal static Bucket GetBucket()
         {
             var t = getTracker();
             return t.getCurrentBucket(false);
@@ -212,7 +292,7 @@ namespace Graphene.Tracking
         {
             try
             {
-                var bucket = getBucket();
+                var bucket = GetBucket();
                 bucket.IncrementCounter(by);
             }
             catch (Exception ex)
@@ -221,9 +301,39 @@ namespace Graphene.Tracking
             }
         }
 
+        internal void Increment(Expression<Func<T1, long>> incAttr, long by, object filter)
+        {
+            try
+            {
+                var pi = PropertyHelper<T1>.GetProperty(incAttr);
+                var bucket = GetBucket();
+                bucket.IncrementCounter(by, pi.Name, filter);
+            }
+            catch (Exception ex)
+            {
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
+            }
+        }
+
+        public static AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by)
+        {
+            Bucket bucket = null;
+            try
+            {
+                var pi = PropertyHelper<T1>.GetProperty(incAttr);
+                bucket = GetBucket();
+                bucket.IncrementCounter(by, pi.Name);                  
+            }
+            catch (Exception ex)
+            {
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
+            }
+            return new AddNamedMetric<T1>(bucket, null);
+        }
+
         internal void IncrementBy(long by, object filter)
         {
-            var bucket = getBucket();
+            var bucket = GetBucket();
             bucket.IncrementCounter(by, filter);
         }
 

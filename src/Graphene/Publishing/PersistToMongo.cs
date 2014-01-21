@@ -33,17 +33,30 @@ namespace Graphene.Publishing
         {
             try
             {
-                var update = Update<TrackerData>.Inc(e => e.Measurement.Total, trackerData.Measurement.Total)
-                                                .Inc(e => e.Measurement.Occurrence, trackerData.Measurement.Occurrence)
-                                                .SetOnInsert(e => e.TypeName, trackerData.TypeName)                                                
-                                                .SetOnInsert(e => e.KeyFilter, trackerData.KeyFilter)                                                
-                                                .SetOnInsert(e => e.Name, trackerData.Name)
-                                                .SetOnInsert(e => e.SearchFilters, trackerData.SearchFilters)
-                                                .SetOnInsert(e => e.TimeSlot, trackerData.TimeSlot);                                                
+                //var update = Update<TrackerData>.Inc(e => e.Measurement.Total, trackerData.Measurement.Total)
+                //                                .Inc(e => e.Measurement.Occurrence, trackerData.Measurement.Occurrence)
+                //                                .SetOnInsert(e => e.TypeName, trackerData.TypeName)                                                
+                //                                .SetOnInsert(e => e.KeyFilter, trackerData.KeyFilter)                                                
+                //                                .SetOnInsert(e => e.Name, trackerData.Name)
+                //                                .SetOnInsert(e => e.SearchFilters, trackerData.SearchFilters)
+                //                                .SetOnInsert(e => e.TimeSlot, trackerData.TimeSlot);
+
+                var update2 = Update.Inc("Measurement._Total", trackerData.Measurement._Total)
+                                                .Inc("Measurement._Occurrence", trackerData.Measurement._Occurrence)
+                                                .SetOnInsert("TypeName", trackerData.TypeName)
+                                                .SetOnInsert("KeyFilter", trackerData.KeyFilter)
+                                                .SetOnInsert("Name", trackerData.Name)
+                                                .SetOnInsert("SearchFilters", new BsonArray(trackerData.SearchFilters))
+                                                .SetOnInsert("TimeSlot", trackerData.TimeSlot);                                             
+
+                foreach (var nm in trackerData.Measurement.NamedMetrics)
+                {
+                    update2.Inc("Measurement." + nm.Key, nm.Value);
+                }
 
                 var query = Query.EQ("_id", trackerData._id);
 
-                _mongoCollection.Update(query, update, UpdateFlags.Upsert);
+                _mongoCollection.Update(query, update2, UpdateFlags.Upsert);
             }
             catch (Exception ex)
             {

@@ -11,18 +11,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Graphene.Tracking
 {
     internal class Bucket
     {
-        private Dictionary<string, Counter> _counters;
+        private ConcurrentDictionary<string, Counter> _counters;
         private object _syncLock = new object();
         private DateTime _expiresAfter;
         internal Bucket(int lifeTimeInSeconds, Resolution resolution)
         {
             _expiresAfter = DateTime.Now.AddSeconds(lifeTimeInSeconds);
-            _counters = new Dictionary<string, Counter>();
+            _counters = new ConcurrentDictionary<string, Counter>();
 
             switch (resolution)
             {
@@ -44,7 +45,7 @@ namespace Graphene.Tracking
             }
         }
 
-        internal Dictionary<string, Counter> Counters { get { return _counters; } }
+        internal ConcurrentDictionary<string, Counter> Counters { get { return _counters; } }
 
         internal DateTime TimeSlot { get; private set; }
 
@@ -52,10 +53,20 @@ namespace Graphene.Tracking
 
         internal void IncrementCounter(long by)
         {
-            IncrementCounter(by, null);
+            IncrementCounter(by, null, null);
+        }
+
+        internal void IncrementCounter(long by, string metricName)
+        {
+            IncrementCounter(by, metricName, null);
         }
 
         internal void IncrementCounter(long by, object filter)
+        {
+            IncrementCounter(by, null, filter);
+        }
+
+        internal void IncrementCounter(long by, string metricName, object filter)
         {
             var keyTag = string.Empty;
             List<String> propertyNv = null;
@@ -86,11 +97,11 @@ namespace Graphene.Tracking
                             counter.SearchTags = searchTags;
                             counter.KeyFilter = keyTag;
                         }
-                        _counters.Add(keyTag, counter);
+                        _counters.TryAdd(keyTag, counter);
                     }
                 }
             }
-            counter.Increment(by);
+            counter.Increment(by, metricName);
         }
 
         public void getAllSearchTags(List<string> filters, List<string> perms)
