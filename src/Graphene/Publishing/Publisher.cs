@@ -25,6 +25,8 @@ namespace Graphene.Publishing
         private static ContainerBase _firstTC;
         private static System.Threading.CancellationTokenSource _trackerBlockCancellationTokenSource = new System.Threading.CancellationTokenSource();
 
+        private static bool _lastPersistanceComplete;
+
         static Publisher()
         {
             _trackerBlock = new ActionBlock<ContainerBase>(async tc =>
@@ -69,11 +71,14 @@ namespace Graphene.Publishing
             {
                 try
                 {
+                    _lastPersistanceComplete = false;
                     Configurator.Configuration.Persister.Persist(tc);
+                    _lastPersistanceComplete = true;
                 }
                 catch (Exception ex)
                 {
                     Configurator.Configuration.Logger.Error(ex.Message, ex);
+                    _lastPersistanceComplete = true;
                 }                
             }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 4});
         }        
@@ -88,7 +93,7 @@ namespace Graphene.Publishing
             _trackerBlockCancellationTokenSource.Cancel();
             Task.WaitAll(_trackerBlock.Completion);
             var loopCount = 0;
-            while (_publisherBlock.InputCount > 0 && loopCount < 20)
+            while ((_publisherBlock.InputCount > 0 || !_lastPersistanceComplete)  && loopCount < 20)
             {
                 System.Threading.Thread.Sleep(100);
                 loopCount++;

@@ -33,14 +33,6 @@ namespace Graphene.Publishing
         {
             try
             {
-                //var update = Update<TrackerData>.Inc(e => e.Measurement.Total, trackerData.Measurement.Total)
-                //                                .Inc(e => e.Measurement.Occurrence, trackerData.Measurement.Occurrence)
-                //                                .SetOnInsert(e => e.TypeName, trackerData.TypeName)                                                
-                //                                .SetOnInsert(e => e.KeyFilter, trackerData.KeyFilter)                                                
-                //                                .SetOnInsert(e => e.Name, trackerData.Name)
-                //                                .SetOnInsert(e => e.SearchFilters, trackerData.SearchFilters)
-                //                                .SetOnInsert(e => e.TimeSlot, trackerData.TimeSlot);
-
                 var update2 = Update.Inc("Measurement._Total", trackerData.Measurement._Total)
                                                 .Inc("Measurement._Occurrence", trackerData.Measurement._Occurrence)
                                                 .SetOnInsert("TypeName", trackerData.TypeName)
@@ -60,7 +52,7 @@ namespace Graphene.Publishing
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.Write(ex.Message);
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
             }
         }
     }

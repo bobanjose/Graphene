@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Collections.Specialized;
 using System.Threading;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace Graphene.Tracking
 {
@@ -27,6 +28,15 @@ namespace Graphene.Tracking
         {
             _bucket = bucket;
             _filter = filter;
+        }
+
+        public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, Stopwatch by)
+        {
+            if (by == null)
+                throw new ArgumentNullException("by cannong be null");
+            if (by.IsRunning)
+                by.Stop();
+            return this.Increment(incAttr, by.ElapsedMilliseconds);
         }
 
         public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by)
@@ -57,7 +67,27 @@ namespace Graphene.Tracking
         }
         Container<T1> Container { get; set; }
 
-        T Filter{ get; set; }       
+        T Filter{ get; set; }
+
+        public void IncrementBy(Stopwatch by)
+        {
+            if (by == null)
+                throw new ArgumentNullException("by cannong be null");
+            if (by.IsRunning)
+                by.Stop();
+
+            this.IncrementBy(by.ElapsedMilliseconds);
+        }
+
+        public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, Stopwatch by)
+        {
+            if (by == null)
+                throw new ArgumentNullException("by cannong be null");
+            if (by.IsRunning)
+                by.Stop();
+
+            return this.Increment(incAttr, by.ElapsedMilliseconds);
+        }
 
         public void IncrementBy(long by)
         {
@@ -288,6 +318,16 @@ namespace Graphene.Tracking
             }
         }
 
+        public static void IncrementBy(Stopwatch by)
+        {
+            if (by == null)
+                throw new ArgumentNullException("by cannong be null");
+            if (by.IsRunning)
+                by.Stop();
+
+            IncrementBy(by.ElapsedMilliseconds);
+        }
+
         public static void IncrementBy(long by)
         {
             try
@@ -313,7 +353,7 @@ namespace Graphene.Tracking
             {
                 Configurator.Configuration.Logger.Error(ex.Message, ex);
             }
-        }
+        }        
 
         public static AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by)
         {

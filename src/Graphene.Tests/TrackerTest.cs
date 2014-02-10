@@ -15,6 +15,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Graphene.Data;
 using Graphene;
 using Graphene.Tracking;
+using System.Diagnostics;
 
 namespace Graphene.Tests
 {
@@ -59,12 +60,30 @@ namespace Graphene.Tests
         public Resolution MinResolution { get { return Resolution.Hour; } }
     }
 
+    public class PerformanceTracker : ITrackable
+    {
+        public string Name { get { return "Method A Performance Tracker"; } }
+
+        public string Description { get { return "Tracks the response time of ### method"; } }
+
+        public Resolution MinResolution { get { return Resolution.FiveMinute; } }
+
+        public int NumberOfCalls { get; set; }
+
+        public long TotalResponseTimeInMilliseconds { get; set; }
+    }
+
     public struct CustomerFilter
     {
         public string State { get; set; }
         public string StoreID { get; set; }
         public string Gender { get; set; }
         public string Environment_ServerName { get; set; }
+    }
+
+    public struct EnvironmentFilter
+    {
+        public string ServerName { get; set; }
     }
 
     [TestClass]
@@ -184,6 +203,71 @@ namespace Graphene.Tests
 
             Task.WaitAll(task1, task2);
             
+        }
+
+        [TestMethod]
+        public void TestPerformaceMetrics()
+        {
+            var ct = new System.Threading.CancellationTokenSource();
+
+            var task1 = Task.Run(() =>
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    var sw = Stopwatch.StartNew();
+
+                    System.Threading.Thread.Sleep(Convert.ToInt32((new Random()).NextDouble() * 100) + 5);
+
+                    sw.Stop();
+
+                    Tracking.Container<PerformanceTracker>
+                        .Where<EnvironmentFilter>(
+                            new EnvironmentFilter
+                            {
+                                ServerName = "Server2"
+                            })
+                        .Increment(e => e.NumberOfCalls, 1)
+                        .Increment(e => e.TotalResponseTimeInMilliseconds, sw);
+
+                    sw.Reset();
+                    sw.Start();
+                    System.Threading.Thread.Sleep(Convert.ToInt32((new Random()).NextDouble() * 100) + 5);
+                    sw.Stop();
+
+                    Tracking.Container<PerformanceTracker>
+                        .Where<EnvironmentFilter>(
+                            new EnvironmentFilter
+                            {
+                                ServerName = "Server1"
+                            })
+                        .Increment(e => e.NumberOfCalls, 1)
+                        .Increment(e => e.TotalResponseTimeInMilliseconds, sw);
+                }
+            }, ct.Token);
+
+            var task2 = Task.Run(() =>
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    var sw = Stopwatch.StartNew();
+
+                    System.Threading.Thread.Sleep(Convert.ToInt32((new Random()).NextDouble() * 100) + 5);
+
+                    sw.Stop();
+
+                    Tracking.Container<PerformanceTracker>
+                        .Increment(e => e.NumberOfCalls, 1)
+                        .Increment(e => e.TotalResponseTimeInMilliseconds, sw);
+                }
+            }, ct.Token);
+
+
+            System.Threading.Thread.Sleep(1000);
+
+            ct.Cancel();
+
+            Task.WaitAll(task1, task2);
+
         }
     }
 }
