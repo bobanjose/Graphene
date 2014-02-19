@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>Graphene</id>
-    <version>0.1.6</version>
+    <version>0.1.7</version>
     <title>Graphene Framework</title>
     <authors>Boban Jose</authors>
     <owners>Boban Jose</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
-      A highly saleable BI framework writing in C#. Graphene can be used to track various Metrics similar to Graphite.
+      A saleable and easy to use BI framework writing in C#. Graphene can be used to track various Metrics similar to Graphite.
       It pre-aggregates the data and uses a document store (like MongoDB/RavenDB).
       https://github.com/bobanjose/Graphene/blob/master/README.md
     </description>
