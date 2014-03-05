@@ -50,7 +50,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Reporting\QueryTest.cs" />
+    <Compile Include="Reporting\ReportSpecificationTests.cs" />
     <Compile Include="TrackerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -29,7 +29,6 @@ namespace Graphene.Reporting
 
         ReportResolution Resolution { get; }
     }
-
     public interface IFilterConditions
     {
         IEnumerable<string> Filters { get; }

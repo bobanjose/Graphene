@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using Graphene.Attributes;
 using Graphene.Tracking;
 
 namespace Graphene.Reporting
 {
-    public class ReportSpecification<TFilter, TTrackable> : IReportSpecification
+    public class ReportSpecification<TTrackable> : IReportSpecification
         where TTrackable : ITrackable
     {
 
@@ -19,7 +20,7 @@ namespace Graphene.Reporting
         private string _trackerTypeName;
         private ReportResolution _reportResolution;
 
-        public ReportSpecification(DateTime fromDateUtc, DateTime toUtcDate, ReportResolution resolution, params TFilter[] filters)
+        public ReportSpecification(DateTime fromDateUtc, DateTime toUtcDate, params object[] filters)
         {
             _fromDateUtc = fromDateUtc;
             _toDateUtc = toUtcDate;
@@ -63,9 +64,11 @@ namespace Graphene.Reporting
         }
 
         private void buildListOfCountersForTracker()
-        {            
+        {
+            MeasurableAttribute attribute = new MeasurableAttribute();
+            
             _counters = (from counter in typeof (TTrackable).GetProperties()
-                where (! _trackableProperties.Contains(counter.Name))
+                         where (counter.GetCustomAttribute(typeof(MeasurableAttribute)) != null)
                 select (counter.Name)).ToList();
         }
 

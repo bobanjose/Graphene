@@ -54,9 +54,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\MeasurableAttribute.cs" />
     <Compile Include="Configuration\Configurator.cs" />
     <Compile Include="Configuration\ILogger.cs" />
     <Compile Include="Data\TrackerData.cs" />
+    <Compile Include="Exceptions\ReportGenerationException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Publishing\IPersist.cs" />
     <Compile Include="Reporting\IQueryResults.cs" />
@@ -64,11 +66,12 @@
     <Compile Include="Publishing\PersistToService.cs" />
     <Compile Include="Publishing\Publisher.cs" />
     <Compile Include="Publishing\PersistToMongo.cs" />
+    <Compile Include="Reporting\FilterConditions.cs" />
     <Compile Include="Reporting\IReportSpecification.cs" />
     <Compile Include="Reporting\AggregationResult.cs" />
     <Compile Include="Reporting\ReportFromService.cs" />
     <Compile Include="Reporting\ReportSpecification.cs" />
-    <Compile Include="Reporting\Reporter.cs" />
+    <Compile Include="Reporting\RestReportGenerator.cs" />
     <Compile Include="Tracking\Bucket.cs" />
     <Compile Include="Tracking\Container.cs" />
     <Compile Include="Tracking\Counter.cs" />
