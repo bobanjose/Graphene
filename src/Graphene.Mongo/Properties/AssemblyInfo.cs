@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Graphene")]
-[assembly: AssemblyDescription("A highly saleable BI framework writing in C#. Graphene can be used to track various Metrics similar to Graphite framework. It pre-aggregates the data and uses a document store (like MongoDB/RavenDB) to store the pre-aggregated data. Graphene also supports adding filters to a Metrics.")]
+[assembly: AssemblyTitle("Graphene.Mongo")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Boban Jose")]
-[assembly: AssemblyProduct("Graphene")]
-[assembly: AssemblyCopyright("Copyright © Boban Jose 2013")]
+[assembly: AssemblyCompany("RelayHealth")]
+[assembly: AssemblyProduct("Graphene.Mongo")]
+[assembly: AssemblyCopyright("Copyright © RelayHealth 2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a98471dc-3e53-493c-b88b-eb033b0f53b4")]
+[assembly: Guid("07a01ede-5dba-41ea-a045-1f44eb7856a9")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,6 +34,3 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-
-
-[assembly: InternalsVisibleTo("Graphene.Tests")]

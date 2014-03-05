@@ -1,11 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene", "Graphene\Graphene.csproj", "{DF87EB29-8E53-4FED-A524-867AB76D71CA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Tests", "Graphene.Tests\Graphene.Tests.csproj", "{21F625E1-02C6-49F9-B26E-C9451209213F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.API", "Graphene.API\Graphene.API.csproj", "{EF1A16B9-D899-4107-B754-D890834C128F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{3197A59B-D286-4096-AD41-E17DEC19860C}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Mongo", "Graphene.Mongo\Graphene.Mongo.csproj", "{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +36,10 @@ Global
 		{EF1A16B9-D899-4107-B754-D890834C128F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF1A16B9-D899-4107-B754-D890834C128F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF1A16B9-D899-4107-B754-D890834C128F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

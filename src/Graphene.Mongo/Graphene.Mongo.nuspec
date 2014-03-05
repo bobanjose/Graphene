@@ -1,24 +1,25 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Graphene</id>
+    <id>Graphene.Mongo</id>
     <version>0.1.10</version>
-    <title>Graphene Framework</title>
+    <title>Mongo Extensions for Graphene Framework</title>
     <authors>Boban Jose</authors>
     <owners>Boban Jose</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <summary>Mongo connectors for Graphene. </summary>
     <description>
-      A saleable and easy to use BI framework writing in C#. Graphene can be used to track various Metrics similar to Graphite.
+      A Mongo Query connector for Graphene, a scaleable and easy to use BI framework writing in C#. Graphene can be used to track various Metrics similar to Graphite.
       It pre-aggregates the data and uses a document store (like MongoDB/RavenDB).
       https://github.com/bobanjose/Graphene/blob/master/README.md
     </description>
     <releaseNotes>https://github.com/bobanjose/Graphene/blob/master/README.md </releaseNotes>
     <copyright>Copyright 2014</copyright>
-    <tags>Graphene Graphite BI Aggregation Aggregator</tags>
+    <tags>Mongo Graphene Graphite BI Aggregation Aggregator</tags>
     <dependencies>
       <dependency id="mongocsharpdriver"/>
-      <dependency id="Microsoft.Tpl.Dataflow"/>
+      <dependency id="Graphene" version="0.1.10"/>
     </dependencies>
   </metadata>
 </package>
