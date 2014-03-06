@@ -29,14 +29,9 @@ namespace Graphene.Mongo.Reporting
             var mongoDatabase = mongoServer.GetDatabase(databaseName);
             return  mongoDatabase.GetCollection(COLLECTION_NAME);
         }
-
-
         public MongoReportGenerator(string connectionString)
         {
             _connectionString = connectionString;
-            
-
-
         }
 
 
@@ -115,7 +110,7 @@ namespace Graphene.Mongo.Reporting
                 {"$sum", string.Format("$Measurement.{0}", counter)}
             })));
 
-            var group = new BsonDocument
+            var @group = new BsonDocument
             {
                 {
                     "$group",
@@ -127,7 +122,7 @@ namespace Graphene.Mongo.Reporting
 
         private static BsonDocument buildMatchCondition(IReportSpecification specification)
         {
-            var orClause = createFilteredOrClause(specification);
+            var orClause = createSearchClauseForAllFilters(specification);
             var typeNameClause = Query.EQ("TypeName", specification.TrackerTypeName);
             var dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
                 Query.LTE("TimeSlot", specification.ToDateUtc));
@@ -145,7 +140,7 @@ namespace Graphene.Mongo.Reporting
             return match;
         }
 
-        private static IMongoQuery createFilteredOrClause(IReportSpecification specification)
+        private static IMongoQuery createSearchClauseForAllFilters(IReportSpecification specification)
         {
             var orQueries = specification.FilterCombinations
                 .Select(filter =>

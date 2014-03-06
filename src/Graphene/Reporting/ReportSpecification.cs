@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using Graphene.Attributes;
 using Graphene.Tracking;
 
 namespace Graphene.Reporting
@@ -56,9 +57,10 @@ namespace Graphene.Reporting
 
         private void buildListOfCountersForTracker()
         {
+            MeasurableAttribute attribute = new MeasurableAttribute();
             
             _counters = (from counter in typeof (TTrackable).GetProperties()
-                where (! _trackableProperties.Contains(counter.Name))
+                         where (counter.GetCustomAttribute(typeof(MeasurableAttribute)) != null)
                 select (counter.Name)).ToList();
         }
 

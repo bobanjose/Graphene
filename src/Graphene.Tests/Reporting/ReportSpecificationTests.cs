@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Graphene.Attributes;
 using Graphene.Reporting;
 using Graphene.Tracking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -7,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Graphene.Tests.Reporting
 {
      [TestClass]
-    public class QueryTest
+    public class ReportSpecificationTests
     {
          [TestMethod]
          public void GivenAQueryWithTwoFilters_WhenBuildingTheList_AppropriateFiltersAreConverted()
@@ -41,7 +42,7 @@ namespace Graphene.Tests.Reporting
          public void GivenAQueryWithTrackerProperties_WhenBuildingTheListOfTrackersToTrack_OnlyTheAppropriateCountersAreCounted()
          {
 
-             var visitTrackerReportSpecification = new ReportSpecification<CustomerAgeTracker>(DateTime.Now, DateTime.UtcNow);
+             var visitTrackerReportSpecification = new ReportSpecification<TrackerWithCountProperties>(DateTime.Now, DateTime.UtcNow);
 
              Assert.AreEqual(3, visitTrackerReportSpecification.Counters.Count());
 
@@ -49,17 +50,32 @@ namespace Graphene.Tests.Reporting
      
     }
 
-     public class TrackerWithCountProperties : ITrackable
-     {
-         public string Name { get { return "Customer Age Tracker"; } }
+    public class TrackerWithCountProperties : ITrackable
+    {
+        public string Name
+        {
+            get { return "Customer Age Tracker"; }
+        }
 
-         public string Description { get { return "Counts the number of customer visits"; } }
+        public string Description
+        {
+            get { return "Counts the number of customer visits"; }
+        }
 
-         public Resolution MinResolution { get { return Resolution.Hour; } }
+        public Resolution MinResolution
+        {
+            get { return Resolution.Hour; }
+        }
+        [Measurable]
+        public long KidsCount { get; set; }
 
-         public long KidsCount { get; set; }
-         public long MiddleAgedCount { get; set; }
-         public long ElderlyCount { get; set; }
-     }
+        [Measurable]
+        public long MiddleAgedCount { get; set; }
+
+        [Measurable]
+        public long ElderlyCount { get; set; }
+
+        public long NotACounter { get; set; }
+}
 
 }
