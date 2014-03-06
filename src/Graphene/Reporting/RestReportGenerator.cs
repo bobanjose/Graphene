@@ -4,17 +4,12 @@ using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using Graphene.Exceptions;
 using Graphene.Tracking;
-using MongoDB.Bson;
-using MongoDB.Driver;
 
 namespace Graphene.Reporting
 {
-    using MongoDB.Driver.Builders;
-
     public interface IReportGenerator
     {
         IEnumerable<IAggregationResult> GeneratorReport(IReportSpecification specification);
-
     }
 
     public class RestReportGenerator : IReportGenerator
