@@ -276,12 +276,13 @@ namespace Graphene.Tests.Reporting
                  visitTrackerReportSpecification.FilterCombinations.ElementAt(0).Filters.ElementAt(0));
          }
 
+         [TestMethod]
          public void GivenAQueryWithTrackerProperties_WhenBuildingTheListOfTrackersToTrack_OnlyTheAppropriateCountersAreCounted()
          {
 
              var visitTrackerReportSpecification = new ReportSpecification<TrackerWithCountProperties>(DateTime.Now, DateTime.UtcNow);
 
-             Assert.AreEqual(3, visitTrackerReportSpecification.Counters.Count());
+             Assert.AreEqual(4, visitTrackerReportSpecification.Counters.Count());
 
          }
      

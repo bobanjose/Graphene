@@ -65,10 +65,12 @@ namespace Graphene.Reporting
 
         private void buildListOfCountersForTracker()
         {
-            MeasurableAttribute attribute = new MeasurableAttribute();
+            
             
             _counters = (from counter in typeof (TTrackable).GetProperties()
-                         where (counter.GetCustomAttribute(typeof(MeasurableAttribute)) != null)
+                         where (! _trackableProperties.Contains(counter.Name))
+                         ||
+                         (counter.GetCustomAttribute(typeof(MeasurableAttribute)) != null)
                 select (counter.Name)).ToList();
         }
 

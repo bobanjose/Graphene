@@ -175,12 +175,6 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Graphene\Graphene.csproj">
-      <Project>{df87eb29-8e53-4fed-a524-867ab76d71ca}</Project>
-      <Name>Graphene</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Graphene.API.nuspec" />
   </ItemGroup>
   <PropertyGroup>

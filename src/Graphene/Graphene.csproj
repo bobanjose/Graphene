@@ -67,6 +67,7 @@
     <Compile Include="Publishing\Publisher.cs" />
     <Compile Include="Publishing\PersistToMongo.cs" />
     <Compile Include="Reporting\FilterConditions.cs" />
+    <Compile Include="Reporting\IMeasurement.cs" />
     <Compile Include="Reporting\IReportSpecification.cs" />
     <Compile Include="Reporting\AggregationResult.cs" />
     <Compile Include="Reporting\ReportFromService.cs" />

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>Graphene.API</id>
-    <version>0.1.8</version>
+    <version>0.1.10</version>
     <authors>RelayHealth</authors>
     <owners>McKesson / RelayHealth.com</owners>
     <licenseUrl>http://www.relayhealth.com</licenseUrl>
