@@ -22,7 +22,7 @@ namespace Graphene.Configuration
         void Error(string message, Exception ex);
     }
 
-    internal class FakeLogger : ILogger
+    internal class SysDiagLogger : ILogger
     {
         public void Debug(string message)
         {

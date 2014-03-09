@@ -107,6 +107,10 @@ namespace Graphene.Tests
             Graphene.Configurator.ShutDown();
         }
 
+        [TestMethod]
+        public void TestEmpty()
+        {
+        }
 
         [TestMethod]
         public void TestIncrement()

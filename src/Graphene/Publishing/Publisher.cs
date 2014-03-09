@@ -26,6 +26,7 @@ namespace Graphene.Publishing
         private static System.Threading.CancellationTokenSource _trackerBlockCancellationTokenSource = new System.Threading.CancellationTokenSource();
 
         private static bool _lastPersistanceComplete;
+        private static bool _trackersRegisted = false;
 
         static Publisher()
         {
@@ -40,11 +41,11 @@ namespace Graphene.Publishing
                     {
                         try
                         {
-                            await Task.Delay(TimeSpan.FromSeconds(30), _trackerBlockCancellationTokenSource.Token).ConfigureAwait(false);
+                            await Task.Delay(TimeSpan.FromSeconds(15), _trackerBlockCancellationTokenSource.Token).ConfigureAwait(false);
                         }
                         catch (OperationCanceledException)
                         {
-                            System.Diagnostics.Debug.WriteLine("Task.Delay exiting");
+                            Configurator.Configuration.Logger.Info("Task.Delay exiting");
                         }
                     }
 
@@ -86,10 +87,14 @@ namespace Graphene.Publishing
         internal static void Register(ContainerBase trackerContainer)
         {
             _trackerBlock.Post(trackerContainer);
+            _trackersRegisted = true;
         }
 
         internal static void ShutDown()
         {
+            if (!_trackersRegisted)
+                return;
+            System.Threading.Thread.Sleep(500);
             _trackerBlockCancellationTokenSource.Cancel();
             Task.WaitAll(_trackerBlock.Completion);
             var loopCount = 0;

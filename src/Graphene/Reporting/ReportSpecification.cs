@@ -7,7 +7,7 @@ using Graphene.Tracking;
 
 namespace Graphene.Reporting
 {
-    public class ReportSpecification<TTrackable> : IReportSpecification
+    public class ReportSpecification<TFilter, TTrackable> : IReportSpecification
         where TTrackable : ITrackable
     {
 
@@ -17,8 +17,9 @@ namespace Graphene.Reporting
         private DateTime _fromDateUtc;
         private DateTime _toDateUtc;
         private string _trackerTypeName;
+        private ReportResolution _reportResolution;
 
-        public ReportSpecification(DateTime fromDateUtc, DateTime toUtcDate, params object[] filters)
+        public ReportSpecification(DateTime fromDateUtc, DateTime toUtcDate, ReportResolution resolution, params TFilter[] filters)
         {
             _fromDateUtc = fromDateUtc;
             _toDateUtc = toUtcDate;
@@ -26,6 +27,7 @@ namespace Graphene.Reporting
             _filters = new List<IFilterConditions>(filters.Count());
             buildFilterList(filters);
             buildListOfCountersForTracker();
+            _reportResolution = resolution;
         }
 
 
@@ -54,19 +56,26 @@ namespace Graphene.Reporting
             get { return _trackerTypeName; }
         }
 
-        private void buildListOfCountersForTracker()
+        public ReportResolution Resolution
         {
-            
+            get { return _reportResolution; }
+            internal set{ _reportResolution = value; }
+        }
+
+        private void buildListOfCountersForTracker()
+        {            
             _counters = (from counter in typeof (TTrackable).GetProperties()
                 where (! _trackableProperties.Contains(counter.Name))
                 select (counter.Name)).ToList();
         }
 
-        private void buildFilterList(params object[] filters)
+        private void buildFilterList(params TFilter[] filters)
         {
+            if (filters == null)
+                return;
             foreach (var filter in filters)
             {
-                _filters.Add(new FilterConditions(filter));
+                _filters.Add(new FilterConditions<TFilter>(filter));
             }
         }
     }

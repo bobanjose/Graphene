@@ -17,6 +17,9 @@ using System.Threading;
 using System.Reflection;
 using System.Diagnostics;
 
+using Graphene.Util;
+using Graphene.Reporting;
+
 namespace Graphene.Tracking
 {
     public class AddNamedMetric<T1>
@@ -55,16 +58,18 @@ namespace Graphene.Tracking
         }
     }
 
-    public class FilteredIncrement<T, T1> where T : struct where T1 : ITrackable
+    public class FilteredOperations<T, T1> where T : struct where T1 : ITrackable
     {
-        internal FilteredIncrement(Container<T1> container, T filter)
+        internal FilteredOperations(Container<T1> container, T filter)
         {
             Container = container;
             Filter = filter;
         }
-        internal FilteredIncrement()
+
+        internal FilteredOperations()
         {
         }
+
         Container<T1> Container { get; set; }
 
         T Filter{ get; set; }
@@ -116,75 +121,20 @@ namespace Graphene.Tracking
             }
             return null;
         }
-    }
 
-    public static class Extentions
-    {
-        public static List<string> GetPropertyNameValueList(this object obj)
+        public AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc)
         {
-            var type = obj.GetType();
-            var props = new List<PropertyInfo>(type.GetProperties());
-            var nvList = new List<string>();
-            foreach (PropertyInfo prop in props)
-            {
-                if (prop.PropertyType == typeof(String) || (Nullable.GetUnderlyingType(prop.PropertyType) != null))
-                {
-                    var propValue = prop.GetValue(obj, null);
-                    if (propValue != null)
-                    {
-                        nvList.Add(string.Format("{0}::{1}", prop.Name.ToUpper(), propValue.ToString().ToUpper()));
-                    }
-                }
-                else
-                {
-                    throw new Exception("All properties have to be Nullable Types");
-                }
-            }
-            nvList.Sort();
-            return nvList;
+            return Report(fromUtc, toUtc, Reporter<T, T1>.GetResolutionFromDates(fromUtc, toUtc));
         }
 
-        public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType)
+        public AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportResolution resolution)
         {
-            return new TimeSpan(
-                Convert.ToInt64(Math.Round(
-                    time.Ticks / (decimal)roundingInterval.Ticks,
-                    roundingType
-                )) * roundingInterval.Ticks
-            );
-        }
+            var reportSpecs = new ReportSpecification<T, T1>(fromUtc, toUtc, resolution, Filter);
 
-        public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval)
-        {
-            return Round(time, roundingInterval, MidpointRounding.ToEven);
-        }
-
-        public static DateTime Round(this DateTime datetime, TimeSpan roundingInterval)
-        {
-            return new DateTime((datetime - DateTime.MinValue).Round(roundingInterval).Ticks);
+            return Reporter<T, T1>.Report(fromUtc, toUtc, reportSpecs);
         }
     }
-
-    public static class PropertyHelper<T>
-    {
-        public static PropertyInfo GetProperty<TValue>(
-            Expression<Func<T, TValue>> selector)
-        {
-            Expression body = selector;
-            if (body is LambdaExpression)
-            {
-                body = ((LambdaExpression)body).Body;
-            }
-            switch (body.NodeType)
-            {
-                case ExpressionType.MemberAccess:
-                    return (PropertyInfo)((MemberExpression)body).Member;
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
-    }
-
+    
     public abstract class ContainerBase
     {
         internal abstract IEnumerable<Data.TrackerData> GetTrackerData(bool flushAll);
@@ -305,16 +255,16 @@ namespace Graphene.Tracking
             return _currentBucket;
         }
 
-        public static FilteredIncrement<T, T1> Where<T>(T filter) where T : struct
+        public static FilteredOperations<T, T1> Where<T>(T filter) where T : struct
         {
             try
             {
-                return new FilteredIncrement<T, T1>(getTracker(), filter);
+                return new FilteredOperations<T, T1>(getTracker(), filter);
             }
             catch (Exception ex)
             {
                 Configurator.Configuration.Logger.Error(ex.Message, ex);
-                return new FilteredIncrement<T, T1>();
+                return new FilteredOperations<T, T1>();
             }
         }
 
@@ -339,6 +289,17 @@ namespace Graphene.Tracking
             {
                 Configurator.Configuration.Logger.Error(ex.Message, ex);
             }
+        }
+
+        public static AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc)
+        {
+            return Report(fromUtc, toUtc, Reporter<EmptyFilter, T1>.GetResolutionFromDates(fromUtc, toUtc));
+        }
+
+        public static AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportResolution resolution)
+        {
+            var reportSpecs = new ReportSpecification<EmptyFilter, T1>(fromUtc, toUtc, resolution);
+            return Reporter<EmptyFilter, T1>.Report(fromUtc, toUtc, reportSpecs);
         }
 
         internal void Increment(Expression<Func<T1, long>> incAttr, long by, object filter)
@@ -412,5 +373,9 @@ namespace Graphene.Tracking
             }
             return null;
         }
+    }
+
+    public struct EmptyFilter
+    {
     }
 }

@@ -4,7 +4,7 @@ using Graphene.Data;
 
 namespace Graphene.Publishing
 {
-    class PersistToService : IPersist
+    public class PersistToService : IPersist
     {
         private string _serviceUrl;
 

@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Graphene;
 using Graphene.Publishing;
 using Graphene.Configuration;
+using Graphene.Reporting;
 
 namespace Graphene.Configuration
 {
@@ -22,6 +23,7 @@ namespace Graphene.Configuration
         internal bool Initialized { get; set; }
         public IPersist Persister { internal get; set; }
         public ILogger Logger { internal get; set; }
+        public IReportGenerator ReportGenerator { internal get; set; }
     }
 }
 
@@ -39,7 +41,7 @@ namespace Graphene
             }
             configuration.Initialized = true;
             if (configuration.Logger == null)
-                configuration.Logger = new FakeLogger();
+                configuration.Logger = new SysDiagLogger();
             _configurator = configuration;
             _configurator.Logger.Debug("Graphene Initialized");
         }

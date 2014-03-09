@@ -4,73 +4,72 @@ using System.Security.Cryptography.X509Certificates;
 using Graphene.Tracking;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Builders;
 
 namespace Graphene.Reporting
 {
-    using MongoDB.Driver.Builders;
-
-    public interface IReportGenerator
+    public class Reporter<T, T1>
+        where T : struct
+        where T1 : ITrackable
     {
-        IEnumerable<IAggregationResult> GeneratorReport(IReportSpecification specification);
-
-    }
-
-    public class Reporter : IReportGenerator
-    {
-        private const string COLLECTION_NAME = "TrackerData";
-        private static MongoServer _mongoServer;
-        private static MongoDatabase _mongoDatabase;
-        private static MongoCollection _mongoCollection;
-
-
-
-        public Reporter(string connectionString)
+        public static ReportResolution GetResolutionFromDates(DateTime fromUtc, DateTime toUtc)
         {
-            _mongoServer = new MongoClient(connectionString).GetServer();
-            var databaseName = MongoUrl.Create(connectionString).DatabaseName;
-            _mongoDatabase = _mongoServer.GetDatabase(databaseName);
-            _mongoCollection = _mongoDatabase.GetCollection(COLLECTION_NAME);
+            var resolution = ReportResolution.Hour;
 
+            var reportSpan = toUtc.Subtract(fromUtc).TotalDays;
+
+            if (reportSpan > 3600)
+                resolution = ReportResolution.Year;
+            else if (reportSpan >= 180)
+                resolution = ReportResolution.Month;
+            else if (reportSpan >= 10)
+                resolution = ReportResolution.Day;
+            else if (reportSpan >= 1)
+                resolution = ReportResolution.Hour;
+            else
+                resolution = ReportResolution.Minute;
+
+            return resolution;
         }
 
-        /*
-         * 
-         * 
-         *  { $match : 
-         *  {   TypeName :"CommonWell.Framework.Reporting.Trackers.NetworkLinksTracker" ,
-         *  
-            $or: 
-         *  [ {  SearchFilters : { $all :  [ "VENDOR::ORANGE", "ORGID::CATALYST101" ] } }, 
-         *  {  SearchFilters :  { $all :  [ "VENDOR::DRIVE" , "ORGID::2.16.840.1.113883.3.3330.757405907"] }} 
-         *  ] }  
-         *  },
-            { 
-         *  $group:{ _id: "Report",
-            NetworkLinksValidated : { $sum : "$Measurement.NetworkLinksValidated" },
-            NetworkLinkRequests: { $sum : "$Measurement.NetworkLinkRequests" },
-            NetworkLinksReturned : { $sum : "$Measurement.NetworkLinksReturned" },
-            NetworkLinksInvalidated : { $sum : "$Measurement.NetworkLinksInvalidated" },
-            TotalRecords : { $sum : 1 } } }
-         */
-
-        public IEnumerable<IAggregationResult> GeneratorReport<TTracker>(DateTime fromDateUtc, DateTime toUtcDate, params object[] filters)
-            where TTracker : ITrackable
+        public static AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportSpecification<T, T1> reportSpecs)
         {
-            List<BsonDocument> documents = new List<BsonDocument>();
+            var queryResults = Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);
 
-            var container = new BsonDocument();
-            return null;
-        }
+            var aggResults = new AggregationResults<T1> { Resolution = reportSpecs.Resolution };
 
-        public IEnumerable<IAggregationResult> GeneratorReport(Type typeofTracker, DateTime fromDateUtc, DateTime toUtcDate, params object[] filters)
-        {
-            return null;
-        } 
+            if (queryResults == null)
+                return aggResults;
 
+            foreach (var qR in queryResults)
+            {
+                var aggResult = new AggregationResult<T1>();
+                aggResult.MesurementTimeUtc = qR.MesurementTimeUtc;
 
-        public IEnumerable<IAggregationResult> GeneratorReport(IReportSpecification specification)
-        {
-            return null;
+                foreach (var mV in qR.MeasurementValues)
+                {
+                    var type = aggResult.Tracker.GetType();
+                    if (mV.Key == "_Occurrence")
+                    {
+                        aggResult.Occurrence = mV.Value;
+                    }
+                    else if (mV.Key == "_Total")
+                    {
+                        aggResult.Total = mV.Value;
+                    }
+                    else
+                    {
+                        var property = type.GetProperty(mV.Key);
+                        if (property != null)
+                        {
+                            var convertedValue = Convert.ChangeType(mV.Value, property.PropertyType);
+                            property.SetValue(aggResult.Tracker, convertedValue);
+                        }
+                    }
+                }
+                aggResults.Results.Add(aggResult);
+            }
+            return aggResults;
         }
     }
 

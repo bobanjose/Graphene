@@ -13,6 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 
+using Graphene.Util;
+
 namespace Graphene.Tracking
 {
     internal class Bucket
@@ -93,6 +95,7 @@ namespace Graphene.Tracking
                         if (propertyNv != null && propertyNv.Count > 0)
                         {
                             var searchTags = new List<string>();
+                            searchTags.Add(propertyNv.Aggregate((x, z) => string.Concat(x, ",,", z)));
                             getAllSearchTags(propertyNv, searchTags);
                             counter.SearchTags = searchTags;
                             counter.KeyFilter = keyTag;
