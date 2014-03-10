@@ -127,9 +127,9 @@ Assert.IsTrue(report.Results[0].Tracker.ElderlyCount >= 12);
 Assert.IsTrue(report.Results[0].Tracker.KidsCount >= 5);
 ```
 
-Each item in "Results" is aggregated results for the a resolution Graphene picked base on the total duration. The resolution picked is returned as "report.Resolution". The resolution can be year, month, day, hour or minute.
+Each item in "Results" is aggregated results for a resolution Graphene picked base on the total duration. The resolution picked is returned as "report.Resolution". The resolution can be year, month, day, hour or minute.
 
-To specify a resolution pass that in as a parameter to "Report".
+To specify a perticular resolution pass it in as a parameter to "Report". The resolution specified here should be at or higher then the resolution for the tracker else the tracker's resolution will take effect.
 
 ```c#
 var report = Graphene.Tracking.Container<TrackerWithCountProperties>.Report(startTimeInUtc, endTimeInUtc, ReportResolution.Minute);
