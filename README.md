@@ -109,30 +109,43 @@ Graphene.Configurator.ShutDown();
 
 ### Generating Reports
 
-This functionality is yet built. Generating reports would requiring querying the underlying Graphene data store directly.
+To generate reports initialize Graphene with ReportGenerator, currently Mongo DB is the only DB supported.
 
-Below is how the generated data looks like when using MongoDB as the data store.
-
-```json
-{
-  "KeyFilter" : "ENVIRONMENT_SERVERNAME::SERVER2,STATE::MN,STOREID::334",
-  "Measurement" : {
-    "ElderlyCount" : NumberLong(76994),
-    "MiddleAgedCount" : NumberLong(38497),
-    "_Occurrence" : NumberLong(76994),
-    "_Total" : NumberLong(0)
-  },
-  "Name" : "Customer Age Tracker",
-  "SearchFilters" : ["STATE::MN,,STOREID::334", "ENVIRONMENT_SERVERNAME::SERVER2,,STOREID::334", "ENVIRONMENT_SERVERNAME::SERVER2,,STATE::MN", "STOREID::334", "ENVIRONMENT_SERVERNAME::SERVER2", "STATE::MN"],
-  "TimeSlot" : ISODate("2014-01-21T02:00:00Z"),
-  "TypeName" : "Graphene.Tests.CustomerAgeTracker",
-  "_id" : "Graphene.Tests.CustomerAgeTracker1/21/20142:00:00AMENVIRONMENT_SERVERNAME::SERVER2,STATE::MN,STOREID::334"
-}
+```c#
+Graphene.Configurator.Initialize(
+                      new Configuration.Settings() { Persister = new Publishing.PersistToMongo("mongodb://localhost/Graphene"), ReportGenerator = new Graphene.Mongo.Reporting.MongoReportGenerator("mongodb://localhost/Graphene") }
+                  );
 ```
 
-So the above can be read as: The "Customer Age Tracker" was incremented Measurement.Occurrence times and the total sum Measurement.MiddleAgedCount for the TimeSlot of 2014-01-21, 02:00:00. There will be a document for every TimeSlot and if the MinResolution is 1 hour the next TimeSlot would be 2014-01-13, 04:00. Also there will be a document for every unique combination of the filters. Measurement.SearchFilters are the tags to for every possible combination of the filters delimited by ",,". To find all customer visits for the state of MN and store ID of 334 add the following to the query
+To generate reports for a given tracker without any filters:
 
-```json
-{ SearchFilters: { $in: ['STATE::MN,,STOREID::334' ] } } 
+```c#
+var report = Graphene.Tracking.Container<TrackerWithCountProperties>.Report(startTimeInUtc, endTimeInUtc);
+
+Assert.IsTrue(report.Results.Count() >= 1);
+Assert.IsTrue(report.Results[0].Tracker.ElderlyCount >= 12);
+Assert.IsTrue(report.Results[0].Tracker.KidsCount >= 5);
 ```
 
+Each item in "Results" is aggregated results for the a resolution Graphene picked base on the total duration. The resolution picked is returned as "report.Resolution". The resolution can be year, month, day, hour or minute.
+
+To specify a resolution pass that in as a parameter to "Report".
+
+```c#
+var report = Graphene.Tracking.Container<TrackerWithCountProperties>.Report(startTimeInUtc, endTimeInUtc, ReportResolution.Minute);
+```
+
+The "Tracker" property is the same type as the Tracker its properties is the aggregated total for the duration specified in the resolution.
+
+To apply a filter to the reports pass the filter criteria in the "Where" method.
+
+```c#
+var filter1 = new CustomerFilter
+            {
+                State = "CA"                
+            };
+
+var report = Graphene.Tracking.Container<TrackerWithCountProperties>.Where(filter1).Report(startTimeInUtc, endTimeInUtc);
+
+```
+ 

@@ -67,8 +67,8 @@ namespace Graphene.Tests.Reporting
             var report = Graphene.Tracking.Container<CustomerVisitTracker>.Where(filter1).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1,0,0)));
 
             Assert.IsTrue(report.Results.Count() >= 1);
-            Assert.AreEqual(report.Results[0].Occurrence, 1);
-            Assert.AreEqual(report.Results[0].Total, 10);
+            Assert.AreEqual(1, report.Results[0].Occurrence);
+            Assert.AreEqual(10, report.Results[0].Total);
         }
 
         [TestMethod]
@@ -94,8 +94,8 @@ namespace Graphene.Tests.Reporting
             var report = Graphene.Tracking.Container<TrackerWithCountProperties>.Where(filter1).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
 
             Assert.IsTrue(report.Results.Count() >= 1);
-            Assert.AreEqual(report.Results[0].Tracker.ElderlyCount, 12);
-            Assert.AreEqual(report.Results[0].Tracker.KidsCount, 5);
+            Assert.AreEqual(12, report.Results[0].Tracker.ElderlyCount);
+            Assert.AreEqual(5, report.Results[0].Tracker.KidsCount);
         }
 
         [TestMethod]
