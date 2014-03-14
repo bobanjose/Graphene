@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using Graphene.Attributes;
 using Graphene.Tracking;
 
@@ -10,24 +9,26 @@ namespace Graphene.Reporting
 {
     public class GrapheneReportSpecification : IReportSpecification
     {
-        private ReportResolution _resolution;
-        
-        private DateTime _toDateUtc;
-        private DateTime _fromDateUtc;
+        private static readonly IEnumerable<string> _trackableProperties =
+            typeof (ITrackable).GetProperties().Select(x => x.Name);
+
+        private readonly DateTime _fromDateUtc;
+
+        private readonly ReportResolution _resolution;
+
+        private readonly DateTime _toDateUtc;
         private IEnumerable<Measurement> _counters;
         private IEnumerable<IFilterConditions> _filterCombinations;
 
-        private static readonly IEnumerable<string> _trackableProperties =  typeof (ITrackable).GetProperties().Select(x=> x.Name);
 
-
-        public GrapheneReportSpecification(IEnumerable<Type> trackerType ,  DateTime fromDateUtc, DateTime toDateUtc, ReportResolution resolution,params object[] filters )
+        public GrapheneReportSpecification(IEnumerable<Type> trackerType, DateTime fromDateUtc, DateTime toDateUtc,
+            ReportResolution resolution, params object[] filters)
         {
             _fromDateUtc = fromDateUtc;
             _toDateUtc = toDateUtc;
             _resolution = resolution;
             buildFilterList(filters);
             buildListOfMeasurementsForTracker(trackerType);
-
         }
 
         public IEnumerable<IFilterConditions> FilterCombinations
@@ -65,7 +66,6 @@ namespace Graphene.Reporting
 
         private void buildListOfMeasurementsForTracker(IEnumerable<Type> trackables)
         {
-            
             _counters = trackables.SelectMany((x, y) => x.GetProperties()).
                 Where(x => (!_trackableProperties.Contains(x.Name))
                            ||
@@ -77,8 +77,6 @@ namespace Graphene.Reporting
         private void buildFilterList(params object[] filters)
         {
             _filterCombinations = filters.Select(x => new FilterConditions(x)).ToList();
-           
         }
-
     }
 }

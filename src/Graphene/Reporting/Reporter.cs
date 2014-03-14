@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
+using System.Reflection;
 using Graphene.Tracking;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.Builders;
 
 namespace Graphene.Reporting
 {
@@ -16,7 +12,7 @@ namespace Graphene.Reporting
         {
             var resolution = ReportResolution.Hour;
 
-            var reportSpan = toUtc.Subtract(fromUtc).TotalDays;
+            double reportSpan = toUtc.Subtract(fromUtc).TotalDays;
 
             if (reportSpan > 3600)
                 resolution = ReportResolution.Year;
@@ -32,16 +28,18 @@ namespace Graphene.Reporting
             return resolution;
         }
 
-        public static AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportSpecification<T, T1> reportSpecs)
+        public static AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc,
+            ReportSpecification<T, T1> reportSpecs)
         {
-            var aggregationResults = Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);
+            ITrackerReportResults aggregationResults =
+                Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);
 
-            var aggResults = new AggregationResults<T1> { Resolution = reportSpecs.Resolution };
+            var aggResults = new AggregationResults<T1> {Resolution = reportSpecs.Resolution};
 
             if (aggregationResults == null)
                 return aggResults;
 
-            foreach (var aggregationResult in aggregationResults.AggregationResults)
+            foreach (IAggregationResult aggregationResult in aggregationResults.AggregationResults)
             {
                 var aggResult = new AggregationResult<T1>();
                 aggResult.MesurementTimeUtc = aggregationResult.MesurementTimeUtc;
@@ -51,29 +49,22 @@ namespace Graphene.Reporting
                 aggResult.Total = aggregationResult.Total;
 
 
-
-                foreach (var mV in aggregationResult.MeasurementValues)
+                foreach (IMeasurementResult mV in aggregationResult.MeasurementValues)
                 {
-                    var type = aggResult.Tracker.GetType();
+                    Type type = aggResult.Tracker.GetType();
 
 
-                    var property = type.GetProperty(mV.PropertyName);
+                    PropertyInfo property = type.GetProperty(mV.PropertyName);
                     if (property != null)
                     {
-                        var convertedValue = Convert.ChangeType(mV.Value, property.PropertyType);
+                        object convertedValue = Convert.ChangeType(mV.Value, property.PropertyType);
                         property.SetValue(aggResult.Tracker, convertedValue);
                     }
-
                 }
                 aggResults.Results.Add(aggResult);
             }
 
             return aggResults;
         }
-
     }
 }
-
-
-
-

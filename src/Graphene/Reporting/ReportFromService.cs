@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
-using Graphene.Data;
 
 namespace Graphene.Reporting
 {
-    public class ReportFromService: IReportGenerator
+    public class ReportFromService : IReportGenerator
     {
-        private string _serviceUrl;
+        private readonly string _serviceUrl;
 
         public ReportFromService(string serviceUrl)
         {
@@ -21,10 +19,11 @@ namespace Graphene.Reporting
             {
                 using (var client = new HttpClient())
                 {
-                    var httpResponseMessage = client.PostAsJsonAsync(_serviceUrl, specification).Result;
+                    HttpResponseMessage httpResponseMessage = client.PostAsJsonAsync(_serviceUrl, specification).Result;
                     if (!httpResponseMessage.IsSuccessStatusCode)
                     {
-                        Configurator.Configuration.Logger.Warn(string.Format("Getting report data failed {0}", httpResponseMessage.StatusCode));
+                        Configurator.Configuration.Logger.Warn(string.Format("Getting report data failed {0}",
+                            httpResponseMessage.StatusCode));
                     }
                     return httpResponseMessage.Content.ReadAsAsync<ITrackerReportResults>().Result;
                 }

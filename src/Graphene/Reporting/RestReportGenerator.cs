@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using Graphene.Exceptions;
-using Graphene.Tracking;
 
 namespace Graphene.Reporting
 {
-    
-
     public class RestReportGenerator : IReportGenerator
     {
         private readonly Uri _serviceUri;
@@ -24,8 +21,9 @@ namespace Graphene.Reporting
         {
             using (var httpClient = new HttpClient())
             {
-                var task = httpClient.PostAsJsonAsync(_serviceUri.ToString(), specification)
-                                         .ContinueWith(x => x.Result.Content.ReadAsAsync<IEnumerable<IAggregationResult>>().Result);
+                Task<IEnumerable<IAggregationResult>> task = httpClient.PostAsJsonAsync(_serviceUri.ToString(),
+                    specification)
+                    .ContinueWith(x => x.Result.Content.ReadAsAsync<IEnumerable<IAggregationResult>>().Result);
 
                 task.ContinueWith(x =>
                 {
@@ -33,14 +31,12 @@ namespace Graphene.Reporting
                     {
                         if (task.Exception != null)
                             throw new ReportGenerationException(task.Exception);
-
                     }
                     IEnumerable<IAggregationResult> results = task.Result;
                     return results;
                 });
 
                 task.Wait();
-
             }
             return null;
         }
@@ -49,8 +45,9 @@ namespace Graphene.Reporting
         {
             using (var httpClient = new HttpClient())
             {
-                var task = httpClient.PostAsJsonAsync(_serviceUri.ToString(), specification)
-                                         .ContinueWith(x => x.Result.Content.ReadAsAsync<IEnumerable<IAggregationResult>>().Result);
+                Task<IEnumerable<IAggregationResult>> task = httpClient.PostAsJsonAsync(_serviceUri.ToString(),
+                    specification)
+                    .ContinueWith(x => x.Result.Content.ReadAsAsync<IEnumerable<IAggregationResult>>().Result);
 
                 task.ContinueWith(x =>
                 {
@@ -58,20 +55,14 @@ namespace Graphene.Reporting
                     {
                         if (task.Exception != null)
                             throw new ReportGenerationException(task.Exception);
-
                     }
                     IEnumerable<IAggregationResult> results = task.Result;
                     return results;
                 });
 
                 task.Wait();
-
             }
             return null;
         }
-
     }
-
-
 }
-

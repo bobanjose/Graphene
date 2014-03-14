@@ -6,7 +6,7 @@ namespace Graphene.Reporting
     internal class Measurement : IMeasurement
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
         /// </summary>
         internal Measurement(PropertyInfo property)
         {
@@ -20,11 +20,9 @@ namespace Graphene.Reporting
             {
                 DisplayName = property.Name;
                 Description = property.Name;
-                
             }
             PropertyName = property.Name;
             TrackerTypeName = property.DeclaringType.FullName;
-
         }
 
         public string PropertyName { get; private set; }
@@ -37,7 +35,7 @@ namespace Graphene.Reporting
 
         public string FullyQualifiedField
         {
-            get { return string.Format("{0}.{1}",TrackerTypeName,PropertyName ); }
+            get { return string.Format("{0}.{1}", TrackerTypeName, PropertyName); }
         }
     }
 }

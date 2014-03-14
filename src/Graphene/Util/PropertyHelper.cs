@@ -7,15 +7,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Specialized;
-using System.Threading;
 using System.Reflection;
-using System.Diagnostics;
 
 namespace Graphene.Util
 {
@@ -27,12 +20,12 @@ namespace Graphene.Util
             Expression body = selector;
             if (body is LambdaExpression)
             {
-                body = ((LambdaExpression)body).Body;
+                body = ((LambdaExpression) body).Body;
             }
             switch (body.NodeType)
             {
                 case ExpressionType.MemberAccess:
-                    return (PropertyInfo)((MemberExpression)body).Member;
+                    return (PropertyInfo) ((MemberExpression) body).Member;
                 case ExpressionType.Convert:
                 case ExpressionType.ConvertChecked:
                     var exp = body as UnaryExpression;
@@ -41,7 +34,7 @@ namespace Graphene.Util
                     var me = ((exp != null) ? exp.Operand : null) as MemberExpression;
                     if (me == null)
                         throw new InvalidOperationException();
-                    return (PropertyInfo)(me).Member;
+                    return (PropertyInfo) (me).Member;
                 default:
                     throw new InvalidOperationException();
             }

@@ -1,33 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Graphene.Reporting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
-
 namespace Graphene.Tests.Reporting
 {
- [TestClass]
+    [TestClass]
     public class GrapheneReportSpecificationTests
     {
+        [TestMethod]
+        public void FirstTest()
+        {
+            var specification = new GrapheneReportSpecification(new[] {typeof (CustomerAgeTracker)},
+                DateTime.UtcNow.AddDays(-100), DateTime.UtcNow, ReportResolution.Hour);
 
-     [TestMethod]
-     public void FirstTest()
-     {
-         
-         GrapheneReportSpecification specification = new GrapheneReportSpecification( new Type[] {typeof(CustomerAgeTracker)}, DateTime.UtcNow.AddDays(-100), DateTime.UtcNow, ReportResolution.Hour);
-
-         Assert.IsTrue(specification.Counters.Any());
+            Assert.IsTrue(specification.Counters.Any());
 
 
-         var serializedObject = JsonConvert.SerializeObject(specification,Formatting.Indented);
+            string serializedObject = JsonConvert.SerializeObject(specification, Formatting.Indented);
 
-         Console.WriteLine(serializedObject);
-
-     }
-
+            Console.WriteLine(serializedObject);
+        }
     }
 }

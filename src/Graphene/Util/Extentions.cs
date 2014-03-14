@@ -8,14 +8,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Specialized;
-using System.Threading;
 using System.Reflection;
-using System.Diagnostics;
 
 namespace Graphene.Util
 {
@@ -23,14 +16,14 @@ namespace Graphene.Util
     {
         public static List<string> GetPropertyNameValueList(this object obj)
         {
-            var type = obj.GetType();
+            Type type = obj.GetType();
             var props = new List<PropertyInfo>(type.GetProperties());
             var nvList = new List<string>();
             foreach (PropertyInfo prop in props)
             {
-                if (prop.PropertyType == typeof(String) || (Nullable.GetUnderlyingType(prop.PropertyType) != null))
+                if (prop.PropertyType == typeof (String) || (Nullable.GetUnderlyingType(prop.PropertyType) != null))
                 {
-                    var propValue = prop.GetValue(obj, null);
+                    object propValue = prop.GetValue(obj, null);
                     if (propValue != null)
                     {
                         nvList.Add(string.Format("{0}::{1}", prop.Name.ToUpper(), propValue.ToString().ToUpper()));
@@ -38,7 +31,9 @@ namespace Graphene.Util
                 }
                 else
                 {
-                    throw new Exception(string.Format("All properties of the filter object of type {0}  have to be Nullable Types", type.FullName));
+                    throw new Exception(
+                        string.Format("All properties of the filter object of type {0}  have to be Nullable Types",
+                            type.FullName));
                 }
             }
             nvList.Sort();
@@ -49,10 +44,10 @@ namespace Graphene.Util
         {
             return new TimeSpan(
                 Convert.ToInt64(Math.Round(
-                    time.Ticks / (decimal)roundingInterval.Ticks,
+                    time.Ticks/(decimal) roundingInterval.Ticks,
                     roundingType
-                )) * roundingInterval.Ticks
-            );
+                    ))*roundingInterval.Ticks
+                );
         }
 
         public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval)

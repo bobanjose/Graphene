@@ -1,13 +1,11 @@
-﻿using Graphene.Reporting;
-using MongoDB.Bson;
-using MongoDB.Bson.IO;
-using MongoDB.Driver;
-using MongoDB.Driver.Builders;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Graphene.Reporting;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using MongoDB.Driver.Builders;
+using Newtonsoft.Json.Linq;
 
 namespace Graphene.Mongo.Reporting
 {
@@ -16,38 +14,38 @@ namespace Graphene.Mongo.Reporting
         private const string COLLECTION_NAME = "TrackerData";
         private static string _connectionString;
 
-        private readonly Lazy<MongoCollection> _mongoCollection = new Lazy<MongoCollection>(() => initializeMongoCollection());
+        private readonly Lazy<MongoCollection> _mongoCollection =
+            new Lazy<MongoCollection>(() => initializeMongoCollection());
 
         #region Initialization
-
-        private static MongoCollection initializeMongoCollection()
-        {
-            var mongoServer = new MongoClient(_connectionString).GetServer();
-            var databaseName = MongoUrl.Create(_connectionString).DatabaseName;
-            var mongoDatabase = mongoServer.GetDatabase(databaseName);
-            return mongoDatabase.GetCollection(COLLECTION_NAME);
-        }
-
 
         public MongoReportGenerator(string connectionString)
         {
             _connectionString = connectionString;
         }
+
+        private static MongoCollection initializeMongoCollection()
+        {
+            MongoServer mongoServer = new MongoClient(_connectionString).GetServer();
+            string databaseName = MongoUrl.Create(_connectionString).DatabaseName;
+            MongoDatabase mongoDatabase = mongoServer.GetDatabase(databaseName);
+            return mongoDatabase.GetCollection(COLLECTION_NAME);
+        }
+
         #endregion inittialization
 
-
         #region public methods
-        
+
         public ITrackerReportResults GeneratorReport(IReportSpecification specification)
         {
-            var match = buildMatchCondition(specification);
-            var projection = buildProjection(specification);
-            var group = buildResultGroup(specification);
+            BsonDocument match = buildMatchCondition(specification);
+            BsonDocument projection = buildProjection(specification);
+            BsonDocument group = buildResultGroup(specification);
 
 
-            var pipeline = new[] { match, projection, group };
+            var pipeline = new[] {match, projection, group};
 
-            var queryResults = _mongoCollection.Value.Aggregate(pipeline);
+            AggregateResult queryResults = _mongoCollection.Value.Aggregate(pipeline);
 
             if (!(queryResults.Ok && queryResults.ResultDocuments.Any()))
                 return null;
@@ -56,11 +54,10 @@ namespace Graphene.Mongo.Reporting
             return ToMongoAggregationResult(specification, queryResults);
         }
 
-
         #endregion public methods
 
-
         #region Static Mongo Aggregation Builders
+
         private static BsonDocument buildProjectionOrig(IReportSpecification specification)
         {
             var year = new BsonElement("year", new BsonDocument("$year", new BsonString("$TimeSlot")));
@@ -119,8 +116,8 @@ namespace Graphene.Mongo.Reporting
         private static BsonDocument buildMatchConditionOrig(IReportSpecification specification)
         {
             IMongoQuery orClause = null; //createFilteredOrClause(specification);
-            var typeNameClause = Query.EQ("TypeName", specification.Counters.First().TrackerTypeName);
-            var dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
+            IMongoQuery typeNameClause = Query.EQ("TypeName", specification.Counters.First().TrackerTypeName);
+            IMongoQuery dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
                 Query.LTE("TimeSlot", specification.ToDateUtc));
 
             var conditions = new BsonDocument(dateClause.ToBsonDocument());
@@ -139,14 +136,14 @@ namespace Graphene.Mongo.Reporting
 
         private static MongoAggregationResult ToMongoAggregationResult(object mr)
         {
-            var jO = (JObject)mr;
+            var jO = (JObject) mr;
 
-            var dateTime = jO["UtcDateTime"];
-            var year = dateTime["year"] != null ? Convert.ToInt32(dateTime["year"]) : DateTime.MinValue.Year;
-            var month = dateTime["month"] != null ? Convert.ToInt32(dateTime["month"]) : 1;
-            var day = dateTime["day"] != null ? Convert.ToInt32(dateTime["day"]) : 1;
-            var hour = dateTime["hour"] != null ? Convert.ToInt32(dateTime["hour"]) : 0;
-            var minute = dateTime["minute"] != null ? Convert.ToInt32(dateTime["minute"]) : 0;
+            JToken dateTime = jO["UtcDateTime"];
+            int year = dateTime["year"] != null ? Convert.ToInt32(dateTime["year"]) : DateTime.MinValue.Year;
+            int month = dateTime["month"] != null ? Convert.ToInt32(dateTime["month"]) : 1;
+            int day = dateTime["day"] != null ? Convert.ToInt32(dateTime["day"]) : 1;
+            int hour = dateTime["hour"] != null ? Convert.ToInt32(dateTime["hour"]) : 0;
+            int minute = dateTime["minute"] != null ? Convert.ToInt32(dateTime["minute"]) : 0;
             var measureTime = new DateTime(year, month, day, hour, minute, 0);
 
             var mongoRecord = new MongoAggregationResult(measureTime);
@@ -165,32 +162,34 @@ namespace Graphene.Mongo.Reporting
             return mongoRecord;
         }
 
-        private static ITrackerReportResults ToMongoAggregationResult(IReportSpecification specification, AggregateResult result)
+        private static ITrackerReportResults ToMongoAggregationResult(IReportSpecification specification,
+            AggregateResult result)
         {
             const string utcDateKey = "UtcDateTime";
             const string totalKey = "_Total";
             const string occurrenceKey = "_Occurrence";
-            var count = result.ResultDocuments.Count();
-            var names = result.ResultDocuments.First().Names.Where(x => !(x == utcDateKey || x == "_id")).ToList();
+            int count = result.ResultDocuments.Count();
+            List<string> names =
+                result.ResultDocuments.First().Names.Where(x => !(x == utcDateKey || x == "_id")).ToList();
 
-            MongoTrackerResults results = new MongoTrackerResults(specification);
+            var results = new MongoTrackerResults(specification);
 
 
-            foreach (var document in result.ResultDocuments)
+            foreach (BsonDocument document in result.ResultDocuments)
             {
                 BsonDocument dateTime = document[utcDateKey].AsBsonDocument;
 
-                var total = document[totalKey].ToInt64();
-                var occurrence = document[occurrenceKey].ToInt64();
-                var utcDateTime = ConvertDateTimeDocumentToDateTime(dateTime);
+                long total = document[totalKey].ToInt64();
+                long occurrence = document[occurrenceKey].ToInt64();
+                DateTime utcDateTime = ConvertDateTimeDocumentToDateTime(dateTime);
 
 
-                var trackerResult = results.AddAggregationResult(utcDateTime, occurrence, total);
+                IAggregationResult trackerResult = results.AddAggregationResult(utcDateTime, occurrence, total);
                 foreach (string key in names)
                 {
-                    var fullyQualifiedName = key.GetFullyQualifiedNameFromFormattedString();
-                    var measurementResult = document[key];
-                    var measurement =
+                    string fullyQualifiedName = key.GetFullyQualifiedNameFromFormattedString();
+                    BsonValue measurementResult = document[key];
+                    IMeasurement measurement =
                         specification.Counters.FirstOrDefault(x => x.FullyQualifiedField == fullyQualifiedName);
                     if (measurement != null)
                         trackerResult.AddMeasurementResult(measurement, measurementResult.ToString());
@@ -202,24 +201,24 @@ namespace Graphene.Mongo.Reporting
 
         private static BsonDocument buildResultGroup(IReportSpecification specification)
         {
-            var elements = new List<BsonElement> { new BsonElement("_id", new BsonString("$Time")) };
+            var elements = new List<BsonElement> {new BsonElement("_id", new BsonString("$Time"))};
             elements.AddRange(specification.Counters.Select(
-                counter => new BsonElement(counter.FormatFieldName(), new BsonDocument()
+                counter => new BsonElement(counter.FormatFieldName(), new BsonDocument
                 {
                     {"$sum", string.Format("$Measurement.{0}", counter.PropertyName)}
                 })));
 
             elements.AddRange(new[]
             {
-                new BsonElement("_Occurrence", new BsonDocument()
+                new BsonElement("_Occurrence", new BsonDocument
                 {
                     {"$sum", "$Measurement._Occurrence"}
                 }),
-                new BsonElement("_Total", new BsonDocument()
+                new BsonElement("_Total", new BsonDocument
                 {
                     {"$sum", "$Measurement._Total"}
                 }),
-                new BsonElement("UtcDateTime", new BsonDocument()
+                new BsonElement("UtcDateTime", new BsonDocument
                 {
                     {"$last", "$Time"}
                 })
@@ -237,24 +236,24 @@ namespace Graphene.Mongo.Reporting
 
         private static BsonDocument buildResultGroupOrig(IReportSpecification specification)
         {
-            var elements = new List<BsonElement> { new BsonElement("_id", new BsonString("$Time")) };
+            var elements = new List<BsonElement> {new BsonElement("_id", new BsonString("$Time"))};
             elements.AddRange(specification.Counters.Select(
-                counter => new BsonElement(counter.PropertyName, new BsonDocument()
+                counter => new BsonElement(counter.PropertyName, new BsonDocument
                 {
                     {"$sum", string.Format("$Measurement.{0}", counter.PropertyName)}
                 })));
 
             elements.AddRange(new[]
             {
-                new BsonElement("_Occurrence", new BsonDocument()
+                new BsonElement("_Occurrence", new BsonDocument
                 {
                     {"$sum", "$Measurement._Occurrence"}
                 }),
-                new BsonElement("_Total", new BsonDocument()
+                new BsonElement("_Total", new BsonDocument
                 {
                     {"$sum", "$Measurement._Total"}
                 }),
-                new BsonElement("UtcDateTime", new BsonDocument()
+                new BsonElement("UtcDateTime", new BsonDocument
                 {
                     {"$last", "$Time"}
                 })
@@ -272,10 +271,10 @@ namespace Graphene.Mongo.Reporting
 
         private static BsonDocument buildMatchCondition(IReportSpecification specification)
         {
-            var orClause = createSearchClauseForAllFilters(specification);
-            var typeNameClause = createSearchClauseForAllTypes(specification);
+            IMongoQuery orClause = createSearchClauseForAllFilters(specification);
+            IMongoQuery typeNameClause = createSearchClauseForAllTypes(specification);
             // Query.EQ("TypeName", specification.TrackerTypeName);
-            var dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
+            IMongoQuery dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
                 Query.LTE("TimeSlot", specification.ToDateUtc));
 
 
@@ -297,39 +296,35 @@ namespace Graphene.Mongo.Reporting
             if (specification.FilterCombinations.Count() == 0)
                 return null;
 
-            var orQueries = specification.FilterCombinations
+            IEnumerable<IMongoQuery> orQueries = specification.FilterCombinations
                 .Select(filter =>
                     Query.In("SearchFilters", new BsonArray(filter.Filters)));
 
-            var orClause = Query.Or(orQueries);
+            IMongoQuery orClause = Query.Or(orQueries);
             return orClause;
         }
 
         private static IMongoQuery createSearchClauseForAllFilters(IReportSpecification specification)
         {
-            var orQueries = specification.FilterCombinations
+            List<IMongoQuery> orQueries = specification.FilterCombinations
                 .Select(filter =>
                     Query.All("SearchFilters", new BsonArray(filter.Filters))).ToList();
 
             if (orQueries.Any())
             {
-                var orClause = Query.Or(orQueries);
+                IMongoQuery orClause = Query.Or(orQueries);
                 return orClause;
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
 
         private static IMongoQuery createSearchClauseForAllTypes(IReportSpecification specification)
         {
-            
-            var orQueries = Query.All("TypeName", new BsonArray(specification.TypeNames));
+            IMongoQuery orQueries = Query.All("TypeName", new BsonArray(specification.TypeNames));
 
 
-            var orClause = Query.Or(orQueries);
+            IMongoQuery orClause = Query.Or(orQueries);
             return orClause;
         }
 
@@ -345,19 +340,19 @@ namespace Graphene.Mongo.Reporting
             switch (specification.Resolution)
             {
                 case ReportResolution.Year:
-                    timeParts = new List<BsonElement> { year };
+                    timeParts = new List<BsonElement> {year};
                     break;
                 case ReportResolution.Month:
-                    timeParts = new List<BsonElement> { year, month };
+                    timeParts = new List<BsonElement> {year, month};
                     break;
                 case ReportResolution.Day:
-                    timeParts = new List<BsonElement> { year, month, day };
+                    timeParts = new List<BsonElement> {year, month, day};
                     break;
                 case ReportResolution.Hour:
-                    timeParts = new List<BsonElement> { year, month, day, hour };
+                    timeParts = new List<BsonElement> {year, month, day, hour};
                     break;
                 default:
-                    timeParts = new List<BsonElement> { year, month, day, hour, minute };
+                    timeParts = new List<BsonElement> {year, month, day, hour, minute};
                     break;
             }
 
@@ -395,32 +390,22 @@ namespace Graphene.Mongo.Reporting
 
                 throw new ArgumentException("Cannot convert document provided to basic datetime");
 
-            var year = dateTime.Contains("year") ? Convert.ToInt32(dateTime["year"]) : DateTime.MinValue.Year;
-            var month = dateTime.Contains("month") ? Convert.ToInt32(dateTime["month"]) : 1;
-            var day = dateTime.Contains("day") ? Convert.ToInt32(dateTime["day"]) : 1;
-            var hour = dateTime.Contains("hour") ? Convert.ToInt32(dateTime["hour"]) : 0;
-            var minute = dateTime.Contains("minute") ? Convert.ToInt32(dateTime["minute"]) : 0;
+            int year = dateTime.Contains("year") ? Convert.ToInt32(dateTime["year"]) : DateTime.MinValue.Year;
+            int month = dateTime.Contains("month") ? Convert.ToInt32(dateTime["month"]) : 1;
+            int day = dateTime.Contains("day") ? Convert.ToInt32(dateTime["day"]) : 1;
+            int hour = dateTime.Contains("hour") ? Convert.ToInt32(dateTime["hour"]) : 0;
+            int minute = dateTime.Contains("minute") ? Convert.ToInt32(dateTime["minute"]) : 0;
             return new DateTime(year, month, day, hour, minute, 0);
         }
 
         #endregion  Static Mongo Aggregation Builders
-        
-
-
-
-        
-
-        
-
-        
-
 
         private class MongoTrackerResults : ITrackerReportResults
         {
-            private DateTime _fromDateUtc;
-            private DateTime _toDateUtc;
-            private List<IAggregationResult> _aggregationResults = new List<IAggregationResult>();
-            private ReportResolution _resolution;
+            private readonly List<IAggregationResult> _aggregationResults = new List<IAggregationResult>();
+            private readonly DateTime _fromDateUtc;
+            private readonly ReportResolution _resolution;
+            private readonly DateTime _toDateUtc;
 
             public MongoTrackerResults(IReportSpecification specification)
             {
@@ -458,12 +443,11 @@ namespace Graphene.Mongo.Reporting
 
             private class MongoTrackingAggregationResult : IAggregationResult
             {
-                private ushort _timeSlice;
-                private DateTime _mesurementTimeUtc;
                 private readonly List<IMeasurementResult> _measurementValues;
+                private DateTime _mesurementTimeUtc;
 
                 /// <summary>
-                /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+                ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
                 /// </summary>
                 public MongoTrackingAggregationResult(DateTime mesurementTimeUtc, long occurence, long total)
                 {
@@ -483,11 +467,7 @@ namespace Graphene.Mongo.Reporting
                 }
 
 
-                public ushort TimeSlice
-                {
-                    get { return _timeSlice; }
-                    set { _timeSlice = value; }
-                }
+                public ushort TimeSlice { get; set; }
 
                 public DateTime MesurementTimeUtc
                 {
@@ -535,12 +515,6 @@ namespace Graphene.Mongo.Reporting
                 }
             }
         }
-
-
-        
-       
-
-        
     }
 
     public class MongoAggregationResult : IQueryResults

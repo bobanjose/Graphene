@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using Graphene.Tracking;
 using Graphene.Attributes;
+using Graphene.Tracking;
 
 namespace Graphene.Reporting
 {
@@ -20,12 +19,12 @@ namespace Graphene.Reporting
         private static readonly IEnumerable<string> _trackableProperties =
             typeof (ITrackable).GetProperties().Select(x => x.Name);
 
-        private IEnumerable<IFilterConditions> _filterCombinations;
+        private readonly DateTime _fromDateUtc;
+        private readonly ReportResolution _resolution;
+        private readonly DateTime _toDateUtc;
         private IEnumerable<IMeasurement> _counters;
-        private DateTime _fromDateUtc;
-        private DateTime _toDateUtc;
+        private IEnumerable<IFilterConditions> _filterCombinations;
         private string _trackerTypeName;
-        private ReportResolution _resolution;
 
         public ReportSpecification(DateTime fromDateUtc, DateTime toDateUtc, ReportResolution resolution)
             : this(fromDateUtc, toDateUtc, resolution, new TFilter[] {})
@@ -40,8 +39,8 @@ namespace Graphene.Reporting
             _toDateUtc = toDateUtc;
             _resolution = resolution;
             buildFilterList(filters);
-            buildListOfMeasurementsForTracker(new Type[] {typeof (TTracker)});
-            this.TypeNames = new string[] {typeof (TTracker).FullName};
+            buildListOfMeasurementsForTracker(new[] {typeof (TTracker)});
+            TypeNames = new[] {typeof (TTracker).FullName};
         }
 
 
@@ -90,6 +89,4 @@ namespace Graphene.Reporting
     }
 
     #endregion Generic Implementation
-
-    
 }

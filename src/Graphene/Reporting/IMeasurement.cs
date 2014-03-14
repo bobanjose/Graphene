@@ -11,16 +11,10 @@
         string Description { get; }
 
         string FullyQualifiedField { get; }
-     
-
     }
 
     public interface IMeasurementResult : IMeasurement
     {
-
-        string Value { get;  }
-
+        string Value { get; }
     }
-
-
 }

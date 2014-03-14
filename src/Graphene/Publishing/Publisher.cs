@@ -7,26 +7,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-
+using Graphene.Data;
 using Graphene.Tracking;
 
 namespace Graphene.Publishing
 {
     internal class Publisher
     {
-        private static ActionBlock<ContainerBase> _trackerBlock;
-        private static ActionBlock<Data.TrackerData> _publisherBlock;
-        
+        private static readonly ActionBlock<ContainerBase> _trackerBlock;
+        private static readonly ActionBlock<TrackerData> _publisherBlock;
+
         private static ContainerBase _firstTC;
-        private static System.Threading.CancellationTokenSource _trackerBlockCancellationTokenSource = new System.Threading.CancellationTokenSource();
+
+        private static readonly CancellationTokenSource _trackerBlockCancellationTokenSource =
+            new CancellationTokenSource();
 
         private static bool _lastPersistanceComplete;
-        private static bool _trackersRegisted = false;
+        private static bool _trackersRegisted;
 
         static Publisher()
         {
@@ -34,14 +34,17 @@ namespace Graphene.Publishing
             {
                 try
                 {
-                    var trackerContainer = (ContainerBase)tc;
+                    ContainerBase trackerContainer = tc;
                     if (_firstTC == null)
                         _firstTC = trackerContainer;
-                    else if (_firstTC == trackerContainer && !_trackerBlockCancellationTokenSource.IsCancellationRequested)
+                    else if (_firstTC == trackerContainer &&
+                             !_trackerBlockCancellationTokenSource.IsCancellationRequested)
                     {
                         try
                         {
-                            await Task.Delay(TimeSpan.FromSeconds(15), _trackerBlockCancellationTokenSource.Token).ConfigureAwait(false);
+                            await
+                                Task.Delay(TimeSpan.FromSeconds(15), _trackerBlockCancellationTokenSource.Token)
+                                    .ConfigureAwait(false);
                         }
                         catch (OperationCanceledException)
                         {
@@ -49,7 +52,10 @@ namespace Graphene.Publishing
                         }
                     }
 
-                    foreach (var td in trackerContainer.GetTrackerData(_trackerBlockCancellationTokenSource.IsCancellationRequested))
+                    foreach (
+                        TrackerData td in
+                            trackerContainer.GetTrackerData(_trackerBlockCancellationTokenSource.IsCancellationRequested)
+                        )
                     {
                         _publisherBlock.Post(td);
                     }
@@ -65,10 +71,9 @@ namespace Graphene.Publishing
                     else if (_trackerBlock.InputCount == 0)
                         _trackerBlock.Complete();
                 }
-                
             });
 
-            _publisherBlock = new ActionBlock<Data.TrackerData>(tc =>
+            _publisherBlock = new ActionBlock<TrackerData>(tc =>
             {
                 try
                 {
@@ -80,9 +85,9 @@ namespace Graphene.Publishing
                 {
                     Configurator.Configuration.Logger.Error(ex.Message, ex);
                     _lastPersistanceComplete = true;
-                }                
-            }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 4});
-        }        
+                }
+            }, new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = 4});
+        }
 
         internal static void Register(ContainerBase trackerContainer)
         {
@@ -94,17 +99,19 @@ namespace Graphene.Publishing
         {
             if (!_trackersRegisted)
                 return;
-            System.Threading.Thread.Sleep(500);
+            Thread.Sleep(500);
             _trackerBlockCancellationTokenSource.Cancel();
             Task.WaitAll(_trackerBlock.Completion);
-            var loopCount = 0;
-            while ((_publisherBlock.InputCount > 0 || !_lastPersistanceComplete)  && loopCount < 20)
+            int loopCount = 0;
+            while ((_publisherBlock.InputCount > 0 || !_lastPersistanceComplete) && loopCount < 20)
             {
-                System.Threading.Thread.Sleep(100);
+                Thread.Sleep(100);
                 loopCount++;
             }
-            if(_publisherBlock.InputCount > 0)
-                Configurator.Configuration.Logger.Error(_publisherBlock.InputCount + " messages could not be persisted.", new Exception("Graphene couldn't persist all message to persister."));
+            if (_publisherBlock.InputCount > 0)
+                Configurator.Configuration.Logger.Error(
+                    _publisherBlock.InputCount + " messages could not be persisted.",
+                    new Exception("Graphene couldn't persist all message to persister."));
         }
     }
 }
