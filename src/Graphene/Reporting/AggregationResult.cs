@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Graphene.Tracking;
 
 namespace Graphene.Reporting
 {
     public class AggregationResults<T>
+     where T : ITrackable, new()
     {
         public AggregationResults()
         {
@@ -15,10 +17,11 @@ namespace Graphene.Reporting
     }
 
     public class AggregationResult<T>
+        where T : ITrackable, new()
     {
         public AggregationResult()
         {
-            Tracker = (T) Activator.CreateInstance(typeof (T));
+            Tracker = new T();
         }
 
         public DateTime MesurementTimeUtc { get; internal set; }

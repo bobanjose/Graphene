@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using CommonWell.Framework.Reporting.Trackers;
 using Graphene.Attributes;
 using Graphene.Mongo.Reporting;
@@ -9,10 +10,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Graphene.Mongo.IntegrationTests
 {
     [TestClass]
-    public class UnitTest1
+    public class MongoReportGeneratorTests
     {
         [TestMethod]
-        public void TestMethod1()
+        public void GivenATrackerWithNoCustomFields_WhenIncrementingTraker_ThenTotalReflectsIncrementAndNoOccurencesIsSet()
         {
             var generator = new MongoReportGenerator("mongodb://localhost:9001/Graphene");
 
@@ -21,6 +22,10 @@ namespace Graphene.Mongo.IntegrationTests
 
 
             ITrackerReportResults newresult = generator.GeneratorReport(spec);
+
+            Assert.IsTrue(newresult.AggregationResults.Any());
+
+
         }
 
 

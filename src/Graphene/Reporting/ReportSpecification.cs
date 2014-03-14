@@ -14,7 +14,7 @@ namespace Graphene.Reporting
         where
             TFilter : struct
         where
-            TTracker : ITrackable
+            TTracker : ITrackable, new()
     {
         private static readonly IEnumerable<string> _trackableProperties =
             typeof (ITrackable).GetProperties().Select(x => x.Name);
@@ -24,7 +24,7 @@ namespace Graphene.Reporting
         private readonly DateTime _toDateUtc;
         private IEnumerable<IMeasurement> _counters;
         private IEnumerable<IFilterConditions> _filterCombinations;
-        private string _trackerTypeName;
+        
 
         public ReportSpecification(DateTime fromDateUtc, DateTime toDateUtc, ReportResolution resolution)
             : this(fromDateUtc, toDateUtc, resolution, new TFilter[] {})

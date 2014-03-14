@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -34,7 +35,7 @@ namespace Graphene.Tracking
         public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, Stopwatch by)
         {
             if (by == null)
-                throw new ArgumentNullException("by cannong be null");
+                throw new ArgumentNullException("by cannot be null");
             if (by.IsRunning)
                 by.Stop();
             return Increment(incAttr, by.ElapsedMilliseconds);
@@ -42,7 +43,7 @@ namespace Graphene.Tracking
 
         public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by)
         {
-            Bucket bucket;
+            
             try
             {
                 PropertyInfo pi = PropertyHelper<T1>.GetProperty(incAttr);
@@ -56,7 +57,7 @@ namespace Graphene.Tracking
         }
     }
 
-    public class FilteredOperations<T, T1> where T : struct where T1 : ITrackable
+    public class FilteredOperations<T, T1> where T : struct where T1 : ITrackable, new()
     {
         internal FilteredOperations(Container<T1> container, T filter)
         {
@@ -75,7 +76,7 @@ namespace Graphene.Tracking
         public void IncrementBy(Stopwatch by)
         {
             if (by == null)
-                throw new ArgumentNullException("by cannong be null");
+                throw new ArgumentNullException("by cannot be null");
             if (by.IsRunning)
                 by.Stop();
 
@@ -85,7 +86,7 @@ namespace Graphene.Tracking
         public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, Stopwatch by)
         {
             if (by == null)
-                throw new ArgumentNullException("by cannong be null");
+                throw new ArgumentNullException("by cannot be null");
             if (by.IsRunning)
                 by.Stop();
 
@@ -138,24 +139,22 @@ namespace Graphene.Tracking
         internal abstract IEnumerable<TrackerData> GetTrackerData(bool flushAll);
     }
 
-    public class Container<T1> : ContainerBase where T1 : ITrackable
+    public class Container<T1> : ContainerBase where T1 : ITrackable, new()
     {
         private static readonly List<Container<T1>> _trackers = new List<Container<T1>>();
         private static ReaderWriterLockSlim _trackerLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-
         private readonly Queue<Bucket> _queuedBucket = new Queue<Bucket>();
         private readonly object _syncLock = new object();
         private readonly ITrackable _tracker;
         private readonly Type _trackerType;
-
         private readonly int _updateIntervalInSeconds = 180;
-        private long _bucketLifeInTicks;
+        
         private Bucket _currentBucket;
 
         internal Container()
         {
             _trackerType = typeof (T1);
-            _tracker = (ITrackable) Activator.CreateInstance(_trackerType);
+            _tracker = new T1();
         }
 
         internal CancellationToken CancellationToken { get; set; }
@@ -269,7 +268,7 @@ namespace Graphene.Tracking
         public static void IncrementBy(Stopwatch by)
         {
             if (by == null)
-                throw new ArgumentNullException("by cannong be null");
+                throw new ArgumentNullException("by cannot be null");
             if (by.IsRunning)
                 by.Stop();
 

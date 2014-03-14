@@ -33,7 +33,7 @@ namespace Graphene.Reporting
 
         public string Description { get; private set; }
 
-        public string FullyQualifiedField
+        public string FullyQualifiedPropertyName
         {
             get { return string.Format("{0}.{1}", TrackerTypeName, PropertyName); }
         }

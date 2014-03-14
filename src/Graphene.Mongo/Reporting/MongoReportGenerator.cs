@@ -43,7 +43,7 @@ namespace Graphene.Mongo.Reporting
             BsonDocument group = buildResultGroup(specification);
 
 
-            var pipeline = new[] {match, projection, group};
+            var pipeline = new[] { match, projection, group };
 
             AggregateResult queryResults = _mongoCollection.Value.Aggregate(pipeline);
 
@@ -70,19 +70,19 @@ namespace Graphene.Mongo.Reporting
             switch (specification.Resolution)
             {
                 case ReportResolution.Year:
-                    timeParts = new List<BsonElement> {year};
+                    timeParts = new List<BsonElement> { year };
                     break;
                 case ReportResolution.Month:
-                    timeParts = new List<BsonElement> {year, month};
+                    timeParts = new List<BsonElement> { year, month };
                     break;
                 case ReportResolution.Day:
-                    timeParts = new List<BsonElement> {year, month, day};
+                    timeParts = new List<BsonElement> { year, month, day };
                     break;
                 case ReportResolution.Hour:
-                    timeParts = new List<BsonElement> {year, month, day, hour};
+                    timeParts = new List<BsonElement> { year, month, day, hour };
                     break;
                 default:
-                    timeParts = new List<BsonElement> {year, month, day, hour, minute};
+                    timeParts = new List<BsonElement> { year, month, day, hour, minute };
                     break;
             }
 
@@ -136,7 +136,7 @@ namespace Graphene.Mongo.Reporting
 
         private static MongoAggregationResult ToMongoAggregationResult(object mr)
         {
-            var jO = (JObject) mr;
+            var jO = (JObject)mr;
 
             JToken dateTime = jO["UtcDateTime"];
             int year = dateTime["year"] != null ? Convert.ToInt32(dateTime["year"]) : DateTime.MinValue.Year;
@@ -190,7 +190,7 @@ namespace Graphene.Mongo.Reporting
                     string fullyQualifiedName = key.GetFullyQualifiedNameFromFormattedString();
                     BsonValue measurementResult = document[key];
                     IMeasurement measurement =
-                        specification.Counters.FirstOrDefault(x => x.FullyQualifiedField == fullyQualifiedName);
+                        specification.Counters.FirstOrDefault(x => x.FullyQualifiedPropertyName == fullyQualifiedName);
                     if (measurement != null)
                         trackerResult.AddMeasurementResult(measurement, measurementResult.ToString());
                 }
@@ -201,7 +201,7 @@ namespace Graphene.Mongo.Reporting
 
         private static BsonDocument buildResultGroup(IReportSpecification specification)
         {
-            var elements = new List<BsonElement> {new BsonElement("_id", new BsonString("$Time"))};
+            var elements = new List<BsonElement> { new BsonElement("_id", new BsonString("$Time")) };
             elements.AddRange(specification.Counters.Select(
                 counter => new BsonElement(counter.FormatFieldName(), new BsonDocument
                 {
@@ -236,7 +236,7 @@ namespace Graphene.Mongo.Reporting
 
         private static BsonDocument buildResultGroupOrig(IReportSpecification specification)
         {
-            var elements = new List<BsonElement> {new BsonElement("_id", new BsonString("$Time"))};
+            var elements = new List<BsonElement> { new BsonElement("_id", new BsonString("$Time")) };
             elements.AddRange(specification.Counters.Select(
                 counter => new BsonElement(counter.PropertyName, new BsonDocument
                 {
@@ -340,19 +340,19 @@ namespace Graphene.Mongo.Reporting
             switch (specification.Resolution)
             {
                 case ReportResolution.Year:
-                    timeParts = new List<BsonElement> {year};
+                    timeParts = new List<BsonElement> { year };
                     break;
                 case ReportResolution.Month:
-                    timeParts = new List<BsonElement> {year, month};
+                    timeParts = new List<BsonElement> { year, month };
                     break;
                 case ReportResolution.Day:
-                    timeParts = new List<BsonElement> {year, month, day};
+                    timeParts = new List<BsonElement> { year, month, day };
                     break;
                 case ReportResolution.Hour:
-                    timeParts = new List<BsonElement> {year, month, day, hour};
+                    timeParts = new List<BsonElement> { year, month, day, hour };
                     break;
                 default:
-                    timeParts = new List<BsonElement> {year, month, day, hour, minute};
+                    timeParts = new List<BsonElement> { year, month, day, hour, minute };
                     break;
             }
 
@@ -487,7 +487,7 @@ namespace Graphene.Mongo.Reporting
 
                 private class MongoMeasurementResult : IMeasurementResult
                 {
-                    private string _fullyQualifiedField;
+                    
 
                     public MongoMeasurementResult(IMeasurement inboundMeasurement, string value)
                     {
@@ -496,6 +496,7 @@ namespace Graphene.Mongo.Reporting
                         TrackerTypeName = inboundMeasurement.TrackerTypeName;
                         DisplayName = inboundMeasurement.DisplayName;
                         Description = inboundMeasurement.Description;
+                        FullyQualifiedPropertyName = string.Format("{0}.{1}", TrackerTypeName, PropertyName);
                     }
 
                     public string PropertyName { get; private set; }
@@ -506,10 +507,7 @@ namespace Graphene.Mongo.Reporting
 
                     public string Description { get; private set; }
 
-                    public string FullyQualifiedField
-                    {
-                        get { return String.Format("{0}.{1}", TrackerTypeName, PropertyName); }
-                    }
+                    public string FullyQualifiedPropertyName { get; private set; }
 
                     public string Value { get; private set; }
                 }

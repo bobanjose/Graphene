@@ -10,7 +10,7 @@
 
         string Description { get; }
 
-        string FullyQualifiedField { get; }
+        string FullyQualifiedPropertyName { get; }
     }
 
     public interface IMeasurementResult : IMeasurement

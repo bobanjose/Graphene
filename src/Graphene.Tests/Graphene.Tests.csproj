@@ -62,6 +62,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Graphene.Mongo\Graphene.Mongo.csproj">
       <Project>{6c72e5c2-a7b7-42b2-9b47-edad7758fad7}</Project>
       <Name>Graphene.Mongo</Name>
@@ -70,10 +74,6 @@
       <Project>{df87eb29-8e53-4fed-a524-867ab76d71ca}</Project>
       <Name>Graphene</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

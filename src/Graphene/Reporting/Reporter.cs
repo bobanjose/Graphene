@@ -6,7 +6,7 @@ namespace Graphene.Reporting
 {
     public class Reporter<T, T1>
         where T : struct
-        where T1 : ITrackable
+        where T1 : ITrackable, new()
     {
         public static ReportResolution GetResolutionFromDates(DateTime fromUtc, DateTime toUtc)
         {
@@ -29,7 +29,8 @@ namespace Graphene.Reporting
         }
 
         public static AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc,
-            ReportSpecification<T, T1> reportSpecs)
+            ReportSpecification<T, T1> reportSpecs) 
+        
         {
             ITrackerReportResults aggregationResults =
                 Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);

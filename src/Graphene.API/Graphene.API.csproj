@@ -43,6 +43,14 @@
     <RunOctoPack>true</RunOctoPack>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Graphene, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Graphene.0.2.01\lib\net45\Graphene.dll</HintPath>
+    </Reference>
+    <Reference Include="Graphene.Mongo, Version=0.2.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Graphene.Mongo.0.2.1.0\lib\net45\Graphene.Mongo.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="MongoDB.Bson, Version=1.8.3.9, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -189,16 +197,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Graphene.API.nuspec" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Graphene.Mongo\Graphene.Mongo.csproj">
-      <Project>{6c72e5c2-a7b7-42b2-9b47-edad7758fad7}</Project>
-      <Name>Graphene.Mongo</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Graphene\Graphene.csproj">
-      <Project>{df87eb29-8e53-4fed-a524-867ab76d71ca}</Project>
-      <Name>Graphene</Name>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
