@@ -18,8 +18,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{3197A5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Mongo", "Graphene.Mongo\Graphene.Mongo.csproj", "{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{3E063D49-E4D8-44AE-96DB-EBBA663C92E7}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Mongo.IntegrationTests", "Graphene.Mongo.IntegrationTests\Graphene.Mongo.IntegrationTests.csproj", "{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}"
 EndProject
 Global
@@ -44,10 +42,6 @@ Global
 		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3E063D49-E4D8-44AE-96DB-EBBA663C92E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3E063D49-E4D8-44AE-96DB-EBBA663C92E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3E063D49-E4D8-44AE-96DB-EBBA663C92E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3E063D49-E4D8-44AE-96DB-EBBA663C92E7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}.Release|Any CPU.ActiveCfg = Release|Any CPU
