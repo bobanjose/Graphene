@@ -2,9 +2,25 @@
 {
     public interface IMeasurement
     {
-        string Field { get; set; }
+        string PropertyName { get; }
 
-        string TrackerTypeName { get; set; }
+        string TrackerTypeName { get; }
+
+        string DisplayName { get; }
+
+        string Description { get; }
+
+        string FullyQualifiedField { get; }
+     
 
     }
+
+    public interface IMeasurementResult : IMeasurement
+    {
+
+        string Value { get;  }
+
+    }
+
+
 }

@@ -19,16 +19,17 @@ namespace Graphene.Reporting
     {
         IEnumerable<IFilterConditions> FilterCombinations { get; }
 
-        IEnumerable<string> Counters { get; }
+        IEnumerable<IMeasurement> Counters { get; }
 
         DateTime FromDateUtc { get; }
 
         DateTime ToDateUtc { get; }
 
-        string TrackerTypeName { get; }
+        IEnumerable<string> TypeNames { get; }
 
         ReportResolution Resolution { get; }
     }
+
     public interface IFilterConditions
     {
         IEnumerable<string> Filters { get; }
@@ -48,5 +49,4 @@ namespace Graphene.Reporting
             get { return _filters; }
         }
     }
-
 }

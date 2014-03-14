@@ -14,7 +14,7 @@ namespace Graphene.Reporting
             _serviceUrl = serviceUrl;
         }
 
-        public IEnumerable<IQueryResults> GeneratorReport(IReportSpecification specification)
+        public ITrackerReportResults GeneratorReport(IReportSpecification specification)
         {
             //this has not been tested!!!!
             try
@@ -26,7 +26,7 @@ namespace Graphene.Reporting
                     {
                         Configurator.Configuration.Logger.Warn(string.Format("Getting report data failed {0}", httpResponseMessage.StatusCode));
                     }
-                    return httpResponseMessage.Content.ReadAsAsync<IEnumerable<IQueryResults>>().Result;
+                    return httpResponseMessage.Content.ReadAsAsync<ITrackerReportResults>().Result;
                 }
             }
             catch (Exception ex)

@@ -61,6 +61,7 @@
     <Compile Include="Exceptions\ReportGenerationException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Publishing\IPersist.cs" />
+    <Compile Include="Reporting\IAggregationResult.cs" />
     <Compile Include="Reporting\IQueryResults.cs" />
     <Compile Include="Reporting\IReportGenerator.cs" />
     <Compile Include="Publishing\PersistToService.cs" />
@@ -70,8 +71,11 @@
     <Compile Include="Reporting\IMeasurement.cs" />
     <Compile Include="Reporting\IReportSpecification.cs" />
     <Compile Include="Reporting\AggregationResult.cs" />
+    <Compile Include="Reporting\Measurement.cs" />
+    <Compile Include="Reporting\Reporter.cs" />
     <Compile Include="Reporting\ReportFromService.cs" />
     <Compile Include="Reporting\ReportSpecification.cs" />
+    <Compile Include="Reporting\GrapheneReportSpecification.cs" />
     <Compile Include="Reporting\RestReportGenerator.cs" />
     <Compile Include="Tracking\Bucket.cs" />
     <Compile Include="Tracking\Container.cs" />

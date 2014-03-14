@@ -32,9 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Graphene">
-      <HintPath>..\packages\Graphene.0.1.10\lib\net45\Graphene.dll</HintPath>
-    </Reference>
     <Reference Include="MongoDB.Bson">
       <HintPath>..\packages\mongocsharpdriver.1.8.3\lib\net35\MongoDB.Bson.dll</HintPath>
     </Reference>
@@ -55,8 +52,14 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reporting\MongoReportGenerator.cs" />
+    <Compile Include="Reporting\ReportingExtensions.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Graphene\Graphene.csproj">
+      <Project>{df87eb29-8e53-4fed-a524-867ab76d71ca}</Project>
+      <Name>Graphene</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <None Include="Graphene.Mongo.nuspec" />
     <None Include="packages.config" />

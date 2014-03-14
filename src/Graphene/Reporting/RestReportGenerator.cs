@@ -7,10 +7,7 @@ using Graphene.Tracking;
 
 namespace Graphene.Reporting
 {
-    public interface IReportGenerator
-    {
-        IEnumerable<IAggregationResult> GeneratorReport(IReportSpecification specification);
-    }
+    
 
     public class RestReportGenerator : IReportGenerator
     {
@@ -23,7 +20,7 @@ namespace Graphene.Reporting
         }
 
 
-        public IEnumerable<IAggregationResult> GeneratorReport(IReportSpecification specification)
+        public ITrackerReportResults GeneratorReport(IReportSpecification specification)
         {
             using (var httpClient = new HttpClient())
             {
@@ -47,6 +44,32 @@ namespace Graphene.Reporting
             }
             return null;
         }
+
+        public ITrackerReportResults GeneratorReport(IReportSpecification specification, bool differentiation)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var task = httpClient.PostAsJsonAsync(_serviceUri.ToString(), specification)
+                                         .ContinueWith(x => x.Result.Content.ReadAsAsync<IEnumerable<IAggregationResult>>().Result);
+
+                task.ContinueWith(x =>
+                {
+                    if (task.IsFaulted)
+                    {
+                        if (task.Exception != null)
+                            throw new ReportGenerationException(task.Exception);
+
+                    }
+                    IEnumerable<IAggregationResult> results = task.Result;
+                    return results;
+                });
+
+                task.Wait();
+
+            }
+            return null;
+        }
+
     }
 
 

@@ -34,45 +34,46 @@ namespace Graphene.Reporting
 
         public static AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportSpecification<T, T1> reportSpecs)
         {
-            var queryResults = Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);
+            var aggregationResults = Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);
 
             var aggResults = new AggregationResults<T1> { Resolution = reportSpecs.Resolution };
 
-            if (queryResults == null)
+            if (aggregationResults == null)
                 return aggResults;
 
-            foreach (var qR in queryResults)
+            foreach (var aggregationResult in aggregationResults.AggregationResults)
             {
                 var aggResult = new AggregationResult<T1>();
-                aggResult.MesurementTimeUtc = qR.MesurementTimeUtc;
+                aggResult.MesurementTimeUtc = aggregationResult.MesurementTimeUtc;
 
-                foreach (var mV in qR.MeasurementValues)
+
+                aggResult.Occurrence = aggregationResult.Occurence;
+                aggResult.Total = aggregationResult.Total;
+
+
+
+                foreach (var mV in aggregationResult.MeasurementValues)
                 {
                     var type = aggResult.Tracker.GetType();
-                    if (mV.Key == "_Occurrence")
+
+
+                    var property = type.GetProperty(mV.PropertyName);
+                    if (property != null)
                     {
-                        aggResult.Occurrence = mV.Value;
+                        var convertedValue = Convert.ChangeType(mV.Value, property.PropertyType);
+                        property.SetValue(aggResult.Tracker, convertedValue);
                     }
-                    else if (mV.Key == "_Total")
-                    {
-                        aggResult.Total = mV.Value;
-                    }
-                    else
-                    {
-                        var property = type.GetProperty(mV.Key);
-                        if (property != null)
-                        {
-                            var convertedValue = Convert.ChangeType(mV.Value, property.PropertyType);
-                            property.SetValue(aggResult.Tracker, convertedValue);
-                        }
-                    }
+
                 }
                 aggResults.Results.Add(aggResult);
             }
+
             return aggResults;
         }
+
     }
-
-
 }
+
+
+
 

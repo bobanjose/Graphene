@@ -8,7 +8,11 @@ namespace Graphene.Reporting
 {
     public interface IReportGenerator
     {
-        IEnumerable<IQueryResults> GeneratorReport(IReportSpecification specification);
+        /*IEnumerable<IAggregationResult> GeneratorReport(IReportSpecification specification);*/
+
+        
+
+        ITrackerReportResults GeneratorReport(IReportSpecification specification);
 
     }
 }

@@ -11,7 +11,7 @@ namespace Graphene.API.Controllers
 {
     public class GrapheneReportController : ApiController
     {
-        public IEnumerable<IAggregationResult> Post(IReportSpecification reportSpecification)
+        public ITrackerReportResults Post(IReportSpecification reportSpecification)
         {
             var mongoReportGenerator = new MongoReportGenerator(ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString);
             return mongoReportGenerator.GeneratorReport(reportSpecification);
