@@ -32,15 +32,15 @@ namespace Graphene.Reporting
             ReportSpecification<T, T1> reportSpecs) 
         
         {
-            ITrackerReportResults aggregationResults =
+            ITrackerReportResults trackerReportResults =
                 Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);
 
             var aggResults = new AggregationResults<T1> {Resolution = reportSpecs.Resolution};
 
-            if (aggregationResults == null)
+            if (trackerReportResults == null)
                 return aggResults;
 
-            foreach (IAggregationResult aggregationResult in aggregationResults.AggregationResults)
+            foreach (IAggregationResult aggregationResult in trackerReportResults.AggregationResults)
             {
                 var aggResult = new AggregationResult<T1>();
                 aggResult.MesurementTimeUtc = aggregationResult.MesurementTimeUtc;

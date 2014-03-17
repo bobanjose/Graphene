@@ -7,12 +7,12 @@ using Newtonsoft.Json;
 namespace Graphene.Tests.Reporting
 {
     [TestClass]
-    public class GrapheneReportSpecificationTests
+    public class ReportSpecificationTests
     {
         [TestMethod]
         public void FirstTest()
         {
-            var specification = new GrapheneReportSpecification(new[] {typeof (CustomerAgeTracker)},
+            var specification = new ReportSpecification(new[] {typeof (CustomerAgeTracker)},
                 DateTime.UtcNow.AddDays(-100), DateTime.UtcNow, ReportResolution.Hour);
 
             Assert.IsTrue(specification.Counters.Any());

@@ -12,9 +12,4 @@
 
         string FullyQualifiedPropertyName { get; }
     }
-
-    public interface IMeasurementResult : IMeasurement
-    {
-        string Value { get; }
-    }
 }

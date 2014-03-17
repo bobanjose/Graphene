@@ -17,7 +17,7 @@ namespace Graphene.Mongo.IntegrationTests
         {
             var generator = new MongoReportGenerator("mongodb://localhost:9001/Graphene");
 
-            var spec = new GrapheneReportSpecification(new[] {typeof (PatientDemographicSearchMatchesTracker)},
+            var spec = new ReportSpecification(new[] {typeof (PatientDemographicSearchMatchesTracker)},
                 DateTime.UtcNow.AddDays(-100), DateTime.UtcNow, ReportResolution.Hour);
 
 
