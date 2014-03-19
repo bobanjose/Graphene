@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using Graphene.Tracking;
+using System.Linq;
 using Graphene.Util;
 
 namespace Graphene.Reporting
@@ -19,13 +18,13 @@ namespace Graphene.Reporting
     {
         IEnumerable<IFilterConditions> FilterCombinations { get; }
 
-        IEnumerable<string> Counters { get; }
+        IEnumerable<IMeasurement> Counters { get; }
 
         DateTime FromDateUtc { get; }
 
         DateTime ToDateUtc { get; }
 
-        string TrackerTypeName { get; }
+        IEnumerable<string> TypeNames { get; }
 
         ReportResolution Resolution { get; }
     }
@@ -37,7 +36,7 @@ namespace Graphene.Reporting
 
     internal class FilterConditions<TFilter> : IFilterConditions
     {
-        private List<string> _filters = new List<string>();
+        private readonly List<string> _filters = new List<string>();
 
         public FilterConditions(TFilter filter)
         {
@@ -49,5 +48,4 @@ namespace Graphene.Reporting
             get { return _filters; }
         }
     }
-
 }

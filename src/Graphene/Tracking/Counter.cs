@@ -6,22 +6,18 @@
 // Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, 
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Graphene.Tracking
 {
     internal class Counter
     {
-        long _occurance;
-        long _total;
+        private long _occurance;
+        private long _total;
 
-        internal ConcurrentDictionary<string, long> NamedMetrics { private set; get;}
+        private object syncLock = new object();
 
         internal Counter()
         {
@@ -30,11 +26,20 @@ namespace Graphene.Tracking
             KeyFilter = string.Empty;
         }
 
-        object syncLock = new object();
+        internal ConcurrentDictionary<string, long> NamedMetrics { private set; get; }
 
-        internal long Occurrence { get { return _occurance; } }
+        internal long Occurrence
+        {
+            get { return _occurance; }
+        }
 
-        internal long Total { get { return _total; } }
+        internal long Total
+        {
+            get { return _total; }
+        }
+
+        internal List<string> SearchTags { get; set; }
+        internal string KeyFilter { get; set; }
 
         internal void Increment(long by, string metricName)
         {
@@ -46,8 +51,5 @@ namespace Graphene.Tracking
                 NamedMetrics.AddOrUpdate(metricName, by, (i, t) => t + by);
             }
         }
-
-        internal List<string> SearchTags { get; set; }
-        internal string KeyFilter { get; set; }
     }
 }

@@ -1,22 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
+using System.Reflection;
 using Graphene.Tracking;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.Builders;
 
 namespace Graphene.Reporting
 {
     public class Reporter<T, T1>
         where T : struct
-        where T1 : ITrackable
+        where T1 : ITrackable, new()
     {
         public static ReportResolution GetResolutionFromDates(DateTime fromUtc, DateTime toUtc)
         {
             var resolution = ReportResolution.Hour;
 
-            var reportSpan = toUtc.Subtract(fromUtc).TotalDays;
+            double reportSpan = toUtc.Subtract(fromUtc).TotalDays;
 
             if (reportSpan > 3600)
                 resolution = ReportResolution.Year;
@@ -32,47 +28,44 @@ namespace Graphene.Reporting
             return resolution;
         }
 
-        public static AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportSpecification<T, T1> reportSpecs)
+        public static AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc,
+            ReportSpecification<T, T1> reportSpecs) 
+        
         {
-            var queryResults = Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);
+            ITrackerReportResults trackerReportResults =
+                Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);
 
-            var aggResults = new AggregationResults<T1> { Resolution = reportSpecs.Resolution };
+            var aggResults = new AggregationResults<T1> {Resolution = reportSpecs.Resolution};
 
-            if (queryResults == null)
+            if (trackerReportResults == null)
                 return aggResults;
 
-            foreach (var qR in queryResults)
+            foreach (IAggregationResult aggregationResult in trackerReportResults.AggregationResults)
             {
                 var aggResult = new AggregationResult<T1>();
-                aggResult.MesurementTimeUtc = qR.MesurementTimeUtc;
+                aggResult.MesurementTimeUtc = aggregationResult.MesurementTimeUtc;
 
-                foreach (var mV in qR.MeasurementValues)
+
+                aggResult.Occurrence = aggregationResult.Occurence;
+                aggResult.Total = aggregationResult.Total;
+
+
+                foreach (IMeasurementResult mV in aggregationResult.MeasurementValues)
                 {
-                    var type = aggResult.Tracker.GetType();
-                    if (mV.Key == "_Occurrence")
+                    Type type = aggResult.Tracker.GetType();
+
+
+                    PropertyInfo property = type.GetProperty(mV.PropertyName);
+                    if (property != null)
                     {
-                        aggResult.Occurrence = mV.Value;
-                    }
-                    else if (mV.Key == "_Total")
-                    {
-                        aggResult.Total = mV.Value;
-                    }
-                    else
-                    {
-                        var property = type.GetProperty(mV.Key);
-                        if (property != null)
-                        {
-                            var convertedValue = Convert.ChangeType(mV.Value, property.PropertyType);
-                            property.SetValue(aggResult.Tracker, convertedValue);
-                        }
+                        object convertedValue = Convert.ChangeType(mV.Value, property.PropertyType);
+                        property.SetValue(aggResult.Tracker, convertedValue);
                     }
                 }
                 aggResults.Results.Add(aggResult);
             }
+
             return aggResults;
         }
     }
-
-
 }
-

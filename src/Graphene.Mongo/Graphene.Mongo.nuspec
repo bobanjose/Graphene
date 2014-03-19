@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Graphene.Mongo</id>
-    <version>0.1.10</version>
+    <version>$version$</version>
     <title>Mongo Extensions for Graphene Framework</title>
     <authors>Boban Jose</authors>
     <owners>Boban Jose</owners>
@@ -18,8 +18,8 @@
     <copyright>Copyright 2014</copyright>
     <tags>Mongo Graphene Graphite BI Aggregation Aggregator</tags>
     <dependencies>
-      <dependency id="mongocsharpdriver"/>
-      <dependency id="Graphene" version="0.1.10"/>
+      <dependency id="mongocsharpdriver" version="1.8.3"/>
+      <dependency id="Graphene" version="0.2.1.0"/>
     </dependencies>
   </metadata>
 </package>

@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Graphene</id>
-    <version>0.1.10</version>
+    <version>$version$</version>
     <title>Graphene Framework</title>
     <authors>Boban Jose</authors>
     <owners>Boban Jose</owners>

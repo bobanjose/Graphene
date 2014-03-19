@@ -7,21 +7,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-
 using Graphene.Util;
 
 namespace Graphene.Tracking
 {
     internal class Bucket
     {
-        private ConcurrentDictionary<string, Counter> _counters;
-        private object _syncLock = new object();
-        private DateTime _expiresAfter;
+        private readonly ConcurrentDictionary<string, Counter> _counters;
+        private readonly DateTime _expiresAfter;
+        private readonly object _syncLock = new object();
+
         internal Bucket(int lifeTimeInSeconds, Resolution resolution)
         {
             _expiresAfter = DateTime.Now.AddSeconds(lifeTimeInSeconds);
@@ -47,11 +45,17 @@ namespace Graphene.Tracking
             }
         }
 
-        internal ConcurrentDictionary<string, Counter> Counters { get { return _counters; } }
+        internal ConcurrentDictionary<string, Counter> Counters
+        {
+            get { return _counters; }
+        }
 
         internal DateTime TimeSlot { get; private set; }
 
-        internal bool HasExpired { get { return DateTime.Now > _expiresAfter; } }
+        internal bool HasExpired
+        {
+            get { return DateTime.Now > _expiresAfter; }
+        }
 
         internal void IncrementCounter(long by)
         {
@@ -70,7 +74,7 @@ namespace Graphene.Tracking
 
         internal void IncrementCounter(long by, string metricName, object filter)
         {
-            var keyTag = string.Empty;
+            string keyTag = string.Empty;
             List<String> propertyNv = null;
 
             if (filter != null)
@@ -114,14 +118,14 @@ namespace Graphene.Tracking
             nvPairsDouble.AddRange(filters);
             nvPairsDouble.AddRange(filters);
 
-            for (var i = 0; i < filters.Count; i++)
+            for (int i = 0; i < filters.Count; i++)
             {
-                for (var k = 0; k < filters.Count; k++)
+                for (int k = 0; k < filters.Count; k++)
                 {
                     var tag = new List<string>();
-                    var skipped = 0;
-                    var picked = 0;
-                    for (var j = 0; j < nvPairsDouble.Count; j++)
+                    int skipped = 0;
+                    int picked = 0;
+                    for (int j = 0; j < nvPairsDouble.Count; j++)
                     {
                         if (skipped > i + k)
                         {
@@ -136,7 +140,7 @@ namespace Graphene.Tracking
                     tag.Sort();
                     if (tag.Count > 0)
                     {
-                        var newTag = tag.Aggregate((x, z) => string.Concat(x, ",,", z));
+                        string newTag = tag.Aggregate((x, z) => string.Concat(x, ",,", z));
                         if (!perms.Contains(newTag))
                         {
                             perms.Add(newTag);
