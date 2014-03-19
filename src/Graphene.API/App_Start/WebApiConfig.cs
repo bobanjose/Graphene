@@ -1,4 +1,11 @@
-﻿using System.Web.Http;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Web.Http;
+using Graphene.API.Controllers;
+using Graphene.API.Models;
+using Graphene.Reporting;
+using Newtonsoft.Json.Converters;
 
 namespace Graphene.API
 {
@@ -17,6 +24,46 @@ namespace Graphene.API
             // To disable tracing in your application, please comment out or remove the following line of code
             // For more information, refer to: http://www.asp.net/web-api
             config.EnableSystemDiagnosticsTracing();
+
+            config.Formatters.JsonFormatter.Indent = true;
+            config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());
+            config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new JsonConverterReportSpecificationConverter());
+            config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new JsonConverterMeasurementConverter());
+            config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new JsonConverterFilterCombinationsConverter());
+            
+            
+
+
         }
+    }
+
+    public class JsonConverterReportSpecificationConverter : CustomCreationConverter<IReportSpecification>
+    {
+        
+        public override IReportSpecification Create(Type objectType)
+        {
+            return new JsonReportSpecification();
+        }
+    }
+
+    public class JsonConverterFilterCombinationsConverter : CustomCreationConverter<IFilterConditions>
+    {
+        public override IFilterConditions Create(Type objectType)
+        {
+            return new JsonFilterCondition();
+        }
+
+     
+        
+    }
+
+    public class JsonConverterMeasurementConverter : CustomCreationConverter<IMeasurement>
+    {
+        public override IMeasurement Create(System.Type objectType)
+        {
+            return new JsonMeasurement();
+        }
+
+      
     }
 }
