@@ -19,7 +19,7 @@ namespace Graphene.Reporting
         }
 
         #region Implementation
-        public ITrackerReportResults GeneratorReport(IReportSpecification specification)
+        public ITrackerReportResults BuildReport(IReportSpecification specification)
         {
             using (var httpClient = new HttpClient())
             {

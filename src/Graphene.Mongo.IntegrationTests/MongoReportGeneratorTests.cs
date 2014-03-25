@@ -21,7 +21,7 @@ namespace Graphene.Mongo.IntegrationTests
                 DateTime.UtcNow.AddDays(-100), DateTime.UtcNow, ReportResolution.Hour);
 
 
-            ITrackerReportResults newresult = generator.GeneratorReport(spec);
+            ITrackerReportResults newresult = generator.BuildReport(spec);
 
             Assert.IsTrue(newresult.AggregationResults.Any());
 

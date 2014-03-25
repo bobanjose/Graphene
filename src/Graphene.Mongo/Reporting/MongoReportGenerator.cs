@@ -36,7 +36,7 @@ namespace Graphene.Mongo.Reporting
 
         #region public methods
 
-        public ITrackerReportResults GeneratorReport(IReportSpecification specification)
+        public ITrackerReportResults BuildReport(IReportSpecification specification)
         {
             BsonDocument match = buildMatchCondition(specification);
             BsonDocument projection = buildProjection(specification);
