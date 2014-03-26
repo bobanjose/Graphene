@@ -12,7 +12,8 @@ namespace Graphene.API.Controllers
             var mongoReportGenerator =
                 new MongoReportGenerator(
                     ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString);
-            return mongoReportGenerator.GeneratorReport(reportSpecification);
+            var returnResult =  mongoReportGenerator.BuildReport(reportSpecification);
+            return returnResult;
         }
     }
 }
