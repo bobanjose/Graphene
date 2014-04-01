@@ -5,13 +5,18 @@ namespace Graphene.Reporting
 {
     internal class FilterConditions : IFilterConditions
     {
-        private readonly List<string> _filters;
+        private readonly IEnumerable<string> _filters;
 
         public FilterConditions(object filter)
         {
             _filters = filter.GetPropertyNameValueList();
         }
 
+        public FilterConditions(IEnumerable<string> filters)
+        {
+            _filters = filters;
+
+        }
 
         public IEnumerable<string> Filters
         {

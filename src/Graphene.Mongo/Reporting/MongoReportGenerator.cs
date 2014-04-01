@@ -215,7 +215,7 @@ namespace Graphene.Mongo.Reporting
         {
             List<IMongoQuery> orQueries = specification.FilterCombinations
                 .Select(filter =>
-                    Query.All("SearchFilters", new BsonArray(filter.Filters))).ToList();
+                    Query.In("SearchFilters", new BsonArray(filter.Filters))).ToList();
 
             if (orQueries.Any())
             {

@@ -49,17 +49,16 @@
     <Reference Include="Autofac.Integration.WebApi">
       <HintPath>..\packages\Autofac.WebApi.3.1.0\lib\net40\Autofac.Integration.WebApi.dll</HintPath>
     </Reference>
-    <Reference Include="Graphene, Version=0.2.6.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Graphene, Version=0.2.6.1, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Graphene.0.2.6.0\lib\net45\Graphene.dll</HintPath>
+      <HintPath>..\packages\Graphene.0.2.6.1\lib\net45\Graphene.dll</HintPath>
     </Reference>
     <Reference Include="Graphene.Log4net">
       <HintPath>..\packages\Graphene.Log4net.0.2.6.0\lib\net45\Graphene.Log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Graphene.Mongo, Version=0.2.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Graphene.Mongo.0.2.6.0\lib\net45\Graphene.Mongo.dll</HintPath>
+    <Reference Include="Graphene.Mongo">
+      <HintPath>..\packages\Graphene.Mongo.0.2.6.5\lib\net45\Graphene.Mongo.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

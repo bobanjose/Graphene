@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Graphene.Attributes;
 using Graphene.Tracking;
+using Graphene.Util;
 
 namespace Graphene.Reporting
 {
@@ -42,6 +43,8 @@ namespace Graphene.Reporting
             buildListOfMeasurementsForTracker(new[] {typeof (TTracker)});
             TypeNames = new[] {typeof (TTracker).FullName};
         }
+
+        
 
 
         public IEnumerable<IFilterConditions> FilterCombinations
@@ -106,13 +109,23 @@ namespace Graphene.Reporting
 
 
         public ReportSpecification(IEnumerable<Type> trackerType, DateTime fromDateUtc, DateTime toDateUtc,
-            ReportResolution resolution, params object[] filters)
+            ReportResolution resolution, params object[] filters) : this( trackerType,filters,fromDateUtc, toDateUtc, resolution )
         {
+            
+        }
+
+        public ReportSpecification(IEnumerable<Type> trackerType, IEnumerable<object> filters, DateTime fromDateUtc,
+            DateTime toDateUtc, ReportResolution resolution)
+        {
+            if(trackerType == null || !trackerType.Any())
+                throw  new ArgumentException("You must provide at least one Tracker Type to measure!");
+
             _fromDateUtc = fromDateUtc;
             _toDateUtc = toDateUtc;
             _resolution = resolution;
             buildFilterList(filters);
             buildListOfMeasurementsForTracker(trackerType);
+
         }
 
         public IEnumerable<IFilterConditions> FilterCombinations
@@ -146,7 +159,9 @@ namespace Graphene.Reporting
 
         private void buildListOfMeasurementsForTracker(IEnumerable<Type> trackables)
         {
-            _counters = trackables.SelectMany((x, y) => x.GetProperties()).
+            
+
+            _counters = trackables.Distinct().SelectMany((x, y) => x.GetProperties()).
                 Where(x => (!_trackableProperties.Contains(x.Name))
                            ||
                            (x.GetCustomAttribute(typeof(MeasurableAttribute)) != null))
@@ -154,9 +169,9 @@ namespace Graphene.Reporting
             TypeNames = _counters.Select(x => x.TrackerTypeName).Distinct();
         }
 
-        private void buildFilterList(params object[] filters)
+        private void buildFilterList(IEnumerable<object> filters)
         {
-            _filterCombinations = filters.Select(x => new FilterConditions(x)).ToList();
+            _filterCombinations = filters.BuildFilterConditionList();
         }
     }
     #endregion
