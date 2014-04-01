@@ -54,6 +54,7 @@ namespace Graphene.Reporting
         internal class InternalAggregationResult : IAggregationResult
         {
             public ushort TimeSlice { get; set; }
+            public string TypeName { get; set; }
             public DateTime MesurementTimeUtc { get; set; }
 
 
@@ -61,11 +62,7 @@ namespace Graphene.Reporting
 
             public long Occurence { get; set; }
             public long Total { get; set; }
-
-            public IMeasurementResult AddMeasurementResult(IMeasurement measurement, string value)
-            {
-                throw new NotImplementedException();
-            }
+          
         }
 
         internal class InternalTrackerReportResults : ITrackerReportResults

@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Reflection;
 using System.Web.Http;
+using Autofac;
+using Autofac.Integration.WebApi;
 using Graphene.API.Controllers;
 using Graphene.API.Models;
+using Graphene.Configuration;
+using Graphene.Mongo.Reporting;
 using Graphene.Reporting;
 using Newtonsoft.Json.Converters;
 
@@ -30,9 +36,41 @@ namespace Graphene.API
             config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new JsonConverterReportSpecificationConverter());
             config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new JsonConverterMeasurementConverter());
             config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new JsonConverterFilterCombinationsConverter());
+
+            var builder = new ContainerBuilder();
+
+            // Register the Web API controllers.
+            builder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+
+
+            
+
+
+            builder.RegisterType<GrapheneLog4NetLogger>().As<ILogger>();
+
+            // Build the container.
+            
+            // Configure Web API with the dependency resolver.
             
             
 
+            // Graphene.Configurator.Initialize(new Settings() { Persister = new PersistToMongo(container.Resolve<IConfiguration>().ReportingStoreConnectionString), Logger = container.Resolve<ILogger>() });
+            builder.Register(x =>
+            {
+                var _logger = x.Resolve<ILogger>();
+                var mongoReportGenerator =
+                    new MongoReportGenerator(
+                        ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString, _logger);
+                return mongoReportGenerator;
+            }).As<IReportGenerator>();
+
+
+            var container = builder.Build();
+
+            // Create the depenedency resolver.
+            var resolver = new AutofacWebApiDependencyResolver(container);
+
+            GlobalConfiguration.Configuration.DependencyResolver = resolver;
 
         }
     }

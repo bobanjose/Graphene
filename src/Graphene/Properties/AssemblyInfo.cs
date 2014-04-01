@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Graphene")]
 [assembly:
     AssemblyDescription(
-        "A highly saleable BI framework writing in C#. Graphene can be used to track various Metrics similar to Graphite framework. It pre-aggregates the data and uses a document store (like MongoDB/RavenDB) to store the pre-aggregated data. Graphene also supports adding filters to a Metrics."
+        "A highly scaleable BI framework writing in C#. Graphene can be used to track various Metrics similar to Graphite framework. It pre-aggregates the data and uses a document store (like MongoDB/RavenDB) to store the pre-aggregated data. Graphene also supports adding filters to a Metrics."
         )]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Boban Jose")]
@@ -38,5 +38,5 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("0.2.3.0")]
-[assembly: AssemblyFileVersion("0.2.3.0")]
+[assembly: AssemblyVersion("0.2.6.0")]
+[assembly: AssemblyFileVersion("0.2.6.0")]
