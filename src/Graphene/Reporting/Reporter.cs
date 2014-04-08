@@ -33,7 +33,7 @@ namespace Graphene.Reporting
         
         {
             ITrackerReportResults trackerReportResults =
-                Configurator.Configuration.ReportGenerator.GeneratorReport(reportSpecs);
+                Configurator.Configuration.ReportGenerator.BuildReport(reportSpecs);
 
             var aggResults = new AggregationResults<T1> {Resolution = reportSpecs.Resolution};
 

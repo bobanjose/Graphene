@@ -5,6 +5,7 @@ using Graphene.Configuration;
 using Graphene.Mongo.Reporting;
 using Graphene.Publishing;
 using Graphene.Reporting;
+using Graphene.Tests.Fakes;
 using Graphene.Tracking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -14,6 +15,8 @@ namespace Graphene.Tests.Reporting
     public class QueryTest
     {
         //Most of the tests below are integration type tests and can only be run in isolation (individually)
+
+        private FakeLogger _fakeLogger = new FakeLogger();
 
         [TestMethod]
         public void GivenAQueryWithTwoFilters_WhenBuildingTheList_AppropriateFiltersAreConverted()
@@ -67,7 +70,7 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister = new PersistToMongo("mongodb://localhost:9001/Graphene"),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene")
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene",_fakeLogger)
                 }
                 );
 
@@ -99,7 +102,7 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister = new PersistToMongo("mongodb://localhost:9001/Graphene"),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene")
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger)
                 }
                 );
 
@@ -133,7 +136,7 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister = new PersistToMongo("mongodb://localhost:9001/Graphene"),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene")
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene",_fakeLogger)
                 }
                 );
 
@@ -159,7 +162,7 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister = new PersistToMongo("mongodb://localhost:9001/Graphene"),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene")
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene",_fakeLogger)
                 }
                 );
 
@@ -194,7 +197,7 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister = new PersistToMongo("mongodb://localhost:9001/Graphene"),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene")
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger)
                 }
                 );
 
@@ -228,7 +231,7 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister = new PersistToMongo("mongodb://localhost:9001/Graphene"),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene")
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger)
                 }
                 );
 
@@ -268,7 +271,7 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister = new PersistToMongo("mongodb://localhost:9001/Graphene"),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene")
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger)
                 }
                 );
 

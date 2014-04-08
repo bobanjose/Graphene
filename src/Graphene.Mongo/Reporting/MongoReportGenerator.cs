@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Graphene.Configuration;
 using Graphene.Reporting;
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using Newtonsoft.Json.Linq;
@@ -13,15 +16,17 @@ namespace Graphene.Mongo.Reporting
     {
         private const string COLLECTION_NAME = "TrackerData";
         private static string _connectionString;
+        private readonly ILogger _logger;
 
         private readonly Lazy<MongoCollection> _mongoCollection =
             new Lazy<MongoCollection>(() => initializeMongoCollection());
 
         #region Initialization
 
-        public MongoReportGenerator(string connectionString)
+        public MongoReportGenerator(string connectionString, ILogger logger)
         {
             _connectionString = connectionString;
+            _logger = logger;
         }
 
         private static MongoCollection initializeMongoCollection()
@@ -36,20 +41,20 @@ namespace Graphene.Mongo.Reporting
 
         #region public methods
 
-        public ITrackerReportResults GeneratorReport(IReportSpecification specification)
+        public ITrackerReportResults BuildReport(IReportSpecification specification)
         {
             BsonDocument match = buildMatchCondition(specification);
             BsonDocument projection = buildProjection(specification);
             BsonDocument group = buildResultGroup(specification);
-
-
-            var pipeline = new[] { match, projection, group };
-
+            var pipeline = new[] {match, projection, group};
             AggregateResult queryResults = _mongoCollection.Value.Aggregate(pipeline);
 
             if (!(queryResults.Ok && queryResults.ResultDocuments.Any()))
-                return null;
-
+                _logger.Debug(string.Format("No Results Returned for Aggregation Pipeline: {0} {1}", pipeline.ToJson(),
+                    System.Environment.NewLine));
+            else
+                _logger.Debug(string.Format("Results Returned for Aggregation Pipeline: {0} {1}", pipeline.ToJson(),
+                    System.Environment.NewLine));
 
             return ToMongoAggregationResult(specification, queryResults);
         }
@@ -58,85 +63,9 @@ namespace Graphene.Mongo.Reporting
 
         #region Static Mongo Aggregation Builders
 
-        private static BsonDocument buildProjectionOrig(IReportSpecification specification)
-        {
-            var year = new BsonElement("year", new BsonDocument("$year", new BsonString("$TimeSlot")));
-            var month = new BsonElement("month", new BsonDocument("$month", new BsonString("$TimeSlot")));
-            var day = new BsonElement("day", new BsonDocument("$dayOfMonth", new BsonString("$TimeSlot")));
-            var hour = new BsonElement("hour", new BsonDocument("$hour", new BsonString("$TimeSlot")));
-            var minute = new BsonElement("minute", new BsonDocument("$minute", new BsonString("$TimeSlot")));
-
-            List<BsonElement> timeParts;
-            switch (specification.Resolution)
-            {
-                case ReportResolution.Year:
-                    timeParts = new List<BsonElement> { year };
-                    break;
-                case ReportResolution.Month:
-                    timeParts = new List<BsonElement> { year, month };
-                    break;
-                case ReportResolution.Day:
-                    timeParts = new List<BsonElement> { year, month, day };
-                    break;
-                case ReportResolution.Hour:
-                    timeParts = new List<BsonElement> { year, month, day, hour };
-                    break;
-                default:
-                    timeParts = new List<BsonElement> { year, month, day, hour, minute };
-                    break;
-            }
-
-            var time = new BsonElement("Time", new BsonDocument(timeParts));
-
-            var measurements = new List<BsonElement>();
-            measurements.AddRange(new[]
-            {
-                new BsonElement("Measurement._Occurrence", "$Measurement._Occurrence"),
-                new BsonElement("Measurement._Total", "$Measurement._Total")
-            });
-            measurements.AddRange(specification.Counters.Select(
-                counter =>
-                    new BsonElement(string.Format("Measurement.{0}", counter.PropertyName),
-                        string.Format("$Measurement.{0}", counter.PropertyName))));
-
-            var projectElements = new List<BsonElement>();
-            projectElements.Add(time);
-            projectElements.AddRange(measurements);
-
-            var projection = new BsonDocument
-            {
-                {
-                    "$project",
-                    new BsonDocument(projectElements)
-                }
-            };
-            return projection;
-        }
-
-        private static BsonDocument buildMatchConditionOrig(IReportSpecification specification)
-        {
-            IMongoQuery orClause = null; //createFilteredOrClause(specification);
-            IMongoQuery typeNameClause = Query.EQ("TypeName", specification.Counters.First().TrackerTypeName);
-            IMongoQuery dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
-                Query.LTE("TimeSlot", specification.ToDateUtc));
-
-            var conditions = new BsonDocument(dateClause.ToBsonDocument());
-            conditions.AddRange(typeNameClause.ToBsonDocument());
-            if (orClause != null)
-                conditions.AddRange(orClause.ToBsonDocument());
-            var match = new BsonDocument
-            {
-                {
-                    "$match", conditions
-                }
-            };
-            return match;
-        }
-
-
         private static MongoAggregationResult ToMongoAggregationResult(object mr)
         {
-            var jO = (JObject)mr;
+            var jO = (JObject) mr;
 
             JToken dateTime = jO["UtcDateTime"];
             int year = dateTime["year"] != null ? Convert.ToInt32(dateTime["year"]) : DateTime.MinValue.Year;
@@ -163,29 +92,34 @@ namespace Graphene.Mongo.Reporting
         }
 
         private static ITrackerReportResults ToMongoAggregationResult(IReportSpecification specification,
-            AggregateResult result)
+            AggregateResult queryResults)
         {
             const string utcDateKey = "UtcDateTime";
             const string totalKey = "_Total";
             const string occurrenceKey = "_Occurrence";
-            int count = result.ResultDocuments.Count();
-            List<string> names =
-                result.ResultDocuments.First().Names.Where(x => !(x == utcDateKey || x == "_id")).ToList();
 
             var results = new MongoTrackerResults(specification);
 
+            if (! queryResults.ResultDocuments.Any())
+                return results;
 
-            foreach (BsonDocument document in result.ResultDocuments)
+            int count = queryResults.ResultDocuments.Count();
+            List<string> names =
+                queryResults.ResultDocuments.First().Names.Where(x => !(x == utcDateKey || x == "_id")).ToList();
+
+            foreach (BsonDocument document in queryResults.ResultDocuments)
             {
                 BsonDocument dateTime = document[utcDateKey].AsBsonDocument;
 
                 long total = document[totalKey].ToInt64();
                 long occurrence = document[occurrenceKey].ToInt64();
+                string typeName = document["_id"]["Type"].AsString;
                 DateTime utcDateTime = ConvertDateTimeDocumentToDateTime(dateTime);
 
 
-                IAggregationResult trackerResult = results.AddAggregationResult(utcDateTime, occurrence, total);
-                foreach (string key in names)
+                IAggregationBuildableResult trackerResult = results.AddAggregationResult(utcDateTime, typeName, occurrence, total);
+                var relevantNames = names.Where(x => x.GetFullyQualifiedNameFromFormattedString().StartsWith(typeName));
+                foreach (string key in relevantNames )
                 {
                     string fullyQualifiedName = key.GetFullyQualifiedNameFromFormattedString();
                     BsonValue measurementResult = document[key];
@@ -199,13 +133,20 @@ namespace Graphene.Mongo.Reporting
             return results;
         }
 
+        #endregion  Static Mongo Aggregation Builders
+
+        #region Aggregation Query Builders
+
         private static BsonDocument buildResultGroup(IReportSpecification specification)
         {
-            var elements = new List<BsonElement> { new BsonElement("_id", new BsonString("$Time")) };
+            var timeElement = new BsonElement("Time", "$Time");
+            var typeElement = new BsonElement("Type", "$Type");
+            BsonDocument idDocument = new BsonDocument(new List<BsonElement>() {timeElement, typeElement});
+            var elements = new List<BsonElement> {new BsonElement("_id", idDocument)};
             elements.AddRange(specification.Counters.Select(
                 counter => new BsonElement(counter.FormatFieldName(), new BsonDocument
                 {
-                    {"$sum", string.Format("$Measurement.{0}", counter.PropertyName)}
+                    {"$sum", string.Format("$Measurement.{0}", counter.FullyQualifiedPropertyName)}
                 })));
 
             elements.AddRange(new[]
@@ -234,45 +175,11 @@ namespace Graphene.Mongo.Reporting
             return @group;
         }
 
-        private static BsonDocument buildResultGroupOrig(IReportSpecification specification)
-        {
-            var elements = new List<BsonElement> { new BsonElement("_id", new BsonString("$Time")) };
-            elements.AddRange(specification.Counters.Select(
-                counter => new BsonElement(counter.PropertyName, new BsonDocument
-                {
-                    {"$sum", string.Format("$Measurement.{0}", counter.PropertyName)}
-                })));
-
-            elements.AddRange(new[]
-            {
-                new BsonElement("_Occurrence", new BsonDocument
-                {
-                    {"$sum", "$Measurement._Occurrence"}
-                }),
-                new BsonElement("_Total", new BsonDocument
-                {
-                    {"$sum", "$Measurement._Total"}
-                }),
-                new BsonElement("UtcDateTime", new BsonDocument
-                {
-                    {"$last", "$Time"}
-                })
-            });
-
-            var group = new BsonDocument
-            {
-                {
-                    "$group",
-                    new BsonDocument(elements)
-                }
-            };
-            return @group;
-        }
 
         private static BsonDocument buildMatchCondition(IReportSpecification specification)
         {
-            IMongoQuery orClause = createSearchClauseForAllFilters(specification);
-            IMongoQuery typeNameClause = createSearchClauseForAllTypes(specification);
+            IMongoQuery orClause = createSearchClauseForAnyFilter(specification);
+            IMongoQuery typeNameClause = createSearchClauseForAnyType(specification);
             // Query.EQ("TypeName", specification.TrackerTypeName);
             IMongoQuery dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
                 Query.LTE("TimeSlot", specification.ToDateUtc));
@@ -304,11 +211,11 @@ namespace Graphene.Mongo.Reporting
             return orClause;
         }
 
-        private static IMongoQuery createSearchClauseForAllFilters(IReportSpecification specification)
+        private static IMongoQuery createSearchClauseForAnyFilter(IReportSpecification specification)
         {
             List<IMongoQuery> orQueries = specification.FilterCombinations
                 .Select(filter =>
-                    Query.All("SearchFilters", new BsonArray(filter.Filters))).ToList();
+                    Query.In("SearchFilters", new BsonArray(filter.Filters))).ToList();
 
             if (orQueries.Any())
             {
@@ -319,9 +226,9 @@ namespace Graphene.Mongo.Reporting
         }
 
 
-        private static IMongoQuery createSearchClauseForAllTypes(IReportSpecification specification)
+        private static IMongoQuery createSearchClauseForAnyType(IReportSpecification specification)
         {
-            IMongoQuery orQueries = Query.All("TypeName", new BsonArray(specification.TypeNames));
+            IMongoQuery orQueries = Query.In("TypeName", new BsonArray(specification.TypeNames));
 
 
             IMongoQuery orClause = Query.Or(orQueries);
@@ -340,24 +247,24 @@ namespace Graphene.Mongo.Reporting
             switch (specification.Resolution)
             {
                 case ReportResolution.Year:
-                    timeParts = new List<BsonElement> { year };
+                    timeParts = new List<BsonElement> {year};
                     break;
                 case ReportResolution.Month:
-                    timeParts = new List<BsonElement> { year, month };
+                    timeParts = new List<BsonElement> {year, month};
                     break;
                 case ReportResolution.Day:
-                    timeParts = new List<BsonElement> { year, month, day };
+                    timeParts = new List<BsonElement> {year, month, day};
                     break;
                 case ReportResolution.Hour:
-                    timeParts = new List<BsonElement> { year, month, day, hour };
+                    timeParts = new List<BsonElement> {year, month, day, hour};
                     break;
                 default:
-                    timeParts = new List<BsonElement> { year, month, day, hour, minute };
+                    timeParts = new List<BsonElement> {year, month, day, hour, minute};
                     break;
             }
 
             var time = new BsonElement("Time", new BsonDocument(timeParts));
-
+            var type = new BsonElement("Type", "$TypeName");
             var measurements = new List<BsonElement>();
             measurements.AddRange(new[]
             {
@@ -366,11 +273,14 @@ namespace Graphene.Mongo.Reporting
             });
             measurements.AddRange(specification.Counters.Select(
                 counter =>
-                    new BsonElement(string.Format("Measurement.{0}", counter.PropertyName),
+                    new BsonElement(
+                        string.Format("Measurement.{0}",
+                            counter.FullyQualifiedPropertyName.GetFullyQualifiedNameFromFormattedString()),
                         string.Format("$Measurement.{0}", counter.PropertyName))));
 
             var projectElements = new List<BsonElement>();
             projectElements.Add(time);
+            projectElements.Add(type);
             projectElements.AddRange(measurements);
 
             var projection = new BsonDocument
@@ -398,9 +308,9 @@ namespace Graphene.Mongo.Reporting
             return new DateTime(year, month, day, hour, minute, 0);
         }
 
-        #endregion  Static Mongo Aggregation Builders
+        #endregion Aggregation Query Builders
 
-        private class MongoTrackerResults : ITrackerReportResults
+        private class MongoTrackerResults : ITrackerReportResultsBuilder
         {
             private readonly List<IAggregationResult> _aggregationResults = new List<IAggregationResult>();
             private readonly DateTime _fromDateUtc;
@@ -414,12 +324,7 @@ namespace Graphene.Mongo.Reporting
                 _resolution = specification.Resolution;
             }
 
-            public IAggregationResult AddAggregationResult(DateTime mesurementTimeUtc, long occurence, long total)
-            {
-                var aggregationResultToReturn = new MongoTrackingAggregationResult(mesurementTimeUtc, occurence, total);
-                _aggregationResults.Add(aggregationResultToReturn);
-                return aggregationResultToReturn;
-            }
+            
 
             public DateTime FromDateUtc
             {
@@ -441,7 +346,14 @@ namespace Graphene.Mongo.Reporting
                 get { return _resolution; }
             }
 
-            private class MongoTrackingAggregationResult : IAggregationResult
+            public IAggregationBuildableResult AddAggregationResult(DateTime mesurementTimeUtc, string typeName, long occurence, long total)
+            {
+                var aggregationResultToReturn = new MongoTrackingAggregationResult(mesurementTimeUtc, typeName, occurence, total);
+                _aggregationResults.Add(aggregationResultToReturn);
+                return aggregationResultToReturn;
+            }
+
+            private class MongoTrackingAggregationResult : IAggregationBuildableResult
             {
                 private readonly List<IMeasurementResult> _measurementValues;
                 private DateTime _mesurementTimeUtc;
@@ -449,9 +361,10 @@ namespace Graphene.Mongo.Reporting
                 /// <summary>
                 ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
                 /// </summary>
-                public MongoTrackingAggregationResult(DateTime mesurementTimeUtc, long occurence, long total)
+                public MongoTrackingAggregationResult(DateTime mesurementTimeUtc, string typeName, long occurence, long total)
                 {
                     _mesurementTimeUtc = mesurementTimeUtc;
+                    TypeName = typeName;
                     Occurence = occurence;
                     Total = total;
 
@@ -468,6 +381,7 @@ namespace Graphene.Mongo.Reporting
 
 
                 public ushort TimeSlice { get; set; }
+                public string TypeName { get; set; }
 
                 public DateTime MesurementTimeUtc
                 {
@@ -487,15 +401,13 @@ namespace Graphene.Mongo.Reporting
 
                 private class MongoMeasurementResult : IMeasurementResult
                 {
-                    
-
                     public MongoMeasurementResult(IMeasurement inboundMeasurement, string value)
                     {
                         Value = value;
                         PropertyName = inboundMeasurement.PropertyName;
-                        TrackerTypeName = inboundMeasurement.TrackerTypeName;
                         DisplayName = inboundMeasurement.DisplayName;
                         Description = inboundMeasurement.Description;
+                        TrackerTypeName = inboundMeasurement.TrackerTypeName;
                         FullyQualifiedPropertyName = string.Format("{0}.{1}", TrackerTypeName, PropertyName);
                     }
 
@@ -528,3 +440,123 @@ namespace Graphene.Mongo.Reporting
         public Dictionary<string, long> MeasurementValues { get; private set; }
     }
 }
+
+/*
+private static BsonDocument buildProjectionOrig(IReportSpecification specification)
+        {
+            var year = new BsonElement("year", new BsonDocument("$year", new BsonString("$TimeSlot")));
+            var month = new BsonElement("month", new BsonDocument("$month", new BsonString("$TimeSlot")));
+            var day = new BsonElement("day", new BsonDocument("$dayOfMonth", new BsonString("$TimeSlot")));
+            var hour = new BsonElement("hour", new BsonDocument("$hour", new BsonString("$TimeSlot")));
+            var minute = new BsonElement("minute", new BsonDocument("$minute", new BsonString("$TimeSlot")));
+
+            List<BsonElement> timeParts;
+            switch (specification.Resolution)
+            {
+                case ReportResolution.Year:
+                    timeParts = new List<BsonElement> {year};
+                    break;
+                case ReportResolution.Month:
+                    timeParts = new List<BsonElement> {year, month};
+                    break;
+                case ReportResolution.Day:
+                    timeParts = new List<BsonElement> {year, month, day};
+                    break;
+                case ReportResolution.Hour:
+                    timeParts = new List<BsonElement> {year, month, day, hour};
+                    break;
+                default:
+                    timeParts = new List<BsonElement> {year, month, day, hour, minute};
+                    break;
+            }
+
+            var time = new BsonElement("Time", new BsonDocument(timeParts));
+            var typeElement = new BsonElement("Type", "$TypeName");
+
+            var measurements = new List<BsonElement>();
+            measurements.AddRange(new[]
+            {
+                new BsonElement("Measurement._Occurrence", "$Measurement._Occurrence"),
+                new BsonElement("Measurement._Total", "$Measurement._Total")
+            });
+            measurements.AddRange(specification.Counters.Select(
+                counter =>
+                    new BsonElement(string.Format("Measurement.{0}", counter.PropertyName),
+                        string.Format("$Measurement.{0}", counter.PropertyName))));
+
+            var projectElements = new List<BsonElement>();
+
+            projectElements.Add(typeElement);
+            projectElements.Add(time);
+            projectElements.AddRange(measurements);
+
+            var projection = new BsonDocument
+            {
+                {
+                    "$project",
+                    new BsonDocument(projectElements)
+                }
+            };
+            return projection;
+        }
+
+        private static BsonDocument buildMatchConditionOrig(IReportSpecification specification)
+        {
+            IMongoQuery orClause = null; //createFilteredOrClause(specification);
+            IMongoQuery typeNameClause = Query.EQ("TypeName", specification.Counters.First().TrackerTypeName);
+            IMongoQuery dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
+                Query.LTE("TimeSlot", specification.ToDateUtc));
+
+            var conditions = new BsonDocument(dateClause.ToBsonDocument());
+            conditions.AddRange(typeNameClause.ToBsonDocument());
+            if (orClause != null)
+                conditions.AddRange(orClause.ToBsonDocument());
+            var match = new BsonDocument
+            {
+                {
+                    "$match", conditions
+                }
+            };
+            return match;
+        }
+   private static BsonDocument buildResultGroupOrig(IReportSpecification specification)
+        {
+            var elements = new List<BsonElement> {new BsonElement("_id", new BsonString("$Time"))};
+            elements.AddRange(specification.Counters.Select(
+                counter => new BsonElement(counter.PropertyName, new BsonDocument
+                {
+                    {"$sum", string.Format("$Measurement.{0}", counter.PropertyName)}
+                })));
+
+            elements.AddRange(new[]
+            {
+                new BsonElement("_Occurrence", new BsonDocument
+                {
+                    {"$sum", "$Measurement._Occurrence"}
+                }),
+                new BsonElement("_Total", new BsonDocument
+                {
+                    {"$sum", "$Measurement._Total"}
+                }),
+                new BsonElement("UtcDateTime", new BsonDocument
+                {
+                    {"$last", "$Time"}
+                })
+            });
+
+            var group = new BsonDocument
+            {
+                {
+                    "$group",
+                    new BsonDocument(elements)
+                }
+            };
+            return @group;
+        }* 
+ * 
+ * 
+ * 
+
+ * 
+ * 
+*/

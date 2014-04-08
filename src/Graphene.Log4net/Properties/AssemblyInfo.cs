@@ -1,28 +1,29 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-
-[assembly: AssemblyTitle("Graphene.Mongo")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Graphene.Log4net")]
+[assembly:
+    AssemblyDescription(
+        "A logging implementation for Graphene based upon Log4net."
+        )]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("RelayHealth")]
-[assembly: AssemblyProduct("Graphene.Mongo")]
-[assembly: AssemblyCopyright("Copyright © RelayHealth 2014")]
+[assembly: AssemblyCompany("Boban Jose")]
+[assembly: AssemblyProduct("Graphene")]
+[assembly: AssemblyCopyright("Copyright © Boban Jose 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
-
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-
-[assembly: Guid("07a01ede-5dba-41ea-a045-1f44eb7856a9")]
+[assembly: Guid("04ad3691-ffe1-4ca7-a044-24bae5916d30")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,6 +35,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-
-[assembly: AssemblyVersion("0.2.6.5")]
-[assembly: AssemblyFileVersion("0.2.6.5")]
+[assembly: AssemblyVersion("0.2.6.0")]
+[assembly: AssemblyFileVersion("0.2.6.0")]

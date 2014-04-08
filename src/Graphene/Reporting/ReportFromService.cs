@@ -12,7 +12,7 @@ namespace Graphene.Reporting
             _serviceUrl = serviceUrl;
         }
 
-        public ITrackerReportResults GeneratorReport(IReportSpecification specification)
+        public ITrackerReportResults BuildReport(IReportSpecification specification)
         {
             //this has not been tested!!!!
             try

@@ -2,6 +2,7 @@
 using System.Linq;
 using CommonWell.Framework.Reporting.Trackers;
 using Graphene.Attributes;
+using Graphene.Configuration;
 using Graphene.Mongo.Reporting;
 using Graphene.Reporting;
 using Graphene.Tracking;
@@ -12,16 +13,44 @@ namespace Graphene.Mongo.IntegrationTests
     [TestClass]
     public class MongoReportGeneratorTests
     {
+
+        public class FakeLogger : ILogger
+        {
+            public void Debug(string message)
+            {
+            
+            }
+
+            public void Info(string message)
+            {
+            
+            }
+
+            public void Warn(string message)
+            {
+            
+            }
+
+            public void Error(string message, Exception ex)
+            {
+            
+            }
+        }
+
+        private FakeLogger  _fakeLogger = new FakeLogger();
+
         [TestMethod]
         public void GivenATrackerWithNoCustomFields_WhenIncrementingTraker_ThenTotalReflectsIncrementAndNoOccurencesIsSet()
         {
-            var generator = new MongoReportGenerator("mongodb://localhost:9001/Graphene");
+
+
+            var generator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger);
 
             var spec = new ReportSpecification(new[] {typeof (PatientDemographicSearchMatchesTracker)},
                 DateTime.UtcNow.AddDays(-100), DateTime.UtcNow, ReportResolution.Hour);
 
 
-            ITrackerReportResults newresult = generator.GeneratorReport(spec);
+            ITrackerReportResults newresult = generator.BuildReport(spec);
 
             Assert.IsTrue(newresult.AggregationResults.Any());
 

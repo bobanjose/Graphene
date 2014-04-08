@@ -19,6 +19,7 @@
     <dependencies>
       <dependency id="mongocsharpdriver"/>
       <dependency id="Microsoft.Tpl.Dataflow"/>
+      <dependency id="Newtonsoft.Json" version="6.0.0" />
     </dependencies>
   </metadata>
 </package>
