@@ -97,6 +97,7 @@ namespace Graphene.Mongo.Reporting
             const string utcDateKey = "UtcDateTime";
             const string totalKey = "_Total";
             const string occurrenceKey = "_Occurrence";
+            const string KEY_FILTER = "KeyFilter";
 
             var results = new MongoTrackerResults(specification);
 
@@ -114,10 +115,10 @@ namespace Graphene.Mongo.Reporting
                 long total = document[totalKey].ToInt64();
                 long occurrence = document[occurrenceKey].ToInt64();
                 string typeName = document["_id"]["Type"].AsString;
+                string keyFilter = document["_id"][KEY_FILTER].ToString();
                 DateTime utcDateTime = ConvertDateTimeDocumentToDateTime(dateTime);
 
-
-                IAggregationBuildableResult trackerResult = results.AddAggregationResult(utcDateTime, typeName, occurrence, total);
+                IAggregationBuildableResult trackerResult = results.AddAggregationResult(utcDateTime, typeName, keyFilter, occurrence, total);
                 var relevantNames = names.Where(x => x.GetFullyQualifiedNameFromFormattedString().StartsWith(typeName));
                 foreach (string key in relevantNames )
                 {
@@ -141,7 +142,9 @@ namespace Graphene.Mongo.Reporting
         {
             var timeElement = new BsonElement("Time", "$Time");
             var typeElement = new BsonElement("Type", "$Type");
-            BsonDocument idDocument = new BsonDocument(new List<BsonElement>() {timeElement, typeElement});
+            var keyfltr = new BsonElement("KeyFilter", "$KeyFilter");
+
+            var idDocument = new BsonDocument(new List<BsonElement>() { timeElement, typeElement, keyfltr});
             var elements = new List<BsonElement> {new BsonElement("_id", idDocument)};
             elements.AddRange(specification.Counters.Select(
                 counter => new BsonElement(counter.FormatFieldName(), new BsonDocument
@@ -177,7 +180,7 @@ namespace Graphene.Mongo.Reporting
 
 
         private static BsonDocument buildMatchCondition(IReportSpecification specification)
-        {
+        {         
             IMongoQuery orClause = createSearchClauseForAnyFilter(specification);
             IMongoQuery typeNameClause = createSearchClauseForAnyType(specification);
             // Query.EQ("TypeName", specification.TrackerTypeName);
@@ -265,6 +268,7 @@ namespace Graphene.Mongo.Reporting
 
             var time = new BsonElement("Time", new BsonDocument(timeParts));
             var type = new BsonElement("Type", "$TypeName");
+            var keyfltr = new BsonElement("KeyFilter", "$KeyFilter");
             var measurements = new List<BsonElement>();
             measurements.AddRange(new[]
             {
@@ -281,6 +285,7 @@ namespace Graphene.Mongo.Reporting
             var projectElements = new List<BsonElement>();
             projectElements.Add(time);
             projectElements.Add(type);
+            projectElements.Add(keyfltr);
             projectElements.AddRange(measurements);
 
             var projection = new BsonDocument
@@ -323,9 +328,7 @@ namespace Graphene.Mongo.Reporting
                 _toDateUtc = specification.ToDateUtc;
                 _resolution = specification.Resolution;
             }
-
-            
-
+        
             public DateTime FromDateUtc
             {
                 get { return _fromDateUtc; }
@@ -344,11 +347,11 @@ namespace Graphene.Mongo.Reporting
             public ReportResolution resolution
             {
                 get { return _resolution; }
-            }
+            }           
 
-            public IAggregationBuildableResult AddAggregationResult(DateTime mesurementTimeUtc, string typeName, long occurence, long total)
+            public IAggregationBuildableResult AddAggregationResult(DateTime mesurementTimeUtc, string typeName, string keyFilter, long occurence, long total)
             {
-                var aggregationResultToReturn = new MongoTrackingAggregationResult(mesurementTimeUtc, typeName, occurence, total);
+                var aggregationResultToReturn = new MongoTrackingAggregationResult(mesurementTimeUtc, typeName, keyFilter, occurence, total);
                 _aggregationResults.Add(aggregationResultToReturn);
                 return aggregationResultToReturn;
             }
@@ -361,16 +364,15 @@ namespace Graphene.Mongo.Reporting
                 /// <summary>
                 ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
                 /// </summary>
-                public MongoTrackingAggregationResult(DateTime mesurementTimeUtc, string typeName, long occurence, long total)
+                public MongoTrackingAggregationResult(DateTime mesurementTimeUtc, string typeName, string keyFilter, long occurence, long total)
                 {
                     _mesurementTimeUtc = mesurementTimeUtc;
                     TypeName = typeName;
                     Occurence = occurence;
                     Total = total;
-
+                    setKeyFilterDictionary(keyFilter);
                     _measurementValues = new List<IMeasurementResult>();
                 }
-
 
                 public IMeasurementResult AddMeasurementResult(IMeasurement measurement, string value)
                 {
@@ -379,9 +381,11 @@ namespace Graphene.Mongo.Reporting
                     return resultToReturn;
                 }
 
-
                 public ushort TimeSlice { get; set; }
+                
                 public string TypeName { get; set; }
+
+                public Dictionary<string, string> KeyFilters { get; private set; }
 
                 public DateTime MesurementTimeUtc
                 {
@@ -394,10 +398,23 @@ namespace Graphene.Mongo.Reporting
                     get { return _measurementValues; }
                 }
 
-
                 public long Occurence { get; set; }
 
                 public long Total { get; set; }
+
+                private void setKeyFilterDictionary(string keyFilterStr)
+                {
+                    KeyFilters = new Dictionary<string, string>();
+                    if (string.IsNullOrWhiteSpace(keyFilterStr)) return;
+                    var keyFilterStrArray = keyFilterStr.Split(',');
+                    if (!keyFilterStrArray.Any()) return;
+                    foreach (var keyFilterArray in keyFilterStrArray.Where(keyFilter => !string.IsNullOrWhiteSpace(keyFilter))
+                                                                    .Select(keyFilter => keyFilter.Split(new[] {"::"}, StringSplitOptions.None))
+                                                                    .Where(keyFilterArray => keyFilterArray.Count() == 2))
+                    {
+                        KeyFilters.Add(keyFilterArray[0].Trim(), keyFilterArray[1].Trim());
+                    }
+                }
 
                 private class MongoMeasurementResult : IMeasurementResult
                 {
