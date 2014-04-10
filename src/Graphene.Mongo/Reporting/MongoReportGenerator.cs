@@ -98,6 +98,8 @@ namespace Graphene.Mongo.Reporting
             const string totalKey = "_Total";
             const string occurrenceKey = "_Occurrence";
             const string KEY_FILTER = "KeyFilter";
+            const string ID_KEY = "_id";
+            const string TYPE_KEY = "Type";
 
             var results = new MongoTrackerResults(specification);
 
@@ -114,8 +116,8 @@ namespace Graphene.Mongo.Reporting
 
                 long total = document[totalKey].ToInt64();
                 long occurrence = document[occurrenceKey].ToInt64();
-                string typeName = document["_id"]["Type"].AsString;
-                string keyFilter = document["_id"][KEY_FILTER].ToString();
+                string typeName = document[ID_KEY][TYPE_KEY].AsString;
+                string keyFilter = document[ID_KEY][KEY_FILTER].ToString();
                 DateTime utcDateTime = ConvertDateTimeDocumentToDateTime(dateTime);
 
                 IAggregationBuildableResult trackerResult = results.AddAggregationResult(utcDateTime, typeName, keyFilter, occurrence, total);
