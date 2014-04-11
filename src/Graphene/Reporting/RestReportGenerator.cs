@@ -55,7 +55,7 @@ namespace Graphene.Reporting
         {
             public ushort TimeSlice { get; set; }
             public string TypeName { get; set; }           
-            public Dictionary<string, string> KeyFilters { get; private set; }
+            public Dictionary<string, string> KeyFilters { get; set; }
             public DateTime MesurementTimeUtc { get; set; }
 
 
