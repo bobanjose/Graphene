@@ -54,7 +54,8 @@ namespace Graphene.Reporting
         internal class InternalAggregationResult : IAggregationResult
         {
             public ushort TimeSlice { get; set; }
-            public string TypeName { get; set; }
+            public string TypeName { get; set; }           
+            public Dictionary<string, string> KeyFilters { get; set; }
             public DateTime MesurementTimeUtc { get; set; }
 
 
