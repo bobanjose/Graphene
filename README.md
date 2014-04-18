@@ -1,7 +1,7 @@
 Graphene
 ========
 
-A highly saleable BI framwork writing in C#. Graphene can be used to track various Metrics. Graphene pre-aggregates the data and uses a document store (like MongoDB/RavenDB) to store the pre-aggregated data. Graphene also supports adding filters to a Metrics.
+A highly scaleable BI framwork writing in C#. Graphene can be used to track various Metrics. Graphene pre-aggregates the data and uses a document store (like MongoDB/RavenDB) to store the pre-aggregated data. Graphene also supports adding filters to a Metrics.
 
 
 ## Getting Started
