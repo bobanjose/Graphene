@@ -17,7 +17,7 @@ namespace Graphene.Data
         public long _Total { get; set; }
         public long _Min { get; set; }
         public long _Max { get; set; }
-        public ConcurrentDictionary<string, long> NamedMetrics { get; set; } 
+        public ConcurrentDictionary<string, long> NamedMetrics { get; set; }
     }
 
     public class TrackerData
@@ -28,9 +28,10 @@ namespace Graphene.Data
             KeyFilter = string.Empty;
         }
 
-        public string _id { get {
-            return String.Concat(TypeName,TimeSlot.ToUniversalTime(),KeyFilter).Replace(" ","");
-        } }
+        public string _id
+        {
+            get { return String.Concat(TypeName, TimeSlot.ToUniversalTime(), KeyFilter).Replace(" ", ""); }
+        }
 
         public string TypeName { get; set; }
 

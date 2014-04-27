@@ -2,44 +2,142 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
+using Graphene.Attributes;
 using Graphene.Tracking;
+using Graphene.Util;
 
 namespace Graphene.Reporting
 {
-    public class ReportSpecification<TFilter, TTrackable> : IReportSpecification
-        where TTrackable : ITrackable
+
+    #region Generic Implementation
+
+    public class ReportSpecification<TFilter, TTracker> : IReportSpecification
+        where
+            TFilter : struct
+        where
+            TTracker : ITrackable, new()
     {
+        private static readonly IEnumerable<string> _trackableProperties =
+            typeof (ITrackable).GetProperties().Select(x => x.Name);
 
-        private static readonly IEnumerable<string> _trackableProperties = typeof (ITrackable).GetProperties().Select(x=> x.Name);
-        private List<IFilterConditions> _filters;
-        private List<string> _counters;
-        private DateTime _fromDateUtc;
-        private DateTime _toDateUtc;
-        private string _trackerTypeName;
-        private ReportResolution _reportResolution;
+        private readonly DateTime _fromDateUtc;
+        private readonly ReportResolution _resolution;
+        private readonly DateTime _toDateUtc;
+        private IEnumerable<IMeasurement> _counters;
+        private IEnumerable<IFilterConditions> _filterCombinations;
+        
 
-        public ReportSpecification(DateTime fromDateUtc, DateTime toUtcDate, ReportResolution resolution, params TFilter[] filters)
+        public ReportSpecification(DateTime fromDateUtc, DateTime toDateUtc, ReportResolution resolution)
+            : this(fromDateUtc, toDateUtc, resolution, new TFilter[] {})
+        {
+        }
+
+
+        public ReportSpecification(DateTime fromDateUtc, DateTime toDateUtc, ReportResolution resolution,
+            params TFilter[] filters)
         {
             _fromDateUtc = fromDateUtc;
-            _toDateUtc = toUtcDate;
-            _trackerTypeName = typeof (TTrackable).FullName;
-            _filters = new List<IFilterConditions>(filters.Count());
+            _toDateUtc = toDateUtc;
+            _resolution = resolution;
             buildFilterList(filters);
-            buildListOfCountersForTracker();
-            _reportResolution = resolution;
+            buildListOfMeasurementsForTracker(new[] {typeof (TTracker)});
+            TypeNames = new[] {typeof (TTracker).FullName};
         }
+
+        
 
 
         public IEnumerable<IFilterConditions> FilterCombinations
         {
-            get { return _filters; }
+            get { return _filterCombinations; }
         }
 
-        public IEnumerable<string> Counters
+        public IEnumerable<IMeasurement> Counters
         {
             get { return _counters; }
         }
+
+        public DateTime FromDateUtc
+        {
+            get { return _fromDateUtc; }
+        }
+
+
+        public DateTime ToDateUtc
+        {
+            get { return _toDateUtc; }
+        }
+
+        public IEnumerable<string> TypeNames { get; private set; }
+
+
+        public ReportResolution Resolution
+        {
+            get { return _resolution; }
+        }
+
+        private void buildFilterList(params TFilter[] filters)
+        {
+            _filterCombinations = filters.Select(x => new FilterConditions(x)).ToList();
+        }
+
+        private void buildListOfMeasurementsForTracker(IEnumerable<Type> trackables)
+        {
+            _counters = trackables.SelectMany((x, y) => x.GetProperties()).
+                Where(x => (!_trackableProperties.Contains(x.Name))
+                           ||
+                           (x.GetCustomAttribute(typeof (MeasurableAttribute)) != null))
+                .Select(x => new Measurement(x)).ToList();
+        }
+    }
+
+    #endregion Generic Implementation
+
+    #region looselytyped implementation
+    public class ReportSpecification : IReportSpecification
+    {
+        private static readonly IEnumerable<string> _trackableProperties =
+            typeof(ITrackable).GetProperties().Select(x => x.Name);
+
+        private readonly DateTime _fromDateUtc;
+
+        private readonly ReportResolution _resolution;
+
+        private readonly DateTime _toDateUtc;
+        private IEnumerable<Measurement> _counters;
+        private IEnumerable<IFilterConditions> _filterCombinations;
+
+
+        public ReportSpecification(IEnumerable<Type> trackerType, DateTime fromDateUtc, DateTime toDateUtc,
+            ReportResolution resolution, params object[] filters) : this( trackerType,filters,fromDateUtc, toDateUtc, resolution )
+        {
+            
+        }
+
+        public ReportSpecification(IEnumerable<Type> trackerType, IEnumerable<object> filters, DateTime fromDateUtc,
+            DateTime toDateUtc, ReportResolution resolution)
+        {
+            if(trackerType == null || !trackerType.Any())
+                throw  new ArgumentException("You must provide at least one Tracker Type to measure!");
+
+            _fromDateUtc = fromDateUtc;
+            _toDateUtc = toDateUtc;
+            _resolution = resolution;
+            buildFilterList(filters);
+            buildListOfMeasurementsForTracker(trackerType);
+
+        }
+
+        public IEnumerable<IFilterConditions> FilterCombinations
+        {
+            get { return _filterCombinations; }
+        }
+
+        public IEnumerable<IMeasurement> Counters
+        {
+            get { return _counters; }
+        }
+
 
         public DateTime FromDateUtc
         {
@@ -51,32 +149,30 @@ namespace Graphene.Reporting
             get { return _toDateUtc; }
         }
 
-        public string TrackerTypeName
-        {
-            get { return _trackerTypeName; }
-        }
+        public IEnumerable<string> TypeNames { get; private set; }
+
 
         public ReportResolution Resolution
         {
-            get { return _reportResolution; }
-            internal set{ _reportResolution = value; }
+            get { return _resolution; }
         }
 
-        private void buildListOfCountersForTracker()
-        {            
-            _counters = (from counter in typeof (TTrackable).GetProperties()
-                where (! _trackableProperties.Contains(counter.Name))
-                select (counter.Name)).ToList();
-        }
-
-        private void buildFilterList(params TFilter[] filters)
+        private void buildListOfMeasurementsForTracker(IEnumerable<Type> trackables)
         {
-            if (filters == null)
-                return;
-            foreach (var filter in filters)
-            {
-                _filters.Add(new FilterConditions<TFilter>(filter));
-            }
+            
+
+            _counters = trackables.Distinct().SelectMany((x, y) => x.GetProperties()).
+                Where(x => (!_trackableProperties.Contains(x.Name))
+                           ||
+                           (x.GetCustomAttribute(typeof(MeasurableAttribute)) != null))
+                .Select(x => new Measurement(x)).ToList();
+            TypeNames = _counters.Select(x => x.TrackerTypeName).Distinct();
+        }
+
+        private void buildFilterList(IEnumerable<object> filters)
+        {
+            _filterCombinations = filters.BuildFilterConditionList();
         }
     }
+    #endregion
 }

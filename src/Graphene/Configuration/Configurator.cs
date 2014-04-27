@@ -7,13 +7,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Graphene;
-using Graphene.Publishing;
 using Graphene.Configuration;
+using Graphene.Publishing;
 using Graphene.Reporting;
 
 namespace Graphene.Configuration
@@ -33,6 +28,12 @@ namespace Graphene
     {
         private static Settings _configurator;
 
+
+        internal static Settings Configuration
+        {
+            get { return _configurator; }
+        }
+
         public static void Initialize(Settings configuration)
         {
             if (configuration == null || configuration.Persister == null)
@@ -46,21 +47,15 @@ namespace Graphene
             _configurator.Logger.Debug("Graphene Initialized");
         }
 
-
-        internal static Settings Configuration
-        {
-            get { return _configurator; }
-        }
-
         public static void ShutDown()
         {
             try
             {
-                Publishing.Publisher.ShutDown();
+                Publisher.ShutDown();
             }
             catch (Exception ex)
             {
-                Graphene.Configurator.Configuration.Logger.Error(ex.Message, ex);
+                Configuration.Logger.Error(ex.Message, ex);
             }
         }
     }

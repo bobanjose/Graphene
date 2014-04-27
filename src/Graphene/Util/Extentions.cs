@@ -9,50 +9,90 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Specialized;
-using System.Threading;
 using System.Reflection;
-using System.Diagnostics;
+using Graphene.Reporting;
 
 namespace Graphene.Util
 {
     public static class Extentions
     {
-        public static List<string> GetPropertyNameValueList(this object obj)
+
+        internal static IEnumerable<FilterConditions> BuildFilterConditionList(this IEnumerable<object> objectList)
         {
-            var type = obj.GetType();
+            foreach( var objectValue in objectList )
+            {
+                 IEnumerable<string> valueList = 
+                objectValue.GetPropertyNameValueEnumeration();
+                if (valueList.Any(x => !String.IsNullOrWhiteSpace(x)))
+                {
+                    yield return new FilterConditions(valueList);
+
+                }
+
+            }
+            
+        }
+        public static IEnumerable<string> GetPropertyNameValueEnumeration(this object obj)
+        {
+            Type type = obj.GetType();
             var props = new List<PropertyInfo>(type.GetProperties());
             var nvList = new List<string>();
             foreach (PropertyInfo prop in props)
             {
-                if (prop.PropertyType == typeof(String) || (Nullable.GetUnderlyingType(prop.PropertyType) != null))
+                if (prop.PropertyType == typeof (String) || (Nullable.GetUnderlyingType(prop.PropertyType) != null))
                 {
-                    var propValue = prop.GetValue(obj, null);
-                    if (propValue != null)
+                    object propValue = prop.GetValue(obj, null);
+                    if (propValue != null && !String.IsNullOrWhiteSpace(propValue.ToString()))
                     {
                         nvList.Add(string.Format("{0}::{1}", prop.Name.ToUpper(), propValue.ToString().ToUpper()));
                     }
                 }
                 else
                 {
-                    throw new Exception(string.Format("All properties of the filter object of type {0}  have to be Nullable Types", type.FullName));
+                    throw new Exception(
+                        string.Format("All properties of the filter object of type {0}  have to be Nullable Types",
+                            type.FullName));
                 }
             }
-            nvList.Sort();
+            
             return nvList;
         }
+
+        public static List<string> GetPropertyNameValueList(this object obj)
+        {
+            Type type = obj.GetType();
+            var props = new List<PropertyInfo>(type.GetProperties());
+            var nvList = new List<string>();
+            foreach (PropertyInfo prop in props)
+            {
+                if (prop.PropertyType == typeof(String) || (Nullable.GetUnderlyingType(prop.PropertyType) != null))
+                {
+                    object propValue = prop.GetValue(obj, null);
+                    if (propValue != null && !String.IsNullOrWhiteSpace(propValue.ToString()))
+                    {
+                        nvList.Add(string.Format("{0}::{1}", prop.Name.ToUpper(), propValue.ToString().ToUpper()));
+                    }
+                }
+                else
+                {
+                    throw new Exception(
+                        string.Format("All properties of the filter object of type {0}  have to be Nullable Types",
+                            type.FullName));
+                }
+            }
+
+            return nvList;
+        }
+
 
         public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType)
         {
             return new TimeSpan(
                 Convert.ToInt64(Math.Round(
-                    time.Ticks / (decimal)roundingInterval.Ticks,
+                    time.Ticks/(decimal) roundingInterval.Ticks,
                     roundingType
-                )) * roundingInterval.Ticks
-            );
+                    ))*roundingInterval.Ticks
+                );
         }
 
         public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval)

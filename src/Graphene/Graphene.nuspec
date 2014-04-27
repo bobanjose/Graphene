@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Graphene</id>
-    <version>0.1.10</version>
+    <version>$version$</version>
     <title>Graphene Framework</title>
     <authors>Boban Jose</authors>
     <owners>Boban Jose</owners>
@@ -19,6 +19,7 @@
     <dependencies>
       <dependency id="mongocsharpdriver"/>
       <dependency id="Microsoft.Tpl.Dataflow"/>
+      <dependency id="Newtonsoft.Json" version="6.0.0" />
     </dependencies>
   </metadata>
 </package>

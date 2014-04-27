@@ -1,7 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Configuration;
+using System.Reflection;
 using System.Web.Http;
+using Autofac;
+using Autofac.Integration.WebApi;
+using Graphene.API.Controllers;
+using Graphene.API.Models;
+using Graphene.Configuration;
+using Graphene.Mongo.Reporting;
+using Graphene.Reporting;
+using Newtonsoft.Json.Converters;
 
 namespace Graphene.API
 {
@@ -9,11 +19,8 @@ namespace Graphene.API
     {
         public static void Register(HttpConfiguration config)
         {
-            config.Routes.MapHttpRoute(
-                name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
-            );
+            config.Routes.MapHttpRoute("DefaultApi", "api/{controller}/{id}", new {id = RouteParameter.Optional}
+                );
 
             // Uncomment the following line of code to enable query support for actions with an IQueryable or IQueryable<T> return type.
             // To avoid processing unexpected or malicious queries, use the validation settings on QueryableAttribute to validate incoming queries.
@@ -23,6 +30,78 @@ namespace Graphene.API
             // To disable tracing in your application, please comment out or remove the following line of code
             // For more information, refer to: http://www.asp.net/web-api
             config.EnableSystemDiagnosticsTracing();
+
+            config.Formatters.JsonFormatter.Indent = true;
+            config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());
+            config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new JsonConverterReportSpecificationConverter());
+            config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new JsonConverterMeasurementConverter());
+            config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new JsonConverterFilterCombinationsConverter());
+
+            var builder = new ContainerBuilder();
+
+            // Register the Web API controllers.
+            builder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+
+
+            
+
+
+            builder.RegisterType<GrapheneLog4NetLogger>().As<ILogger>();
+
+            // Build the container.
+            
+            // Configure Web API with the dependency resolver.
+            
+            
+
+            // Graphene.Configurator.Initialize(new Settings() { Persister = new PersistToMongo(container.Resolve<IConfiguration>().ReportingStoreConnectionString), Logger = container.Resolve<ILogger>() });
+            builder.Register(x =>
+            {
+                var _logger = x.Resolve<ILogger>();
+                var mongoReportGenerator =
+                    new MongoReportGenerator(
+                        ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString, _logger);
+                return mongoReportGenerator;
+            }).As<IReportGenerator>();
+
+
+            var container = builder.Build();
+
+            // Create the depenedency resolver.
+            var resolver = new AutofacWebApiDependencyResolver(container);
+
+            GlobalConfiguration.Configuration.DependencyResolver = resolver;
+
         }
+    }
+
+    public class JsonConverterReportSpecificationConverter : CustomCreationConverter<IReportSpecification>
+    {
+        
+        public override IReportSpecification Create(Type objectType)
+        {
+            return new JsonReportSpecification();
+        }
+    }
+
+    public class JsonConverterFilterCombinationsConverter : CustomCreationConverter<IFilterConditions>
+    {
+        public override IFilterConditions Create(Type objectType)
+        {
+            return new JsonFilterCondition();
+        }
+
+     
+        
+    }
+
+    public class JsonConverterMeasurementConverter : CustomCreationConverter<IMeasurement>
+    {
+        public override IMeasurement Create(System.Type objectType)
+        {
+            return new JsonMeasurement();
+        }
+
+      
     }
 }

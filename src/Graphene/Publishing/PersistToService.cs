@@ -6,7 +6,7 @@ namespace Graphene.Publishing
 {
     public class PersistToService : IPersist
     {
-        private string _serviceUrl;
+        private readonly string _serviceUrl;
 
         public PersistToService(string serviceUrl)
         {
@@ -27,10 +27,11 @@ namespace Graphene.Publishing
                 using (var client = new HttpClient(handler))
                 {
                     // post it
-                    var httpResponseMessage = client.PostAsJsonAsync(_serviceUrl, trackerData).Result;
+                    HttpResponseMessage httpResponseMessage = client.PostAsJsonAsync(_serviceUrl, trackerData).Result;
                     if (!httpResponseMessage.IsSuccessStatusCode)
                     {
-                        Configurator.Configuration.Logger.Warn(string.Format("Data not persisted with status {0}", httpResponseMessage.StatusCode));
+                        Configurator.Configuration.Logger.Warn(string.Format("Data not persisted with status {0}",
+                            httpResponseMessage.StatusCode));
                     }
                 }
             }
