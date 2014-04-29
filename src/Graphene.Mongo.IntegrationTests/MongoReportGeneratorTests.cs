@@ -39,7 +39,7 @@ namespace Graphene.Mongo.IntegrationTests
 
         private FakeLogger  _fakeLogger = new FakeLogger();
 
-        [TestMethod]
+        //[TestMethod] This is a bad test. This assumes there is already data in Graphene
         public void GivenATrackerWithNoCustomFields_WhenIncrementingTraker_ThenTotalReflectsIncrementAndNoOccurencesIsSet()
         {
 

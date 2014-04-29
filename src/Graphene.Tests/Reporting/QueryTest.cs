@@ -14,7 +14,9 @@ namespace Graphene.Tests.Reporting
     [TestClass]
     public class QueryTest
     {
+        //*****************************************************************************************************************
         //Most of the tests below are integration type tests and can only be run in isolation (individually)
+        //*****************************************************************************************************************
 
         private FakeLogger _fakeLogger = new FakeLogger();
 
@@ -150,6 +152,8 @@ namespace Graphene.Tests.Reporting
                 StoreID = storeId
             }).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
 
+            System.Diagnostics.Debug.Write(report.Results.Count());
+
             Assert.IsTrue(report.Results.Count() >= 1);
             Assert.AreEqual(12, report.Results[0].Tracker.ElderlyCount);
             Assert.AreEqual(5, report.Results[0].Tracker.KidsCount);
@@ -247,9 +251,9 @@ namespace Graphene.Tests.Reporting
                     DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Minute);
 
             Assert.IsTrue(report.Results.Count() >= 1);
-            Assert.AreEqual(DateTime.Now.Year, report.Results[0].MesurementTimeUtc.Year);
-            Assert.AreEqual(DateTime.Now.Month, report.Results[0].MesurementTimeUtc.Month);
-            Assert.AreEqual(DateTime.Now.Day, report.Results[0].MesurementTimeUtc.Day);
+            Assert.AreEqual(DateTime.UtcNow.Year, report.Results[0].MesurementTimeUtc.Year);
+            Assert.AreEqual(DateTime.UtcNow.Month, report.Results[0].MesurementTimeUtc.Month);
+            Assert.AreEqual(DateTime.UtcNow.Day, report.Results[0].MesurementTimeUtc.Day);
 
             Assert.AreEqual(ReportResolution.Minute, report.Resolution);
         }
@@ -322,10 +326,9 @@ namespace Graphene.Tests.Reporting
 
                 Assert.AreEqual(2, visitTrackerReportSpecification.FilterCombinations.Count());
                 Assert.AreEqual(4, visitTrackerReportSpecification.FilterCombinations.ElementAt(0).Filters.Count());
-                Assert.AreEqual(
+                Assert.AreEqual(visitTrackerReportSpecification.FilterCombinations.Count(fs => fs.Filters.Contains(
                     string.Format("{0}::{1}",
-                        ("Environment_ServerName").ToUpper(), filter1.Environment_ServerName.ToUpper()),
-                    visitTrackerReportSpecification.FilterCombinations.ElementAt(0).Filters.ElementAt(0));
+                        ("Environment_ServerName").ToUpper(), filter1.Environment_ServerName.ToUpper()))),1);
             }
 
             [TestMethod]
