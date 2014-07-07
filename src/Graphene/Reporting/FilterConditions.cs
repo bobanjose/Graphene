@@ -1,21 +1,32 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Graphene.Util;
 
 namespace Graphene.Reporting
 {
+
+    internal class FilterConditions<TFilter> : IFilterConditions
+    {
+        private readonly List<string> _filters = new List<string>();
+
+        public FilterConditions(TFilter filter)
+        {
+            _filters.Add(filter.GetPropertyNameValueList().Aggregate((x, z) => string.Concat(x, ",,", z)));
+        }
+
+        public IEnumerable<string> Filters
+        {
+            get { return _filters; }
+        }
+    }
+
     internal class FilterConditions : IFilterConditions
     {
-        private readonly IEnumerable<string> _filters;
+        private readonly List<string> _filters;
 
         public FilterConditions(object filter)
         {
-            _filters = filter.GetPropertyNameValueList();
-        }
-
-        public FilterConditions(IEnumerable<string> filters)
-        {
-            _filters = filters;
-
+            _filters.Add(filter.GetPropertyNameValueList().Aggregate((x, z) => string.Concat(x, ",,", z)));
         }
 
         public IEnumerable<string> Filters

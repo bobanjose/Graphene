@@ -33,19 +33,4 @@ namespace Graphene.Reporting
     {
         IEnumerable<string> Filters { get; }
     }
-
-    internal class FilterConditions<TFilter> : IFilterConditions
-    {
-        private readonly List<string> _filters = new List<string>();
-
-        public FilterConditions(TFilter filter)
-        {
-            _filters.Add(filter.GetPropertyNameValueList().Aggregate((x, z) => string.Concat(x, ",,", z)));
-        }
-
-        public IEnumerable<string> Filters
-        {
-            get { return _filters; }
-        }
-    }
 }

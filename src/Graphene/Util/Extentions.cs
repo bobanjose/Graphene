@@ -17,21 +17,6 @@ namespace Graphene.Util
     public static class Extentions
     {
 
-        internal static IEnumerable<FilterConditions> BuildFilterConditionList(this IEnumerable<object> objectList)
-        {
-            foreach( var objectValue in objectList )
-            {
-                 IEnumerable<string> valueList = 
-                objectValue.GetPropertyNameValueEnumeration();
-                if (valueList.Any(x => !String.IsNullOrWhiteSpace(x)))
-                {
-                    yield return new FilterConditions(valueList);
-
-                }
-
-            }
-            
-        }
         public static IEnumerable<string> GetPropertyNameValueEnumeration(this object obj)
         {
             Type type = obj.GetType();

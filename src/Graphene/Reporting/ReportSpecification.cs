@@ -78,7 +78,7 @@ namespace Graphene.Reporting
 
         private void buildFilterList(params TFilter[] filters)
         {
-            _filterCombinations = filters.Select(x => new FilterConditions(x)).ToList();
+            _filterCombinations = filters.Select(x => new FilterConditions<TFilter>(x)).ToList();
         }
 
         private void buildListOfMeasurementsForTracker(IEnumerable<Type> trackables)
@@ -171,7 +171,7 @@ namespace Graphene.Reporting
 
         private void buildFilterList(IEnumerable<object> filters)
         {
-            _filterCombinations = filters.BuildFilterConditionList();
+            _filterCombinations = filters.Select(x => new FilterConditions(x)).ToList();
         }
     }
     #endregion
