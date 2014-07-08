@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using Graphene.Attributes;
 using Graphene.Configuration;
 using Graphene.Mongo.Reporting;
@@ -137,14 +138,16 @@ namespace Graphene.Tests.Reporting
             Configurator.Initialize(
                 new Settings
                 {
-                    Persister = new PersistToMongo("mongodb://localhost:9001/Graphene"),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene",_fakeLogger)
+                    Persister = new PersistToMongo("mongodb://localhost:27017/Graphene"),
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:27017/Graphene", _fakeLogger)
                 }
                 );
 
-            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 10);
+            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 0);
+            Thread.Sleep(new TimeSpan(0, 0, 5, 0));
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 5);
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 2);
+            
             Configurator.ShutDown();
 
             AggregationResults<TrackerWithCountProperties> report = Container<TrackerWithCountProperties>.Where(new CustomerFilter
