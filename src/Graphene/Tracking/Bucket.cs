@@ -20,27 +20,28 @@ namespace Graphene.Tracking
         private readonly DateTime _expiresAfter;
         private readonly object _syncLock = new object();
 
-        internal Bucket(int lifeTimeInSeconds, Resolution resolution)
+        internal Bucket(int lifeTimeInSeconds, Resolution resolution, DateTime? mesaurementDate = null)
         {
             _expiresAfter = DateTime.Now.AddSeconds(lifeTimeInSeconds);
             _counters = new ConcurrentDictionary<string, Counter>();
-
+            var mDate = mesaurementDate ?? DateTime.Now;
+            
             switch (resolution)
             {
                 case Resolution.FiveMinute:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(5));
+                    TimeSlot = mDate.Round(TimeSpan.FromMinutes(5));
                     break;
                 case Resolution.FifteenMinute:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(15));
+                    TimeSlot = mDate.Round(TimeSpan.FromMinutes(15));
                     break;
                 case Resolution.Hour:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromHours(1));
+                    TimeSlot = mDate.Round(TimeSpan.FromHours(1));
                     break;
                 case Resolution.ThirtyMinute:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(30));
+                    TimeSlot = mDate.Round(TimeSpan.FromMinutes(30));
                     break;
                 case Resolution.Minute:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(1));
+                    TimeSlot = mDate.Round(TimeSpan.FromMinutes(1));
                     break;
             }
         }

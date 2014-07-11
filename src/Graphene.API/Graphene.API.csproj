@@ -49,10 +49,6 @@
     <Reference Include="Autofac.Integration.WebApi">
       <HintPath>..\packages\Autofac.WebApi.3.1.0\lib\net40\Autofac.Integration.WebApi.dll</HintPath>
     </Reference>
-    <Reference Include="Graphene.Mongo, Version=0.2.6.9, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Graphene.Mongo\bin\Release\Graphene.Mongo.dll</HintPath>
-    </Reference>
     <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
@@ -213,6 +209,10 @@
     <ProjectReference Include="..\Graphene.Log4net\Graphene.Log4net.csproj">
       <Project>{2e8a1e16-a54c-42d8-9c89-67b83e7fa03f}</Project>
       <Name>Graphene.Log4net</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Graphene.Mongo\Graphene.Mongo.csproj">
+      <Project>{6c72e5c2-a7b7-42b2-9b47-edad7758fad7}</Project>
+      <Name>Graphene.Mongo</Name>
     </ProjectReference>
     <ProjectReference Include="..\Graphene\Graphene.csproj">
       <Project>{df87eb29-8e53-4fed-a524-867ab76d71ca}</Project>

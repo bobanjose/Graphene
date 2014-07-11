@@ -147,8 +147,9 @@ namespace Graphene.Tracking
         private readonly object _syncLock = new object();
         private readonly ITrackable _tracker;
         private readonly Type _trackerType;
-        private readonly int _updateIntervalInSeconds = 180;
-        
+        private const int UPDATE_INTERVAL_IN_SECONDS = 180;
+        private static DateTime? _measurementDate;
+
         private Bucket _currentBucket;
 
         internal Container()
@@ -244,7 +245,7 @@ namespace Graphene.Tracking
                     {
                         if (_currentBucket != null)
                             _queuedBucket.Enqueue(_currentBucket);
-                        _currentBucket = new Bucket(_updateIntervalInSeconds, _tracker.MinResolution);
+                        _currentBucket = new Bucket(UPDATE_INTERVAL_IN_SECONDS, _tracker.MinResolution, _measurementDate);
                     }
                 }
             }
@@ -313,11 +314,12 @@ namespace Graphene.Tracking
             }
         }
 
-        public static AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by)
+        public static AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by, DateTime? measurementDate = null)
         {
             Bucket bucket = null;
             try
             {
+                _measurementDate = measurementDate;
                 PropertyInfo pi = PropertyHelper<T1>.GetProperty(incAttr);
                 bucket = GetBucket();
                 bucket.IncrementCounter(by, pi.Name);
@@ -327,7 +329,7 @@ namespace Graphene.Tracking
                 Configurator.Configuration.Logger.Error(ex.Message, ex);
             }
             return new AddNamedMetric<T1>(bucket, null);
-        }
+        }        
 
         internal void IncrementBy(long by, object filter)
         {
