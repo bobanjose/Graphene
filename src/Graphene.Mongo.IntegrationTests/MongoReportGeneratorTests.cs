@@ -86,7 +86,7 @@ namespace CommonWell.Framework.Reporting.Trackers
 {
     public class PatientDemographicSearchMatchesTracker : ITrackable
     {
-        [Measurable("Matches with Scores Greater than 90%", "Counts all matches with a score greater than 90%.")]
+        [Measurement("Matches with Scores Greater than 90%", "Counts all matches with a score greater than 90%.")]
         public long MatchesWithScoresGreaterThan90 { get; set; }
 
         public long MatchesWithScoresBetween80And90 { get; set; }

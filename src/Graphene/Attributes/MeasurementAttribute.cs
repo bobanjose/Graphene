@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Graphene.Attributes
 {
-    [AttributeUsage(AttributeTargets.All)]
-    public class TrackerMetaDataAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Property)]
+    public class MeasurementAttribute : Attribute
     {
-        
-        public TrackerMetaDataAttribute(string name)
+        public MeasurementAttribute(string name = "")
         {
             Name = name;
         }

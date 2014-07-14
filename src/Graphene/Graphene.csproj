@@ -67,8 +67,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\AttributeHelperExtentions.cs" />
-    <Compile Include="Attributes\MeasurableAttribute.cs" />
-    <Compile Include="Attributes\TrackerMetaDataAttribute.cs" />
+    <Compile Include="Attributes\MeasurementAttribute.cs" />
+    <Compile Include="Attributes\TrackerAttribute.cs" />
     <Compile Include="Configuration\Configurator.cs" />
     <Compile Include="Configuration\ILogger.cs" />
     <Compile Include="Data\TrackerData.cs" />

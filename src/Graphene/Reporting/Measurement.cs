@@ -10,7 +10,7 @@ namespace Graphene.Reporting
         /// </summary>
         internal Measurement(PropertyInfo property)
         {
-            var attribute = property.GetCustomAttribute(typeof (MeasurableAttribute)) as MeasurableAttribute;
+            var attribute = property.GetCustomAttribute(typeof (MeasurementAttribute)) as MeasurementAttribute;
             if (attribute != null)
             {
                 DisplayName = attribute.Name;

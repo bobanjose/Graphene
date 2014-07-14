@@ -86,7 +86,7 @@ namespace Graphene.Reporting
             _counters = trackables.SelectMany((x, y) => x.GetProperties()).
                 Where(x => (!_trackableProperties.Contains(x.Name))
                            ||
-                           (x.GetCustomAttribute(typeof (MeasurableAttribute)) != null))
+                           (x.GetCustomAttribute(typeof (MeasurementAttribute)) != null))
                 .Select(x => new Measurement(x)).ToList();
         }
     }
@@ -164,7 +164,7 @@ namespace Graphene.Reporting
             _counters = trackables.Distinct().SelectMany((x, y) => x.GetProperties()).
                 Where(x => (!_trackableProperties.Contains(x.Name))
                            ||
-                           (x.GetCustomAttribute(typeof(MeasurableAttribute)) != null))
+                           (x.GetCustomAttribute(typeof(MeasurementAttribute)) != null))
                 .Select(x => new Measurement(x)).ToList();
             TypeNames = _counters.Select(x => x.TrackerTypeName).Distinct();
         }

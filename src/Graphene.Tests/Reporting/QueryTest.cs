@@ -349,13 +349,13 @@ namespace Graphene.Tests.Reporting
 
         public class TrackerWithCountProperties : ITrackable
         {
-            [Measurable]
+            [Measurement]
             public long KidsCount { get; set; }
 
-            [Measurable]
+            [Measurement]
             public long MiddleAgedCount { get; set; }
 
-            [Measurable]
+            [Measurement]
             public long ElderlyCount { get; set; }
 
             public long NotACounter { get; set; }
