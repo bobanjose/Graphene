@@ -53,8 +53,26 @@ namespace Graphene.Mongo.IntegrationTests
             ITrackerReportResults newresult = generator.BuildReport(spec);
 
             Assert.IsTrue(newresult.AggregationResults.Any());
+        }
 
+        //[TestMethod]
+        public void ReportOnTrackerWithBlankFilters()
+        {
+            var generator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger);
 
+            var spec = new ReportSpecification(new[] { typeof(PatientDemographicSearchMatchesTracker) },
+                new[] { new OrgAndVendorFilter {Vendor = "", OrgId = ""} },
+                DateTime.UtcNow.AddDays(-100), DateTime.UtcNow, ReportResolution.Hour);
+
+            ITrackerReportResults newresult = generator.BuildReport(spec);
+
+            Assert.IsTrue(newresult.AggregationResults.Any());
+        }
+
+        public class OrgAndVendorFilter
+        {
+            public string Vendor { get; set; }
+            public string OrgId { get; set; }
         }
 
 
@@ -86,7 +104,7 @@ namespace CommonWell.Framework.Reporting.Trackers
 {
     public class PatientDemographicSearchMatchesTracker : ITrackable
     {
-        [Measurement("Matches with Scores Greater than 90%", "Counts all matches with a score greater than 90%.")]
+        [Measurement("Matches with Scores Greater than 90%", Description = "Counts all matches with a score greater than 90%.")]
         public long MatchesWithScoresGreaterThan90 { get; set; }
 
         public long MatchesWithScoresBetween80And90 { get; set; }
