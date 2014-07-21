@@ -20,30 +20,35 @@ namespace Graphene.Tracking
         private readonly DateTime _expiresAfter;
         private readonly object _syncLock = new object();
 
-        internal Bucket(int lifeTimeInSeconds, Resolution resolution, DateTime? mesaurementDate = null)
+        internal Bucket(int lifeTimeInSeconds, Resolution resolution)
         {
             _expiresAfter = DateTime.Now.AddSeconds(lifeTimeInSeconds);
             _counters = new ConcurrentDictionary<string, Counter>();
-            var mDate = mesaurementDate ?? DateTime.Now;
-            
+                       
             switch (resolution)
             {
                 case Resolution.FiveMinute:
-                    TimeSlot = mDate.Round(TimeSpan.FromMinutes(5));
+                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(5));
                     break;
                 case Resolution.FifteenMinute:
-                    TimeSlot = mDate.Round(TimeSpan.FromMinutes(15));
+                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(15));
                     break;
                 case Resolution.Hour:
-                    TimeSlot = mDate.Round(TimeSpan.FromHours(1));
+                    TimeSlot = DateTime.Now.Round(TimeSpan.FromHours(1));
                     break;
                 case Resolution.ThirtyMinute:
-                    TimeSlot = mDate.Round(TimeSpan.FromMinutes(30));
+                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(30));
                     break;
                 case Resolution.Minute:
-                    TimeSlot = mDate.Round(TimeSpan.FromMinutes(1));
+                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(1));
                     break;
             }
+        }
+
+        internal Bucket(int lifeTimeInSeconds)
+        {
+            _expiresAfter = DateTime.Now.AddSeconds(lifeTimeInSeconds);
+            _counters = new ConcurrentDictionary<string, Counter>();           
         }
 
         internal ConcurrentDictionary<string, Counter> Counters
@@ -110,6 +115,11 @@ namespace Graphene.Tracking
                 }
             }
             counter.Increment(by, metricName);
+        }
+
+        internal void setTimeSlot(DateTime timeSlot)
+        {
+            TimeSlot = timeSlot;
         }
 
         public void getAllSearchTags(List<string> filters, List<string> perms)
