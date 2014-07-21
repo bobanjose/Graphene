@@ -31,7 +31,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
- <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\</OutputPath>
@@ -39,7 +39,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  
   <ItemGroup>
     <Reference Include="MongoDB.Bson">
       <HintPath>..\packages\mongocsharpdriver.1.8.3\lib\net35\MongoDB.Bson.dll</HintPath>
@@ -67,7 +66,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\MeasurableAttribute.cs" />
+    <Compile Include="Attributes\AttributeHelperExtentions.cs" />
+    <Compile Include="Attributes\MeasurementAttribute.cs" />
+    <Compile Include="Attributes\TrackerAttribute.cs" />
     <Compile Include="Configuration\Configurator.cs" />
     <Compile Include="Configuration\ILogger.cs" />
     <Compile Include="Data\TrackerData.cs" />

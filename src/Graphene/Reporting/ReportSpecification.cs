@@ -78,7 +78,7 @@ namespace Graphene.Reporting
 
         private void buildFilterList(params TFilter[] filters)
         {
-            _filterCombinations = filters.Select(x => new FilterConditions<TFilter>(x)).ToList();
+            _filterCombinations = filters.Select(x => new FilterConditions<TFilter>(x)).Where(fc => fc.Filters.Any()).ToList();
         }
 
         private void buildListOfMeasurementsForTracker(IEnumerable<Type> trackables)
@@ -86,7 +86,7 @@ namespace Graphene.Reporting
             _counters = trackables.SelectMany((x, y) => x.GetProperties()).
                 Where(x => (!_trackableProperties.Contains(x.Name))
                            ||
-                           (x.GetCustomAttribute(typeof (MeasurableAttribute)) != null))
+                           (x.GetCustomAttribute(typeof (MeasurementAttribute)) != null))
                 .Select(x => new Measurement(x)).ToList();
         }
     }
@@ -164,14 +164,14 @@ namespace Graphene.Reporting
             _counters = trackables.Distinct().SelectMany((x, y) => x.GetProperties()).
                 Where(x => (!_trackableProperties.Contains(x.Name))
                            ||
-                           (x.GetCustomAttribute(typeof(MeasurableAttribute)) != null))
+                           (x.GetCustomAttribute(typeof(MeasurementAttribute)) != null))
                 .Select(x => new Measurement(x)).ToList();
             TypeNames = _counters.Select(x => x.TrackerTypeName).Distinct();
         }
 
         private void buildFilterList(IEnumerable<object> filters)
         {
-            _filterCombinations = filters.Select(x => new FilterConditions(x)).ToList();
+            _filterCombinations = filters.Select(x => new FilterConditions(x)).Where(fc => fc.Filters.Any()).ToList();
         }
     }
     #endregion
