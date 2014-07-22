@@ -150,12 +150,7 @@ namespace Graphene.Tracking
         private const int UPDATE_INTERVAL_IN_SECONDS = 180;        
 
         private Bucket _currentBucket;
-
-        //Need another bucket for which, caller provides time
-        //Cannot use _currentBucket because once time is set, that time will be used for all next calls unless caller sets the time again or
-        //bucket expires
-        private Bucket _currentTimedBucket;
-
+        
         internal Container()
         {
             _trackerType = typeof (T1);
@@ -257,21 +252,20 @@ namespace Graphene.Tracking
             return _currentBucket;
         }
 
-        private Bucket getCurrentTimedBucket(bool flushAll)
+        //Need another bucket for which, caller provides time
+        //Cannot use _currentBucket because once time is set, that time will be used for all next calls untill bucket expires
+        
+        private Bucket getTimedBucket(DateTime measurementDate)
         {
-            if (_currentTimedBucket == null || _currentTimedBucket.HasExpired || flushAll)
+           var timedBucket = _queuedBucket.FirstOrDefault(x => x.TimeSlot == measurementDate && !x.HasExpired);
+
+            if (timedBucket == null)
             {
-                lock (_syncLock)
-                {
-                    if (_currentTimedBucket == null || _currentTimedBucket.HasExpired || flushAll)
-                    {
-                        if (_currentTimedBucket != null)
-                            _queuedBucket.Enqueue(_currentTimedBucket);
-                        _currentTimedBucket = new Bucket(UPDATE_INTERVAL_IN_SECONDS);
-                    }
-                }
+                timedBucket = new Bucket(UPDATE_INTERVAL_IN_SECONDS);
+                timedBucket.setTimeSlot(measurementDate);
+                _queuedBucket.Enqueue(timedBucket);
             }
-            return _currentTimedBucket;
+            return timedBucket;
         }
 
         public static FilteredOperations<T, T1> Where<T>(T filter) where T : struct
@@ -362,8 +356,8 @@ namespace Graphene.Tracking
             try
             {
                 var t = getTracker();
-                bucket = t.getCurrentTimedBucket(false);
-                bucket.setTimeSlot(roundDateWithResolution(measurementDate, t._tracker.MinResolution));
+                var roundedMeasurementDate = roundDateWithResolution(measurementDate, t._tracker.MinResolution);
+                bucket = t.getTimedBucket(roundedMeasurementDate);               
             }
             catch (Exception ex)
             {
