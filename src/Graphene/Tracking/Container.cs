@@ -257,7 +257,15 @@ namespace Graphene.Tracking
         
         private Bucket getTimedBucket(DateTime measurementDate)
         {
-           var timedBucket = _queuedBucket.FirstOrDefault(x => x.TimeSlot == measurementDate && !x.HasExpired);
+            Bucket timedBucket = null;
+            try
+            {
+                timedBucket = _queuedBucket.FirstOrDefault(x => x.TimeSlot == measurementDate && !x.HasExpired);
+            }
+            catch
+            {
+                
+            }
 
             if (timedBucket == null)
             {
