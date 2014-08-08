@@ -262,9 +262,14 @@ namespace Graphene.Tracking
             {
                 timedBucket = _queuedBucket.FirstOrDefault(x => x.TimeSlot == measurementDate && !x.HasExpired);
             }
-            catch
+            catch (InvalidOperationException)
             {
-                
+                //Collection was modified after the enumerator was instantiated.
+                //In this case, we will create a new bucket
+            }
+            catch (Exception ex)
+            {
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
             }
 
             if (timedBucket == null)
