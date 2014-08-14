@@ -24,7 +24,7 @@ namespace Graphene.Tracking
         {
             _expiresAfter = DateTime.Now.AddSeconds(lifeTimeInSeconds);
             _counters = new ConcurrentDictionary<string, Counter>();
-
+                       
             switch (resolution)
             {
                 case Resolution.FiveMinute:
@@ -43,6 +43,12 @@ namespace Graphene.Tracking
                     TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(1));
                     break;
             }
+        }
+
+        internal Bucket(int lifeTimeInSeconds)
+        {
+            _expiresAfter = DateTime.Now.AddSeconds(lifeTimeInSeconds);
+            _counters = new ConcurrentDictionary<string, Counter>();           
         }
 
         internal ConcurrentDictionary<string, Counter> Counters
@@ -109,6 +115,11 @@ namespace Graphene.Tracking
                 }
             }
             counter.Increment(by, metricName);
+        }
+
+        internal void setTimeSlot(DateTime timeSlot)
+        {
+            TimeSlot = timeSlot;
         }
 
         public void getAllSearchTags(List<string> filters, List<string> perms)

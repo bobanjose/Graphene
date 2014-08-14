@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Reflection;
 using System.Web.Http;
 using Autofac;
 using Autofac.Integration.WebApi;
-using Graphene.API.Controllers;
 using Graphene.API.Models;
 using Graphene.Configuration;
 using Graphene.Mongo.Reporting;

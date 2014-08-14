@@ -147,10 +147,10 @@ namespace Graphene.Tracking
         private readonly object _syncLock = new object();
         private readonly ITrackable _tracker;
         private readonly Type _trackerType;
-        private readonly int _updateIntervalInSeconds = 180;
-        
-        private Bucket _currentBucket;
+        private const int UPDATE_INTERVAL_IN_SECONDS = 180;        
 
+        private Bucket _currentBucket;
+        
         internal Container()
         {
             _trackerType = typeof (T1);
@@ -244,12 +244,41 @@ namespace Graphene.Tracking
                     {
                         if (_currentBucket != null)
                             _queuedBucket.Enqueue(_currentBucket);
-                        _currentBucket = new Bucket(_updateIntervalInSeconds, _tracker.MinResolution);
+                        _currentBucket = new Bucket(UPDATE_INTERVAL_IN_SECONDS, _tracker.MinResolution);
                     }
                 }
             }
 
             return _currentBucket;
+        }
+
+        //Need another bucket for which, caller provides time
+        //Cannot use _currentBucket because once time is set, that time will be used for all next calls untill bucket expires
+        
+        private Bucket getTimedBucket(DateTime measurementDate)
+        {
+            Bucket timedBucket = null;
+            try
+            {
+                timedBucket = _queuedBucket.FirstOrDefault(x => x.TimeSlot == measurementDate && !x.HasExpired);
+            }
+            catch (InvalidOperationException)
+            {
+                //Collection was modified after the enumerator was instantiated.
+                //In this case, we will create a new bucket
+            }
+            catch (Exception ex)
+            {
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
+            }
+
+            if (timedBucket == null)
+            {
+                timedBucket = new Bucket(UPDATE_INTERVAL_IN_SECONDS);
+                timedBucket.setTimeSlot(measurementDate);
+                _queuedBucket.Enqueue(timedBucket);
+            }
+            return timedBucket;
         }
 
         public static FilteredOperations<T, T1> Where<T>(T filter) where T : struct
@@ -317,10 +346,31 @@ namespace Graphene.Tracking
         {
             Bucket bucket = null;
             try
-            {
+            {               
                 PropertyInfo pi = PropertyHelper<T1>.GetProperty(incAttr);
                 bucket = GetBucket();
                 bucket.IncrementCounter(by, pi.Name);
+            }
+            catch (Exception ex)
+            {
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
+            }
+            return new AddNamedMetric<T1>(bucket, null);
+        }        
+
+        /// <summary>
+        /// Sets the measurement date on the bucket
+        /// </summary>
+        /// <param name="measurementDate">Measurement date</param>
+        /// <returns></returns>
+        public static AddNamedMetric<T1> SetMeasurementDate(DateTime measurementDate)
+        {            
+            Bucket bucket = null;
+            try
+            {
+                var t = getTracker();
+                var roundedMeasurementDate = roundDateWithResolution(measurementDate, t._tracker.MinResolution);
+                bucket = t.getTimedBucket(roundedMeasurementDate);               
             }
             catch (Exception ex)
             {
@@ -369,6 +419,30 @@ namespace Graphene.Tracking
                 }
             }
             return null;
+        }
+
+        private static DateTime roundDateWithResolution(DateTime date, Resolution resolution)
+        {
+            var returnDate = new DateTime();
+            switch (resolution)
+            {
+                case Resolution.FiveMinute:
+                    returnDate = date.Round(TimeSpan.FromMinutes(5));
+                    break;
+                case Resolution.FifteenMinute:
+                    returnDate = date.Round(TimeSpan.FromMinutes(15));
+                    break;
+                case Resolution.Hour:
+                    returnDate = date.Round(TimeSpan.FromHours(1));
+                    break;
+                case Resolution.ThirtyMinute:
+                    returnDate = date.Round(TimeSpan.FromMinutes(30));
+                    break;
+                case Resolution.Minute:
+                    returnDate = date.Round(TimeSpan.FromMinutes(1));
+                    break;
+            }
+            return returnDate;
         }
     }
 
