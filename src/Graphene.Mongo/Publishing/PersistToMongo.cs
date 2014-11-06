@@ -1,12 +1,14 @@
 ﻿// Copyright 2013-2014 Boban Jose
 
 using System;
+using Graphene.Configuration;
 using Graphene.Data;
+using Graphene.Publishing;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 
-namespace Graphene.Publishing
+namespace Graphene.Mongo.Publishing
 {
     public class PersistToMongo : IPersist
     {
@@ -14,13 +16,15 @@ namespace Graphene.Publishing
         private static MongoServer _mongoServer;
         private static MongoDatabase _mongoDatabase;
         private static MongoCollection _mongoCollection;
+        private readonly ILogger _logger;
 
-        public PersistToMongo(string connectionString)
+        public PersistToMongo(string connectionString, ILogger logger)
         {
             _mongoServer = new MongoClient(connectionString).GetServer();
             string databaseName = MongoUrl.Create(connectionString).DatabaseName;
             _mongoDatabase = _mongoServer.GetDatabase(databaseName);
             _mongoCollection = _mongoDatabase.GetCollection(COLLECTION_NAME);
+            _logger = logger;
         }
 
         public void Persist(TrackerData trackerData)
@@ -46,7 +50,7 @@ namespace Graphene.Publishing
             }
             catch (Exception ex)
             {
-                Configurator.Configuration.Logger.Error(ex.Message, ex);
+                _logger.Error(ex.Message, ex);
             }
         }
     }

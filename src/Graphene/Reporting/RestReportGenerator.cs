@@ -56,7 +56,7 @@ namespace Graphene.Reporting
             public ushort TimeSlice { get; set; }
             public string TypeName { get; set; }           
             public Dictionary<string, string> KeyFilters { get; set; }
-            public DateTime MesurementTimeUtc { get; set; }
+            public DateTime? MesurementTimeUtc { get; set; }
 
 
             public IEnumerable<IMeasurementResult> MeasurementValues { get; set; }
@@ -94,7 +94,7 @@ namespace Graphene.Reporting
             public string DisplayName { get; set; }
             public string Description { get; set; }
             public string FullyQualifiedPropertyName { get; set; }
-            public string Value { get; set; }
+            public long Value { get; set; }
         }
         #endregion Implementations
 

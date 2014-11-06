@@ -304,7 +304,6 @@ namespace Graphene.Mongo.Reporting
         private static DateTime ConvertDateTimeDocumentToDateTime(BsonDocument dateTime)
         {
             if (!dateTime.Contains("year"))
-
                 throw new ArgumentException("Cannot convert document provided to basic datetime");
 
             int year = dateTime.Contains("year") ? Convert.ToInt32(dateTime["year"]) : DateTime.MinValue.Year;
@@ -349,9 +348,10 @@ namespace Graphene.Mongo.Reporting
             public ReportResolution resolution
             {
                 get { return _resolution; }
-            }           
+            }
 
-            public IAggregationBuildableResult AddAggregationResult(DateTime mesurementTimeUtc, string typeName, string keyFilter, long occurence, long total)
+
+            public IAggregationBuildableResult AddAggregationResult(DateTime? mesurementTimeUtc, string typeName, string keyFilter, long occurence, long total)
             {
                 var aggregationResultToReturn = new MongoTrackingAggregationResult(mesurementTimeUtc, typeName, keyFilter, occurence, total);
                 _aggregationResults.Add(aggregationResultToReturn);
@@ -361,12 +361,12 @@ namespace Graphene.Mongo.Reporting
             private class MongoTrackingAggregationResult : IAggregationBuildableResult
             {
                 private readonly List<IMeasurementResult> _measurementValues;
-                private DateTime _mesurementTimeUtc;
+                private DateTime? _mesurementTimeUtc;
 
                 /// <summary>
                 ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
                 /// </summary>
-                public MongoTrackingAggregationResult(DateTime mesurementTimeUtc, string typeName, string keyFilter, long occurence, long total)
+                public MongoTrackingAggregationResult(DateTime? mesurementTimeUtc, string typeName, string keyFilter, long occurence, long total)
                 {
                     _mesurementTimeUtc = mesurementTimeUtc;
                     TypeName = typeName;
@@ -389,7 +389,7 @@ namespace Graphene.Mongo.Reporting
 
                 public Dictionary<string, string> KeyFilters { get; private set; }
 
-                public DateTime MesurementTimeUtc
+                public DateTime? MesurementTimeUtc
                 {
                     get { return _mesurementTimeUtc; }
                     set { _mesurementTimeUtc = value; }
@@ -422,7 +422,7 @@ namespace Graphene.Mongo.Reporting
                 {
                     public MongoMeasurementResult(IMeasurement inboundMeasurement, string value)
                     {
-                        Value = value;
+                        Value = Convert.ToInt64(value);
                         PropertyName = inboundMeasurement.PropertyName;
                         DisplayName = inboundMeasurement.DisplayName;
                         Description = inboundMeasurement.Description;
@@ -440,7 +440,7 @@ namespace Graphene.Mongo.Reporting
 
                     public string FullyQualifiedPropertyName { get; private set; }
 
-                    public string Value { get; private set; }
+                    public long Value { get; private set; }
                 }
             }
         }

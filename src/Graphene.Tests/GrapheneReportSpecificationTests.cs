@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Graphene.Reporting;
+using Graphene.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
-namespace Graphene.Tests.Reporting
+namespace Graphene.Reporting
 {
     [TestClass]
     public class ReportSpecificationTests

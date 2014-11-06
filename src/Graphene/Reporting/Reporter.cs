@@ -43,7 +43,7 @@ namespace Graphene.Reporting
             foreach (IAggregationResult aggregationResult in trackerReportResults.AggregationResults)
             {
                 var aggResult = new AggregationResult<T1>();
-                aggResult.MesurementTimeUtc = aggregationResult.MesurementTimeUtc;
+                aggResult.MesurementTimeUtc = aggregationResult.MesurementTimeUtc.GetValueOrDefault();
 
 
                 aggResult.Occurrence = aggregationResult.Occurence;
@@ -54,8 +54,9 @@ namespace Graphene.Reporting
                 {
                     Type type = aggResult.Tracker.GetType();
 
-
-                    PropertyInfo property = type.GetProperty(mV.PropertyName);
+                    PropertyInfo property = null;
+                    if (mV.PropertyName != null)
+                        property = type.GetProperty(mV.PropertyName);
                     if (property != null)
                     {
                         object convertedValue = Convert.ChangeType(mV.Value, property.PropertyType);

@@ -7,24 +7,23 @@ namespace Graphene.Tests.Fakes
         {
             public void Debug(string message)
             {
-
+                System.Diagnostics.Debug.Write(message);
             }
 
             public void Info(string message)
             {
-
+                System.Diagnostics.Debug.Write(message);
             }
 
             public void Warn(string message)
             {
-
+                System.Diagnostics.Debug.Write(message);
             }
 
             public void Error(string message, Exception ex)
             {
-
+                System.Diagnostics.Debug.Write(message);
             }
         } 
-
 
 }

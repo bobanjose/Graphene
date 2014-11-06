@@ -159,8 +159,6 @@ namespace Graphene.Reporting
 
         private void buildListOfMeasurementsForTracker(IEnumerable<Type> trackables)
         {
-            
-
             _counters = trackables.Distinct().SelectMany((x, y) => x.GetProperties()).
                 Where(x => (!_trackableProperties.Contains(x.Name))
                            ||

@@ -43,12 +43,13 @@ namespace Graphene.Util
             return nvList;
         }
 
+        [Obsolete]
         public static List<string> GetPropertyNameValueList(this object obj)
         {
             Type type = obj.GetType();
             var props = new List<PropertyInfo>(type.GetProperties());
             var nvList = new List<string>();
-            foreach (PropertyInfo prop in props)
+            foreach (PropertyInfo prop in props.OrderBy(p=>p.Name))
             {
                 if (prop.PropertyType == typeof(String) || (Nullable.GetUnderlyingType(prop.PropertyType) != null))
                 {
@@ -69,6 +70,31 @@ namespace Graphene.Util
             return nvList;
         }
 
+        public static List<string> GetPropertyNameValueListSorted(this object obj)
+        {
+            Type type = obj.GetType();
+            var props = new List<PropertyInfo>(type.GetProperties());
+            var nvList = new List<string>();
+            foreach (PropertyInfo prop in props.OrderBy(p => p.Name))
+            {
+                if (prop.PropertyType == typeof(String) || (Nullable.GetUnderlyingType(prop.PropertyType) != null))
+                {
+                    object propValue = prop.GetValue(obj, null);
+                    if (propValue != null && !String.IsNullOrWhiteSpace(propValue.ToString()))
+                    {
+                        nvList.Add(string.Format("{0}::{1}", prop.Name.ToUpper(), propValue.ToString().ToUpper()));
+                    }
+                }
+                else
+                {
+                    throw new Exception(
+                        string.Format("All properties of the filter object of type {0}  have to be Nullable Types",
+                            type.FullName));
+                }
+            }
+
+            return nvList;
+        }
 
         public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType)
         {

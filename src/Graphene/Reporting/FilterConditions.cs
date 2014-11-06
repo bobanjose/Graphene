@@ -11,9 +11,9 @@ namespace Graphene.Reporting
 
         public FilterConditions(TFilter filter)
         {
-            var propertyNameValueList = filter.GetPropertyNameValueList();
+            var propertyNameValueList = filter.GetPropertyNameValueListSorted();
             if (propertyNameValueList.Any())
-                _filters.Add(filter.GetPropertyNameValueList().Aggregate((x, z) => string.Concat(x, ",,", z)));
+                _filters.Add(propertyNameValueList.Aggregate((x, z) => string.Concat(x, ",,", z)));
         }
 
         public IEnumerable<string> Filters
@@ -28,9 +28,9 @@ namespace Graphene.Reporting
 
         public FilterConditions(object filter)
         {
-            var propertyNameValueList = filter.GetPropertyNameValueList();
+            var propertyNameValueList = filter.GetPropertyNameValueListSorted();
             if (propertyNameValueList.Any())
-                _filters.Add(filter.GetPropertyNameValueList().Aggregate((x, z) => string.Concat(x, ",,", z)));
+                _filters.Add(propertyNameValueList.Aggregate((x, z) => string.Concat(x, ",,", z)));
         }
 
         public IEnumerable<string> Filters

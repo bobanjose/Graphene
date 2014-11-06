@@ -85,7 +85,7 @@ namespace Graphene.Tracking
 
             if (filter != null)
             {
-                propertyNv = filter.GetPropertyNameValueList();
+                propertyNv = filter.GetPropertyNameValueListSorted();
                 if (propertyNv.Count > 0)
                     keyTag = propertyNv.Aggregate((x, z) => string.Concat(x, ",", z));
             }

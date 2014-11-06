@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene", "Graphene\Graphene.csproj", "{DF87EB29-8E53-4FED-A524-867AB76D71CA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Tests", "Graphene.Tests\Graphene.Tests.csproj", "{21F625E1-02C6-49F9-B26E-C9451209213F}"
@@ -22,6 +24,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Mongo.IntegrationTests", "Graphene.Mongo.IntegrationTests\Graphene.Mongo.IntegrationTests.csproj", "{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Log4net", "Graphene.Log4net\Graphene.Log4net.csproj", "{2E8A1E16-A54C-42D8-9C89-67B83E7FA03F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.SQLServer", "Graphene.SQLServer\Graphene.SQLServer.csproj", "{B8D19F64-84D6-4F82-B1BD-D5A6626E34EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Tools", "Graphene.Tools\Graphene.Tools.csproj", "{D030B85F-EDDB-4532-8C29-02794E0CCFA4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +59,14 @@ Global
 		{2E8A1E16-A54C-42D8-9C89-67B83E7FA03F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E8A1E16-A54C-42D8-9C89-67B83E7FA03F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E8A1E16-A54C-42D8-9C89-67B83E7FA03F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8D19F64-84D6-4F82-B1BD-D5A6626E34EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8D19F64-84D6-4F82-B1BD-D5A6626E34EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8D19F64-84D6-4F82-B1BD-D5A6626E34EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8D19F64-84D6-4F82-B1BD-D5A6626E34EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D030B85F-EDDB-4532-8C29-02794E0CCFA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D030B85F-EDDB-4532-8C29-02794E0CCFA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D030B85F-EDDB-4532-8C29-02794E0CCFA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D030B85F-EDDB-4532-8C29-02794E0CCFA4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

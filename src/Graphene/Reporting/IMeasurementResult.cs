@@ -2,6 +2,6 @@
 {
     public interface IMeasurementResult : IMeasurement
     {
-        string Value { get; }
+        long Value { get; }
     }
 }

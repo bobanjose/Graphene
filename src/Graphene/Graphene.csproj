@@ -40,12 +40,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MongoDB.Bson">
-      <HintPath>..\packages\mongocsharpdriver.1.8.3\lib\net35\MongoDB.Bson.dll</HintPath>
-    </Reference>
-    <Reference Include="MongoDB.Driver">
-      <HintPath>..\packages\mongocsharpdriver.1.8.3\lib\net35\MongoDB.Driver.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -81,7 +75,6 @@
     <Compile Include="Reporting\IReportGenerator.cs" />
     <Compile Include="Publishing\PersistToService.cs" />
     <Compile Include="Publishing\Publisher.cs" />
-    <Compile Include="Publishing\PersistToMongo.cs" />
     <Compile Include="Reporting\FilterConditions.cs" />
     <Compile Include="Reporting\IMeasurement.cs" />
     <Compile Include="Reporting\IReportSpecification.cs" />
