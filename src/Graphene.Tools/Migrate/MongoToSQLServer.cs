@@ -67,15 +67,15 @@ namespace Graphene.Tools.Migrate
             _logger = logger;
         }
 
-        public void Start(bool deleteRecordAfterMigration, int skipDocuments)
+        public void Start(bool deleteRecordAfterMigration, int startAt, int stopAfter, int docsImported)
         {
-            var docNumber = skipDocuments;
+            var docNumber = startAt;
             try
             {
                 var trackerDocuments = _mongoDatabase.GetCollection("TrackerData");
                 var sqlPersister = new PersistToSQLServer(_sqlConnectionString, new ConsoleLogger());
                 
-                foreach (var trackerDocument in trackerDocuments.FindAll().Skip(skipDocuments))
+                foreach (var trackerDocument in trackerDocuments.FindAll().Skip(startAt))
                 {
                     Debug.Write(trackerDocument);
                     TrackerData trakerData = null;
@@ -90,7 +90,6 @@ namespace Graphene.Tools.Migrate
 
                     if (trakerData != null)
                     {
-
                         foreach (var element in trackerDocument.Elements)
                         {
                             switch (element.Name)
@@ -153,8 +152,10 @@ namespace Graphene.Tools.Migrate
                             _logger.Info(string.Format("Migrated Document with ID:{0}, Number{1}", trakerData._id,
                                 docNumber));
                         docNumber++;
-                        if (_stopCalled)
+                        docsImported++;
+                        if (_stopCalled || (stopAfter!=-1 && docsImported >= stopAfter))
                             break;
+                        
                     }
                 }
             }
@@ -163,7 +164,7 @@ namespace Graphene.Tools.Migrate
                 _logger.Error(exception);
                 if (exception is MongoDB.Driver.MongoQueryException && exception.Message == "Cursor not found.")//todo: find out the exception type. 
                 {
-                    Start(deleteRecordAfterMigration, docNumber);
+                    Start(deleteRecordAfterMigration, docNumber, stopAfter, docsImported);
                 }
             }
         }

@@ -27,7 +27,8 @@ namespace Graphene.Tools
             var paraValid = true;
             var mongoConnectionString = string.Empty;
             var sqlConnectionString = string.Empty;
-            var skip = 0;
+            var startAt = 0;
+            var stopAfter = -1;
             var deleteRecordAfterMigration = false;
 
             if (!arguments.ContainsKey("mc"))
@@ -50,15 +51,28 @@ namespace Graphene.Tools
                 sqlConnectionString = arguments["sc"];
             }
 
-            if (arguments.ContainsKey("skip"))
+            if (arguments.ContainsKey("startat"))
             {
                 try
                 {
-                    skip = Convert.ToInt32(arguments["skip"]);
+                    startAt = Convert.ToInt32(arguments["startat"]);
                 }
                 catch
                 {
-                    Console.WriteLine("Invaid value for paramter skip");
+                    Console.WriteLine("Invaid value for paramter startat");
+                    paraValid = false;
+                }
+            }
+
+            if (arguments.ContainsKey("stopafter"))
+            {
+                try
+                {
+                    stopAfter = Convert.ToInt32(arguments["stopafter"]);
+                }
+                catch
+                {
+                    Console.WriteLine("Invaid value for paramter stopafter");
                     paraValid = false;
                 }
             }
@@ -85,7 +99,7 @@ namespace Graphene.Tools
                     _mongoToSqlServerMigrator.Stop();
                 };
 
-                _mongoToSqlServerMigrator.Start(deleteRecordAfterMigration, skip);
+                _mongoToSqlServerMigrator.Start(deleteRecordAfterMigration, startAt, stopAfter, 0);
             }
 
             Console.ReadLine();
