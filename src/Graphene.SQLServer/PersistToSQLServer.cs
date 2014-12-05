@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Graphene.Configuration;
 using Graphene.Data;
 using Graphene.Publishing;
+using Graphene.Tracking;
 using Microsoft.SqlServer.Server;
 
 namespace Graphene.SQLServer
@@ -77,7 +78,7 @@ namespace Graphene.SQLServer
                     SqlParameter mParameter;
                     mParameter = command.Parameters.AddWithValue("@Measurement", createMeasurementDataTable(trackerData));
                     mParameter.SqlDbType = SqlDbType.Structured;
-                    mParameter.TypeName = "dbo.Measurement";
+                    mParameter.TypeName = "dbo.Measurement2";
 
                     command.ExecuteNonQuery();
                 }
@@ -100,13 +101,34 @@ namespace Graphene.SQLServer
             var table = new DataTable();
             table.Columns.Add("Name", typeof(string));
             table.Columns.Add("Value", typeof(long));
+            table.Columns.Add("CoversMinuteBucket", typeof(bool));
+            table.Columns.Add("CoversFiveMinuteBucket", typeof(bool));
+            table.Columns.Add("CoversFifteenMinuteBucket", typeof(bool));
+            table.Columns.Add("CoversThirtyMinuteBucket", typeof(bool));
+            table.Columns.Add("CoversHourBucket", typeof(bool));
+            table.Columns.Add("CoversDayBucket", typeof(bool));
+            table.Columns.Add("CoversMonthBucket", typeof(bool));
+
             foreach (var metrics in trackerData.Measurement.NamedMetrics)
             {
-                table.Rows.Add(metrics.Key, metrics.Value);
+                addToMeasurementTable(trackerData, table, metrics.Key, metrics.Value);
             }
-            table.Rows.Add("_Occurrence", trackerData.Measurement._Occurrence);
-            table.Rows.Add("_Total", trackerData.Measurement._Total);
+
+            addToMeasurementTable(trackerData, table, "_Occurrence", trackerData.Measurement._Occurrence);
+            addToMeasurementTable(trackerData, table, "_Total", trackerData.Measurement._Total);
             return table;
+        }
+
+        private static void addToMeasurementTable(TrackerData trackerData, DataTable table, string metricName, long metricValue)
+        {
+            table.Rows.Add(metricName, metricValue
+                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Minute)
+                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FiveMinute)
+                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FifteenMinute)
+                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.ThirtyMinute)
+                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Hour)
+                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Day)
+                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Month));
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Graphene.Tools
 {
     class Program
     {
-        private static MongoToSQLServer _mongoToSqlServerMigrator;
+        private static MigrateDataToV2 _migrateDataToV2;
 
         static void Main(string[] args)
         {
@@ -26,14 +26,16 @@ namespace Graphene.Tools
             }
             var paraValid = true;
             var mongoConnectionString = string.Empty;
-            var sqlConnectionString = string.Empty;
+            var targetSqlConnectionString = string.Empty;
+            var targetMongoConnectionString = string.Empty;
+
             var startAt = 0;
             var stopAfter = -1;
             var deleteRecordAfterMigration = false;
 
             if (!arguments.ContainsKey("mc"))
             {
-                Console.WriteLine("Missing prameter mc with Mongo Connection String");
+                Console.WriteLine("Missing prameter mc with Mongo Source DB Connection String");
                 paraValid = false;
             }
             else
@@ -48,7 +50,7 @@ namespace Graphene.Tools
             }
             else
             {
-                sqlConnectionString = arguments["sc"];
+                targetSqlConnectionString = arguments["sc"];
             }
 
             if (arguments.ContainsKey("startat"))
@@ -92,30 +94,18 @@ namespace Graphene.Tools
 
             if (paraValid)
             {
-                _mongoToSqlServerMigrator = new MongoToSQLServer(sqlConnectionString, mongoConnectionString, new Logger());
+                _migrateDataToV2 = new MigrateDataToV2(targetSqlConnectionString, mongoConnectionString, new ConsoleLogger());
 
                 Console.CancelKeyPress += delegate
                 {
-                    _mongoToSqlServerMigrator.Stop();
+                    _migrateDataToV2.Stop();
                 };
 
-                _mongoToSqlServerMigrator.Start(deleteRecordAfterMigration, startAt, stopAfter, 0);
+                _migrateDataToV2.Start(deleteRecordAfterMigration, startAt, stopAfter, 0);
             }
 
             Console.ReadLine();
         }
     }
 
-    class Logger:ILog
-    {
-        public void Info(string message)
-        {
-            Console.WriteLine(message);
-        }
-
-        public void Error(Exception exception)
-        {
-            Console.WriteLine("ERROR::" + exception.Message);
-        }
-    }
 }

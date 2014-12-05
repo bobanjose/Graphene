@@ -8,6 +8,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using Graphene.Tracking;
 
 namespace Graphene.Data
 {
@@ -18,6 +20,7 @@ namespace Graphene.Data
         public long _Min { get; set; }
         public long _Max { get; set; }
         public ConcurrentDictionary<string, long> NamedMetrics { get; set; }
+        public List<Resolution> CoveredResolutions { get; set; }
     }
 
     public class TrackerData

@@ -14,7 +14,9 @@ namespace Graphene.Tracking
         FifteenMinute = 1,
         ThirtyMinute = 2,
         FiveMinute = 3,
-        Minute = 4
+        Minute = 4,
+        Day = 5,
+        Month = 6,
     }
 
     public interface ITrackable

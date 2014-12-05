@@ -16,6 +16,7 @@ namespace Graphene.Tracking
     {
         private long _occurance;
         private long _total;
+        private bool _occuranceOveridden = false;
 
         private object syncLock = new object();
 
@@ -43,12 +44,21 @@ namespace Graphene.Tracking
 
         internal void Increment(long by, string metricName)
         {
-            Interlocked.Increment(ref _occurance);
-            if (metricName == null)
-                Interlocked.Add(ref _total, by);
+            if (metricName == "_Occurrence")
+            {
+                _occurance = by;
+                _occuranceOveridden = true;
+            }
             else
             {
-                NamedMetrics.AddOrUpdate(metricName, by, (i, t) => t + by);
+                if (!_occuranceOveridden)
+                    Interlocked.Increment(ref _occurance);
+                if (metricName == null || metricName == "_Total")
+                    Interlocked.Add(ref _total, by);
+                else
+                {
+                    NamedMetrics.AddOrUpdate(metricName, by, (i, t) => t + by);
+                }
             }
         }
     }

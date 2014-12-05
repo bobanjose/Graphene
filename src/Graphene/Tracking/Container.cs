@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Graphene.Data;
 using Graphene.Publishing;
@@ -145,13 +146,13 @@ namespace Graphene.Tracking
         private static ReaderWriterLockSlim _trackerLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private readonly Queue<Bucket> _queuedBucket = new Queue<Bucket>();
         private readonly object _syncLock = new object();
-        private readonly ITrackable _tracker;
-        private readonly Type _trackerType;
+        private ITrackable _tracker;
+        private Type _trackerType;
         private const int UPDATE_INTERVAL_IN_SECONDS = 180;        
 
         private Bucket _currentBucket;
-        
-        internal Container()
+
+        public Container()
         {
             _trackerType = typeof (T1);
             _tracker = new T1();
@@ -172,12 +173,13 @@ namespace Graphene.Tracking
         internal override IEnumerable<TrackerData> GetTrackerData(bool flushAll)
         {
             getCurrentBucket(flushAll);
+            var trackerData = new List<TrackerData>();
             while (_queuedBucket.Count > 0)
             {
                 Bucket bucket = _queuedBucket.Dequeue();
-                foreach (Counter counter in bucket.Counters.Values)
+                foreach (var counter in bucket.Counters.Values)
                 {
-                    yield return new TrackerData((typeof (T1)).FullName)
+                    trackerData.Add(new TrackerData((typeof (T1)).FullName)
                     {
                         KeyFilter = counter.KeyFilter,
                         Name = _tracker.Name,
@@ -187,20 +189,42 @@ namespace Graphene.Tracking
                         {
                             _Occurrence = counter.Occurrence,
                             _Total = counter.Total,
-                            NamedMetrics = counter.NamedMetrics
+                            NamedMetrics = counter.NamedMetrics,
+                            CoveredResolutions = bucket.CoveredResolutions
                         }
-                    };
+                    });
+                }
+                foreach (var lowRezBucket in bucket.LowResolutionBuckets)
+                {
+                    foreach (var counter in lowRezBucket.Counters.Values)
+                    {
+                        trackerData.Add(new TrackerData((typeof(T1)).FullName)
+                        {
+                            KeyFilter = counter.KeyFilter,
+                            Name = _tracker.Name,
+                            SearchFilters = counter.SearchTags.ToArray(),
+                            TimeSlot = lowRezBucket.TimeSlot,
+                            Measurement = new Measure
+                            {
+                                _Occurrence = counter.Occurrence,
+                                _Total = counter.Total,
+                                NamedMetrics = counter.NamedMetrics,
+                                CoveredResolutions = lowRezBucket.CoveredResolutions
+                            }
+                        });
+                    }
                 }
             }
+            return trackerData;
         }
 
-        private static Container<T1> getTracker()
+        private static Container<T1> getTrackerContainer(Container<T1> trackerContainer = null)
         {
-            var t = new Container<T1>();
+            Container<T1> t = null;
             _trackerLock.EnterReadLock();
             try
             {
-                t = _trackers.Where(t1 => t1.Equals(t)).FirstOrDefault();
+                t = _trackers.FirstOrDefault(t1 => t1.Equals(t));
             }
             finally
             {
@@ -211,10 +235,10 @@ namespace Graphene.Tracking
                 _trackerLock.EnterWriteLock();
                 try
                 {
-                    t = _trackers.Where(t1 => t1.Equals(t)).FirstOrDefault();
+                    t = _trackers.FirstOrDefault(t1 => t1.Equals(t));
                     if (t == null)
                     {
-                        t = new Container<T1>();
+                        t = trackerContainer ?? new Container<T1>();
                         _trackers.Add(t);
                         Publisher.Register(t);
                     }
@@ -230,7 +254,7 @@ namespace Graphene.Tracking
 
         internal static Bucket GetBucket()
         {
-            Container<T1> t = getTracker();
+            Container<T1> t = getTrackerContainer();
             return t.getCurrentBucket(false);
         }
 
@@ -255,7 +279,7 @@ namespace Graphene.Tracking
         //Need another bucket for which, caller provides time
         //Cannot use _currentBucket because once time is set, that time will be used for all next calls untill bucket expires
         
-        private Bucket getTimedBucket(DateTime measurementDate)
+        private Bucket getTimedBucket(DateTime measurementDate, Resolution minResolution)
         {
             Bucket timedBucket = null;
             try
@@ -274,8 +298,8 @@ namespace Graphene.Tracking
 
             if (timedBucket == null)
             {
-                timedBucket = new Bucket(UPDATE_INTERVAL_IN_SECONDS);
-                timedBucket.setTimeSlot(measurementDate);
+                timedBucket = new Bucket(UPDATE_INTERVAL_IN_SECONDS, minResolution, measurementDate);
+                //timedBucket.setTimeSlot(measurementDate);
                 _queuedBucket.Enqueue(timedBucket);
             }
             return timedBucket;
@@ -285,7 +309,7 @@ namespace Graphene.Tracking
         {
             try
             {
-                return new FilteredOperations<T, T1>(getTracker(), filter);
+                return new FilteredOperations<T, T1>(getTrackerContainer(), filter);
             }
             catch (Exception ex)
             {
@@ -328,6 +352,24 @@ namespace Graphene.Tracking
             return Reporter<EmptyFilter, T1>.Report(fromUtc, toUtc, reportSpecs);
         }
 
+        internal void Increment(ITrackable tracker, Resolution minResolution, DateTime timeSlot, string propertyName, long by, object filter)
+        {
+            try
+            {
+                _trackerType = typeof(T1);
+                _tracker = tracker;
+                var trackerContainer = getTrackerContainer(this);
+
+                var bucket = new Bucket(0, minResolution, timeSlot);
+                trackerContainer._queuedBucket.Enqueue(bucket);
+                bucket.IncrementCounter(by, propertyName, filter);
+            }
+            catch (Exception ex)
+            {
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
+            }
+        }
+
         internal void Increment(Expression<Func<T1, long>> incAttr, long by, object filter)
         {
             try
@@ -368,9 +410,9 @@ namespace Graphene.Tracking
             Bucket bucket = null;
             try
             {
-                var t = getTracker();
-                var roundedMeasurementDate = roundDateWithResolution(measurementDate, t._tracker.MinResolution);
-                bucket = t.getTimedBucket(roundedMeasurementDate);               
+                var t = getTrackerContainer();
+                //var roundedMeasurementDate = roundDateWithResolution(measurementDate, t._tracker.MinResolution);
+                bucket = t.getTimedBucket(measurementDate, t._tracker.MinResolution);               
             }
             catch (Exception ex)
             {

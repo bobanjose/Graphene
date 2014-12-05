@@ -37,9 +37,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -73,26 +73,26 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
 
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 10);
-            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 5);
-            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 2);
+            //Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 5);
+            //Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 2);
 
 
-            Container<TrackerWithCountProperties>.Where(new CustomerFilter
-            {
-                Environment_ServerName = "Env1",
-                Gender = "M",
-                State = "MN",
-                StoreID = Guid.NewGuid().ToString("D")
-            }).Increment(t => t.ElderlyCount, 2)
-            .Increment(t => t.MiddleAgedCount, 1);
+            //Container<TrackerWithCountProperties>.Where(new CustomerFilter
+            //{
+            //    Environment_ServerName = "Env1",
+            //    Gender = "M",
+            //    State = "MN",
+            //    StoreID = Guid.NewGuid().ToString("D")
+            //}).Increment(t => t.ElderlyCount, 2)
+            //.Increment(t => t.MiddleAgedCount, 1);
 
             Configurator.ShutDown();
 
@@ -130,9 +130,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -164,9 +164,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -203,9 +203,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -243,9 +243,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -287,9 +287,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLEXPRESS2014;Database=Graphene;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );

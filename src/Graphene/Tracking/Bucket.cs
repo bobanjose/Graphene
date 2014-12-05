@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Graphene.Util;
+using Newtonsoft.Json.Bson;
 
 namespace Graphene.Tracking
 {
@@ -19,37 +20,118 @@ namespace Graphene.Tracking
         private readonly ConcurrentDictionary<string, Counter> _counters;
         private readonly DateTime _expiresAfter;
         private readonly object _syncLock = new object();
+        private readonly List<Bucket> _lowRezBuckets = new List<Bucket>();
+        private readonly List<Resolution> _coveredResolutions = new List<Resolution>(); 
 
-        internal Bucket(int lifeTimeInSeconds, Resolution resolution)
+        internal Bucket(int lifeTimeInSeconds, Resolution minResolution, DateTime? timeNow = null, bool isLowerResolutionBucket = false)
         {
-            _expiresAfter = DateTime.Now.AddSeconds(lifeTimeInSeconds);
+            DateTime timeNow1 = DateTime.Now;
+            if (timeNow.HasValue)
+                timeNow1 = timeNow.Value;
+            _expiresAfter = timeNow1.AddSeconds(lifeTimeInSeconds);
             _counters = new ConcurrentDictionary<string, Counter>();
-                       
-            switch (resolution)
+            if (isLowerResolutionBucket)
+                _coveredResolutions.Add(minResolution);
+            switch (minResolution)
             {
                 case Resolution.FiveMinute:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(5));
+                    TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(5));
+                    if (!isLowerResolutionBucket)
+                        _coveredResolutions.AddRange(new[] { Resolution.FiveMinute, Resolution.Minute});
                     break;
                 case Resolution.FifteenMinute:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(15));
+                    TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(15));
+                    if (!isLowerResolutionBucket)
+                        _coveredResolutions.AddRange(new[] { Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
                     break;
                 case Resolution.Hour:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromHours(1));
+                    TimeSlot = timeNow1.Round(TimeSpan.FromHours(1));
+                    if (!isLowerResolutionBucket)
+                        _coveredResolutions.AddRange(new[] { Resolution.Hour, Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
                     break;
                 case Resolution.ThirtyMinute:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(30));
+                    TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(30));
+                    if (!isLowerResolutionBucket)
+                        _coveredResolutions.AddRange(new[] { Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
                     break;
                 case Resolution.Minute:
-                    TimeSlot = DateTime.Now.Round(TimeSpan.FromMinutes(1));
+                    TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(1));
+                    if (!isLowerResolutionBucket)
+                        _coveredResolutions.AddRange(new[] { Resolution.Minute });
+                    break;
+                case Resolution.Day:
+                    TimeSlot = new DateTime(timeNow1.Year, timeNow1.Month, timeNow1.Day);
+                    if (!isLowerResolutionBucket)
+                        _coveredResolutions.AddRange(new[] { Resolution.Day, Resolution.Hour, Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
+                    break;
+                case Resolution.Month:
+                    TimeSlot = new DateTime(timeNow1.Year, timeNow1.Month, 1);
+                    if (!isLowerResolutionBucket)
+                        _coveredResolutions.AddRange(new[] { Resolution.Month, Resolution.Day, Resolution.Hour, Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
+                    break;
+            } 
+            if (!isLowerResolutionBucket)
+                initalizeLowRezBuckets(lifeTimeInSeconds, minResolution);
+        }
+
+        private void initalizeLowRezBuckets(int lifeTimeInSeconds, Resolution minResolution)
+        {
+            switch (minResolution)
+            {
+                case Resolution.FiveMinute:
+                    _lowRezBuckets.AddRange(new Bucket[]
+                    {
+                        new Bucket(lifeTimeInSeconds, Resolution.FifteenMinute, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Hour, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Day, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Month, TimeSlot, true),
+                    });
+            
+                    break;
+                case Resolution.FifteenMinute:
+                    _lowRezBuckets.AddRange(new Bucket[]
+                    {
+                        new Bucket(lifeTimeInSeconds, Resolution.Hour, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Day, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Month, TimeSlot, true),
+                    });
+                    break;
+                case Resolution.Hour:
+                    _lowRezBuckets.AddRange(new Bucket[]
+                    {
+                        new Bucket(lifeTimeInSeconds, Resolution.Day, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Month, TimeSlot, true),
+                    });
+                    break;
+                case Resolution.ThirtyMinute:
+                    _lowRezBuckets.AddRange(new Bucket[]
+                    {
+                        new Bucket(lifeTimeInSeconds, Resolution.Hour, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Day, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Month, TimeSlot, true),
+                    });
+                    break;
+                case Resolution.Minute:
+                    _lowRezBuckets.AddRange(new Bucket[]
+                    {
+                        new Bucket(lifeTimeInSeconds, Resolution.FifteenMinute, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Hour, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Day, TimeSlot, true),
+                        new Bucket(lifeTimeInSeconds, Resolution.Month, TimeSlot, true),
+                    });
                     break;
             }
         }
 
-        internal Bucket(int lifeTimeInSeconds)
+        public List<Bucket> LowResolutionBuckets
         {
-            _expiresAfter = DateTime.Now.AddSeconds(lifeTimeInSeconds);
-            _counters = new ConcurrentDictionary<string, Counter>();           
+            get { return _lowRezBuckets; }
         }
+
+        public List<Resolution> CoveredResolutions
+        {
+            get { return _coveredResolutions; }
+        } 
 
         internal ConcurrentDictionary<string, Counter> Counters
         {
@@ -115,6 +197,8 @@ namespace Graphene.Tracking
                 }
             }
             counter.Increment(by, metricName);
+
+            _lowRezBuckets.ForEach(b => b.IncrementCounter(by, metricName, filter));
         }
 
         internal void setTimeSlot(DateTime timeSlot)
