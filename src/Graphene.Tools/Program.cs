@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Configuration;
+using Graphene.Configuration;
 using Graphene.Tools.Migrate;
 
 namespace Graphene.Tools
 {
     class Program
     {
-        private static MigrateDataToV2 _migrateDataToV2;
-
         static void Main(string[] args)
         {
             var arguments = new Dictionary<string, string>();
@@ -29,14 +26,18 @@ namespace Graphene.Tools
             var targetSqlConnectionString = string.Empty;
             var targetMongoConnectionString = string.Empty;
 
-            var startAt = 0;
             var stopAfter = -1;
             var deleteRecordAfterMigration = false;
 
             if (!arguments.ContainsKey("mc"))
             {
                 Console.WriteLine("Missing prameter mc with Mongo Source DB Connection String");
-                paraValid = false;
+                mongoConnectionString = ConfigurationManager.AppSettings["MongoDBConnectionString"];
+                if (String.IsNullOrEmpty(mongoConnectionString) ||
+                    String.IsNullOrWhiteSpace(mongoConnectionString))
+                {
+                    paraValid = false;
+                }
             }
             else
             {
@@ -46,24 +47,16 @@ namespace Graphene.Tools
             if (!arguments.ContainsKey("sc"))
             {
                 Console.WriteLine("Missing prameter sc with SQL Connection String");
-                paraValid = false;
+                targetSqlConnectionString = ConfigurationManager.AppSettings["MSSQLConnectionString"];
+                if (String.IsNullOrEmpty(targetSqlConnectionString) ||
+                    String.IsNullOrWhiteSpace(targetSqlConnectionString))
+                {
+                    paraValid = false;
+                }
             }
             else
             {
                 targetSqlConnectionString = arguments["sc"];
-            }
-
-            if (arguments.ContainsKey("startat"))
-            {
-                try
-                {
-                    startAt = Convert.ToInt32(arguments["startat"]);
-                }
-                catch
-                {
-                    Console.WriteLine("Invaid value for paramter startat");
-                    paraValid = false;
-                }
             }
 
             if (arguments.ContainsKey("stopafter"))
@@ -94,14 +87,14 @@ namespace Graphene.Tools
 
             if (paraValid)
             {
-                _migrateDataToV2 = new MigrateDataToV2(targetSqlConnectionString, mongoConnectionString, new ConsoleLogger());
-
+                ILogger _logger = new MigrateConsoleLogger();
+                var _mongoToSqlServerMigrator = new MongoToSQLServer(targetSqlConnectionString, mongoConnectionString, _logger);
                 Console.CancelKeyPress += delegate
                 {
-                    _migrateDataToV2.Stop();
+                    _mongoToSqlServerMigrator.Stop();
                 };
 
-                _migrateDataToV2.Start(deleteRecordAfterMigration, startAt, stopAfter, 0);
+                _mongoToSqlServerMigrator.Start(deleteRecordAfterMigration, stopAfter);
             }
 
             Console.ReadLine();
