@@ -24,9 +24,10 @@ namespace Graphene.Tools
             var paraValid = true;
             var mongoConnectionString = string.Empty;
             var targetSqlConnectionString = string.Empty;
-            var targetMongoConnectionString = string.Empty;
+            var startDate = DateTime.MinValue;
+            var endDate = DateTime.MaxValue;
+            var daysInSpan = -1;
 
-            var stopAfter = -1;
             var deleteRecordAfterMigration = false;
 
             if (!arguments.ContainsKey("mc"))
@@ -59,20 +60,7 @@ namespace Graphene.Tools
                 targetSqlConnectionString = arguments["sc"];
             }
 
-            if (arguments.ContainsKey("stopafter"))
-            {
-                try
-                {
-                    stopAfter = Convert.ToInt32(arguments["stopafter"]);
-                }
-                catch
-                {
-                    Console.WriteLine("Invaid value for paramter stopafter");
-                    paraValid = false;
-                }
-            }
-
-            if (arguments.ContainsKey("deleteaftermigration"))
+           if (arguments.ContainsKey("deleteaftermigration"))
             {
                 try
                 {
@@ -80,7 +68,46 @@ namespace Graphene.Tools
                 }
                 catch
                 {
-                    Console.WriteLine("Invaid value for paramter deleteaftermigration");
+                    Console.WriteLine("Invalid value for paramter deleteaftermigration");
+                    paraValid = false;
+                }
+            }
+
+            if (arguments.ContainsKey("startdate"))
+            {
+                try
+                {
+                    startDate = Convert.ToDateTime(arguments["startdate"]);
+                }
+                catch
+                {
+                    Console.WriteLine("Invalid value for paramter startdate");
+                    paraValid = false;
+                }
+            }
+
+            if (arguments.ContainsKey("enddate"))
+            {
+                try
+                {
+                    endDate = Convert.ToDateTime(arguments["enddate"]);
+                }
+                catch
+                {
+                    Console.WriteLine("Invalid value for paramter enddate");
+                    paraValid = false;
+                }
+            }
+
+            if (arguments.ContainsKey("timespansindays"))
+            {
+                try
+                {
+                    daysInSpan = Convert.ToInt32(arguments["timespansindays"]);
+                }
+                catch
+                {
+                    Console.WriteLine("Invalid value for paramter timespansindays");
                     paraValid = false;
                 }
             }
@@ -94,7 +121,7 @@ namespace Graphene.Tools
                     _mongoToSqlServerMigrator.Stop();
                 };
 
-                _mongoToSqlServerMigrator.Start(deleteRecordAfterMigration, stopAfter);
+                _mongoToSqlServerMigrator.Start(deleteRecordAfterMigration, startDate, endDate, daysInSpan);
             }
 
             Console.ReadLine();

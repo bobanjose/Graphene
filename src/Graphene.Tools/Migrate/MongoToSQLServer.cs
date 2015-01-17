@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Graphene.Configuration;
@@ -67,9 +68,11 @@ namespace Graphene.Tools.Migrate
         private bool _stopCalled;
         private static readonly int DegreeOfParallelism = int.Parse(ConfigurationManager.AppSettings["DegreeOfParallelism"]);
         private static readonly DateTime StartTime = DateTime.Now;
-        private static int _stopAfter;
         private static bool _deleteRecordAfterMigration;
-        
+        private DateTime _startDate;
+        private DateTime _endDate;
+        private int _daysInRange;
+
         public MongoToSQLServer(string sqlConnectionString, string mongoConnectionString, ILogger logger)
         {
             _sqlConnectionString = sqlConnectionString;
@@ -82,22 +85,29 @@ namespace Graphene.Tools.Migrate
             _logger = logger;
         }
 
-        public void Start(bool deleteRecordAfterMigration, int stopAfter)
+        public void Start(bool deleteRecordAfterMigration, DateTime startDate, DateTime endDate, int daysInRange = -1)
         {
             _deleteRecordAfterMigration = deleteRecordAfterMigration;
-            _stopAfter = stopAfter;
-            var dates = getDateRange();
+
+            _startDate = (startDate == DateTime.MinValue ? DateTime.Parse(ConfigurationManager.AppSettings["StartDate"]) : startDate);
+            _endDate = (endDate == DateTime.MaxValue ? DateTime.Parse(ConfigurationManager.AppSettings["EndDate"]) : endDate);
+            _daysInRange = daysInRange == -1 ? int.Parse(ConfigurationManager.AppSettings["TimeSpanInDays"]) : daysInRange;
+
+            var dates = getDateRange(_startDate, _endDate, _daysInRange);
             var sqlIds = getSqlIds();
-            Parallel.ForEach(dates, new ParallelOptions { MaxDegreeOfParallelism = DegreeOfParallelism },
+            Parallel.ForEach(dates, new ParallelOptions {MaxDegreeOfParallelism = DegreeOfParallelism},
                 range => processDateRange(range.Item1, range.Item2, sqlIds.ToList()));
 
             var end = DateTime.Now;
             Console.WriteLine("Job end: {0}", end.ToString("MM/dd/yy HH:mm:ss"));
-            Console.WriteLine("Transfer took {0} total", (end - StartTime).ToString("d'd 'hh'h 'mm'm 'ss's'"));
+            Console.WriteLine("Document Transfer took {0} total", (end - StartTime).ToString("d'd 'hh'h 'mm'm 'ss's'"));
             Console.WriteLine("Beginning data conversion {0}", DateTime.Now.ToString("MM/dd/yy HH:mm:ss"));
             startBulkConversion();
+            Console.WriteLine("Data conversion ended {0}", DateTime.Now.ToString("MM/dd/yy HH:mm:ss"));
+            Console.WriteLine("Data conversion took {0} total", (DateTime.Now - end).ToString("d'd 'hh'h 'mm'm 'ss's'"));
+            Console.WriteLine("Full Migration took {0} total", (DateTime.Now - StartTime).ToString("d'd 'hh'h 'mm'm 'ss's'"));
+            Console.WriteLine("Press enter to finalize.");
         }
-
 
         private void processDateRange(DateTime start, DateTime end, List<string> sqlIds)
         {
@@ -137,15 +147,12 @@ namespace Graphene.Tools.Migrate
             }
         }
 
-        private static IEnumerable<Tuple<DateTime, DateTime>> getDateRange()
+        private static IEnumerable<Tuple<DateTime, DateTime>> getDateRange(DateTime startDate, DateTime endDate, int daysInRange)
         {
-            var startDate = DateTime.Parse(ConfigurationManager.AppSettings["StartDate"]);
-            var endDate = DateTime.Parse(ConfigurationManager.AppSettings["EndDate"]);
-            var days = int.Parse(ConfigurationManager.AppSettings["TimeSpanInDays"]);
-            return createRange(startDate, endDate, days);
+            return createRange(startDate, endDate, daysInRange);
         }
 
-        private static IEnumerable<Tuple<DateTime, DateTime>> createRange(DateTime start, DateTime end, int days = 7)
+        private static IEnumerable<Tuple<DateTime, DateTime>> createRange(DateTime start, DateTime end, int days = 2)
         {
             var ret = new Tuple<DateTime, DateTime>(start, start.AddDays(days));
             do
@@ -186,7 +193,18 @@ namespace Graphene.Tools.Migrate
             List<string> idsList = new List<string>();
             using (var conn = new SqlConnection(sqlConnStr))
             {
-                conn.Open();
+                try
+                {
+                    conn.Open();
+                }
+                catch (SqlException ex)
+                {
+                    Console.WriteLine("Unable to connect to Sql Server database.");
+                    if (ex.Number != 10060)
+                    {
+                        throw;
+                    }
+                }
                 SqlDataReader result;
                 using (var cmd = new SqlCommand("SELECT Tracker_Document_Id FROM " + sqlTableName, conn))
                 {
@@ -195,22 +213,36 @@ namespace Graphene.Tools.Migrate
                         result = cmd.ExecuteReader();
 
                     }
-                    catch (SqlException)
+                    catch (SqlException ex)
                     {
-                        using (
-                            var createTable =
-                                new SqlCommand(
-                                    "CREATE TABLE [dbo].[TrackerDocuments]([Tracker_Document_Id] [nvarchar](400) NOT NULL,[Tracker_Json_Document] [nvarchar](MAX) NOT NULL,[Tracker_Xml_Document] [xml] NULL,[Document_Processed_By_Sproc] [nchar](1) NULL,[Document_Converted_By_Bulk_Load] [nchar](1) NULL) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]",
-                                    conn))
+                        if (ex.Number == 208)
                         {
-                            try
+                            using (
+                                var createTable =
+                                    new SqlCommand(
+                                        "CREATE TABLE [dbo].[TrackerDocuments]([Tracker_Document_Id] [nvarchar](400) NOT NULL,[Tracker_Json_Document] [nvarchar](MAX) NOT NULL,[Tracker_Xml_Document] [xml] NULL,[Document_Processed_By_Sproc] [nchar](1) NULL,[Document_Converted_By_Bulk_Load] [nchar](1) NULL) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]",
+                                        conn))
                             {
-                                createTable.ExecuteNonQuery();
+                                try
+                                {
+                                    createTable.ExecuteNonQuery();
+                                }
+                                // ReSharper disable once EmptyGeneralCatchClause
+                                catch
+                                {
+                                }
                             }
-                            // ReSharper disable once EmptyGeneralCatchClause
-                            catch { }
+                            result = cmd.ExecuteReader();
                         }
-                        result = cmd.ExecuteReader();
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        Console.WriteLine("Cannot load document ids to skip.");
+                        throw;
                     }
                     while (result.Read())
                     {
@@ -232,8 +264,16 @@ namespace Graphene.Tools.Migrate
                 {
                     using (new SqlCommandBuilder(adapter))
                     {
-                        adapter.FillLoadOption = LoadOption.Upsert;
-                        adapter.Update(values);
+                        try
+                        {
+                            adapter.FillLoadOption = LoadOption.Upsert;
+                            adapter.Update(values);
+                        }
+                        catch (SqlException ex)
+                        {
+                            if (ex.Number != 2627)
+                                throw;
+                        }
                     }
                 }
             }
@@ -245,12 +285,11 @@ namespace Graphene.Tools.Migrate
             table.Columns.Add("Tracker_Document_Id", typeof (string));
             table.Columns.Add("Tracker_Json_Document", typeof (string));
             table.Columns.Add("Tracker_Xml_Document", typeof (string));
-            table.Columns.Add("Document_Processed_By_Sproc", typeof (char));
             table.Columns.Add("Document_Converted_By_Bulk_Load", typeof (char));
 
             foreach (var tdp in tdps)
             {
-                table.Rows.Add(tdp.Id, tdp.ToJson(), tdp.ToXml(), 'N', 'N');
+                table.Rows.Add(tdp.Id, tdp.ToJson(), tdp.ToXml(), 'N');
             }
 
             return table;
