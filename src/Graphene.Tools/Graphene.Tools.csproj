@@ -52,7 +52,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Migrate\MigrateConsoleLogger.cs" />
-    <Compile Include="Migrate\MigrateDataToV2.cs" />
     <Compile Include="Migrate\MongoToSQLServer.cs" />
     <Compile Include="Migrate\TrackerBuilder.cs" />
     <Compile Include="Program.cs" />

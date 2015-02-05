@@ -56,7 +56,15 @@ namespace Graphene.SQLServer
                         tnParameter.TypeName = "dbo.TypeName";
 
                         var sqlReader = command.ExecuteReader();
-                        int timeSlotC = sqlReader.GetOrdinal("TimeSlot");
+
+                        string query = command.CommandText;
+
+                        foreach (SqlParameter p in command.Parameters)
+                        {
+                            query = query.Replace(p.ParameterName, p.Value.ToString());
+                        }
+
+                        int timeSlotC = sqlReader.GetOrdinal("MeasureTime");
 
                         var mesurementTypeList = new Dictionary<string, IMeasurement>();
 
@@ -65,41 +73,58 @@ namespace Graphene.SQLServer
                             DateTime? measurementDate = null;
 
                             if (!sqlReader.IsDBNull(timeSlotC))
+                            {
                                 measurementDate = sqlReader.GetDateTime(timeSlotC);
 
-                            string typeName = null;
-                            if (sqlReader["TypeName"] != DBNull.Value)
-                                typeName = (string)sqlReader["TypeName"];
+                                string typeName = null;
+                                if (sqlReader["TypeName"] != DBNull.Value)
+                                    typeName = (string) sqlReader["TypeName"];
 
-                            string measurementName = null;
-                            if (sqlReader["MeasurementName"] != DBNull.Value)
-                                measurementName = (string)sqlReader["MeasurementName"];
+                                string measurementName = null;
+                                if (sqlReader["MeasurementName"] != DBNull.Value)
+                                    measurementName = (string) sqlReader["MeasurementName"];
 
-                            IMeasurement measurement = null;
-                            string typeFullyName = null;
+                                IMeasurement measurement = null;
+                                string typeFullyName = null;
 
-                            if (typeName != null && measurementName != null)
-                            {
-                                typeFullyName = string.Concat(typeName, ".", measurementName);
-                                mesurementTypeList.TryGetValue(typeFullyName, out measurement);
-                            }
-
-                            if (measurement == null)
-                            {
-                                if (typeFullyName != null)
+                                if (typeName != null && measurementName != null)
                                 {
-                                    measurement = specification.Counters.FirstOrDefault(
-                                        x => x.FullyQualifiedPropertyName == typeFullyName) ??
-                                                  new SqlMeasurement() { TrackerTypeName = typeName, Description = typeName, DisplayName = typeName, PropertyName = measurementName };
-                                    mesurementTypeList.Add(typeFullyName, measurement);
+                                    typeFullyName = string.Concat(typeName, ".", measurementName);
+                                    mesurementTypeList.TryGetValue(typeFullyName, out measurement);
                                 }
-                                else
+
+                                if (measurement == null)
                                 {
-                                    measurement = new SqlMeasurement() { TrackerTypeName = typeName, Description = typeName, DisplayName = typeName, PropertyName = measurementName };
+                                    if (typeFullyName != null)
+                                    {
+                                        measurement = specification.Counters.FirstOrDefault(
+                                            x => x.FullyQualifiedPropertyName == typeFullyName) ??
+                                                      new SqlMeasurement()
+                                                      {
+                                                          TrackerTypeName = typeName,
+                                                          Description = typeName,
+                                                          DisplayName = typeName,
+                                                          PropertyName = measurementName
+                                                      };
+                                        mesurementTypeList.Add(typeFullyName, measurement);
+                                    }
+                                    else
+                                    {
+                                        measurement = new SqlMeasurement()
+                                        {
+                                            TrackerTypeName = typeName,
+                                            Description = typeName,
+                                            DisplayName = typeName,
+                                            PropertyName = measurementName
+                                        };
+                                    }
                                 }
+                                results.AddAggregationResult(measurementDate, typeName,
+                                    (sqlReader.HasColumn("Filter") && sqlReader["Filter"] != DBNull.Value)
+                                        ? (string) sqlReader["Filter"]
+                                        : null,
+                                    measurement, (long) sqlReader["MeasurementValue"]);
                             }
-                            results.AddAggregationResult(measurementDate, typeName, (sqlReader.HasColumn("Filter") && sqlReader["Filter"] != DBNull.Value) ? (string)sqlReader["Filter"] : null,
-                                    measurement, (long)sqlReader["MeasurementValue"]);
                         }
                     }
                 }

@@ -21,14 +21,16 @@ namespace Graphene.Data
         public long _Max { get; set; }
         public ConcurrentDictionary<string, long> NamedMetrics { get; set; }
         public List<Resolution> CoveredResolutions { get; set; }
+        public Resolution BucketResolution { get; set; }
     }
 
     public class TrackerData
     {
-        public TrackerData(string typeName)
+        public TrackerData(string typeName, Resolution minResolution)
         {
             TypeName = typeName;
             KeyFilter = string.Empty;
+            MinResolution = minResolution;
         }
 
         public string _id
@@ -45,6 +47,8 @@ namespace Graphene.Data
         public string KeyFilter { get; set; }
 
         public string[] SearchFilters { get; set; }
+
+        public Resolution MinResolution { get; private set; }
 
         public Measure Measurement { get; set; }
     }

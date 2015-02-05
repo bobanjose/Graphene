@@ -14,9 +14,7 @@ namespace Graphene.Reporting
 
             double reportSpan = toUtc.Subtract(fromUtc).TotalDays;
 
-            if (reportSpan > 3600)
-                resolution = ReportResolution.Year;
-            else if (reportSpan >= 180)
+            if (reportSpan > 180)
                 resolution = ReportResolution.Month;
             else if (reportSpan >= 10)
                 resolution = ReportResolution.Day;

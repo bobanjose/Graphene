@@ -7,11 +7,14 @@ namespace Graphene.Reporting
 {
     public enum ReportResolution
     {
-        Minute = 0,
-        Hour = 1,
-        Day = 2,
-        Month = 3,
-        Year = 4
+        Hour = 0,
+        FifteenMinute = 1,
+        ThirtyMinute = 2,
+        FiveMinute = 3,
+        Minute = 4,
+        Day = 5,
+        Month = 6,
+        Year = 7
     }
 
     public interface IReportSpecification

@@ -64,6 +64,9 @@ namespace Graphene.SQLServer
                     command.Parameters.Add("@TypeName", SqlDbType.NVarChar);
                     command.Parameters["@TypeName"].Value = trackerData.TypeName;
 
+                    command.Parameters.Add("@MinResolution", SqlDbType.Int);
+                    command.Parameters["@MinResolution"].Value = trackerData.MinResolution;
+
                     command.Parameters.Add("@KeyFilter", SqlDbType.NVarChar);
                     command.Parameters["@KeyFilter"].Value = trackerData.KeyFilter;
 
@@ -78,7 +81,7 @@ namespace Graphene.SQLServer
                     SqlParameter mParameter;
                     mParameter = command.Parameters.AddWithValue("@Measurement", createMeasurementDataTable(trackerData));
                     mParameter.SqlDbType = SqlDbType.Structured;
-                    mParameter.TypeName = "dbo.Measurement2";
+                    mParameter.TypeName = "dbo.Measurement";
 
                     command.ExecuteNonQuery();
                 }
@@ -101,6 +104,7 @@ namespace Graphene.SQLServer
             var table = new DataTable();
             table.Columns.Add("Name", typeof(string));
             table.Columns.Add("Value", typeof(long));
+            table.Columns.Add("BucketResolution", typeof(int));
             table.Columns.Add("CoversMinuteBucket", typeof(bool));
             table.Columns.Add("CoversFiveMinuteBucket", typeof(bool));
             table.Columns.Add("CoversFifteenMinuteBucket", typeof(bool));
@@ -111,17 +115,17 @@ namespace Graphene.SQLServer
 
             foreach (var metrics in trackerData.Measurement.NamedMetrics)
             {
-                addToMeasurementTable(trackerData, table, metrics.Key, metrics.Value);
+                addToMeasurementTable(trackerData, table, trackerData.Measurement.BucketResolution, metrics.Key, metrics.Value);
             }
 
-            addToMeasurementTable(trackerData, table, "_Occurrence", trackerData.Measurement._Occurrence);
-            addToMeasurementTable(trackerData, table, "_Total", trackerData.Measurement._Total);
+            addToMeasurementTable(trackerData, table, trackerData.Measurement.BucketResolution, "_Occurrence", trackerData.Measurement._Occurrence);
+            addToMeasurementTable(trackerData, table, trackerData.Measurement.BucketResolution, "_Total", trackerData.Measurement._Total);
             return table;
         }
 
-        private static void addToMeasurementTable(TrackerData trackerData, DataTable table, string metricName, long metricValue)
+        private static void addToMeasurementTable(TrackerData trackerData, DataTable table, Resolution measurementResolution, string metricName, long metricValue)
         {
-            table.Rows.Add(metricName, metricValue
+            table.Rows.Add(metricName, metricValue, measurementResolution
                 , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Minute)
                 , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FiveMinute)
                 , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FifteenMinute)

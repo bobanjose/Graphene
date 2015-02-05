@@ -52,6 +52,8 @@ namespace Graphene.API
             
 
             // Graphene.Configurator.Initialize(new Settings() { Persister = new PersistToMongo(container.Resolve<IConfiguration>().ReportingStoreConnectionString), Logger = container.Resolve<ILogger>() });
+            
+
             builder.Register(x =>
             {
                 var _logger = x.Resolve<ILogger>();

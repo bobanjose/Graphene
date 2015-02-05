@@ -179,7 +179,7 @@ namespace Graphene.Tracking
                 Bucket bucket = _queuedBucket.Dequeue();
                 foreach (var counter in bucket.Counters.Values)
                 {
-                    trackerData.Add(new TrackerData((typeof (T1)).FullName)
+                    trackerData.Add(new TrackerData((typeof (T1)).FullName, _tracker.MinResolution)
                     {
                         KeyFilter = counter.KeyFilter,
                         Name = _tracker.Name,
@@ -190,7 +190,8 @@ namespace Graphene.Tracking
                             _Occurrence = counter.Occurrence,
                             _Total = counter.Total,
                             NamedMetrics = counter.NamedMetrics,
-                            CoveredResolutions = bucket.CoveredResolutions
+                            CoveredResolutions = bucket.CoveredResolutions,
+                            BucketResolution = bucket.BucketResolution
                         }
                     });
                 }
@@ -198,7 +199,7 @@ namespace Graphene.Tracking
                 {
                     foreach (var counter in lowRezBucket.Counters.Values)
                     {
-                        trackerData.Add(new TrackerData((typeof(T1)).FullName)
+                        trackerData.Add(new TrackerData((typeof(T1)).FullName, _tracker.MinResolution)
                         {
                             KeyFilter = counter.KeyFilter,
                             Name = _tracker.Name,
@@ -209,7 +210,8 @@ namespace Graphene.Tracking
                                 _Occurrence = counter.Occurrence,
                                 _Total = counter.Total,
                                 NamedMetrics = counter.NamedMetrics,
-                                CoveredResolutions = lowRezBucket.CoveredResolutions
+                                CoveredResolutions = lowRezBucket.CoveredResolutions,
+                                BucketResolution = lowRezBucket.BucketResolution
                             }
                         });
                     }

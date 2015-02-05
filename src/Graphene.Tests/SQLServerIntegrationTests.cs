@@ -37,9 +37,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -73,16 +73,16 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
 
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 10);
-            //Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 5);
-            //Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 2);
+            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 5);
+            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 2);
 
 
             //Container<TrackerWithCountProperties>.Where(new CustomerFilter
@@ -130,9 +130,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -164,9 +164,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -203,9 +203,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -243,30 +243,88 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
 
+            var now = DateTime.UtcNow;
             Container<PerformanceTracker>.Where(filter1).IncrementBy(10);
 
             Configurator.ShutDown();
 
-            AggregationResults<PerformanceTracker> report = Container<PerformanceTracker>.Where(new CustomerFilter
-            {
-                Gender = "M",
-            })
+            //minute
+            AggregationResults<PerformanceTracker> report = Container<PerformanceTracker>.Where(filter1)
                 .Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)),
                     DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Minute);
 
             Assert.IsTrue(report.Results.Count() >= 1);
-            Assert.AreEqual(DateTime.UtcNow.Year, report.Results[0].MesurementTimeUtc.Year);
-            Assert.AreEqual(DateTime.UtcNow.Month, report.Results[0].MesurementTimeUtc.Month);
-            Assert.AreEqual(DateTime.UtcNow.Day, report.Results[0].MesurementTimeUtc.Day);
-
+            Assert.AreEqual(now.Year, report.Results[0].MesurementTimeUtc.Year);
+            Assert.AreEqual(now.Month, report.Results[0].MesurementTimeUtc.Month);
+            Assert.AreEqual(now.Day, report.Results[0].MesurementTimeUtc.Day);
+            Assert.AreEqual(10, report.Results[0].Total);
             Assert.AreEqual(ReportResolution.Minute, report.Resolution);
+
+            //five minute
+            report = Container<PerformanceTracker>.Where(filter1)
+                .Report(now.Subtract(new TimeSpan(5000, 1, 0, 0)),
+                    now.Add(new TimeSpan(1, 0, 0)), ReportResolution.FiveMinute);
+
+            Assert.IsTrue(report.Results.Count() >= 1);
+            Assert.AreEqual(now.Year, report.Results[0].MesurementTimeUtc.Year);
+            Assert.AreEqual(now.Month, report.Results[0].MesurementTimeUtc.Month);
+            Assert.AreEqual(now.Day, report.Results[0].MesurementTimeUtc.Day);
+            Assert.AreEqual(10, report.Results[0].Total);
+            Assert.AreEqual(ReportResolution.FiveMinute, report.Resolution);
+
+            //30 minute
+            report = Container<PerformanceTracker>.Where(filter1)
+                .Report(now.Subtract(new TimeSpan(5000, 1, 0, 0)),
+                    now.Add(new TimeSpan(1, 0, 0)), ReportResolution.ThirtyMinute);
+
+            Assert.IsTrue(report.Results.Count() >= 1);
+            Assert.AreEqual(now.Year, report.Results[0].MesurementTimeUtc.Year);
+            Assert.AreEqual(now.Month, report.Results[0].MesurementTimeUtc.Month);
+            Assert.AreEqual(now.Day, report.Results[0].MesurementTimeUtc.Day);
+            Assert.AreEqual(10, report.Results[0].Total);
+            Assert.AreEqual(ReportResolution.ThirtyMinute, report.Resolution);
+
+            //day
+            report = Container<PerformanceTracker>.Where(filter1)
+                .Report(now.Subtract(new TimeSpan(5000, 1, 0, 0)),
+                    now.Add(new TimeSpan(1, 0, 0)), ReportResolution.Day);
+
+            Assert.IsTrue(report.Results.Count() >= 1);
+            Assert.AreEqual(now.Year, report.Results[0].MesurementTimeUtc.Year);
+            Assert.AreEqual(now.Month, report.Results[0].MesurementTimeUtc.Month);
+            Assert.AreEqual(now.Day, report.Results[0].MesurementTimeUtc.Day);
+            Assert.AreEqual(10, report.Results[0].Total);
+            Assert.AreEqual(ReportResolution.Day, report.Resolution);
+
+            //month
+            report = Container<PerformanceTracker>.Where(filter1)
+                .Report(now.Subtract(new TimeSpan(5000, 1, 0, 0)),
+                    now.Add(new TimeSpan(1, 0, 0)), ReportResolution.Month);
+
+            Assert.IsTrue(report.Results.Count() >= 1);
+            Assert.AreEqual(now.Year, report.Results[0].MesurementTimeUtc.Year);
+            Assert.AreEqual(now.Month, report.Results[0].MesurementTimeUtc.Month);
+            Assert.AreEqual(1, report.Results[0].MesurementTimeUtc.Day);
+            Assert.AreEqual(10, report.Results[0].Total);
+            Assert.AreEqual(ReportResolution.Month, report.Resolution);
+
+            report = Container<PerformanceTracker>.Where(filter1)
+                .Report(now.Subtract(new TimeSpan(5000, 1, 0, 0)),
+                    now.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
+
+            Assert.IsTrue(report.Results.Count() >= 1);
+            Assert.AreEqual(now.Year, report.Results[0].MesurementTimeUtc.Year);
+            Assert.AreEqual(1, report.Results[0].MesurementTimeUtc.Month);
+            Assert.AreEqual(1, report.Results[0].MesurementTimeUtc.Day);
+            Assert.AreEqual(10, report.Results[0].Total);
+            Assert.AreEqual(ReportResolution.Year, report.Resolution);
         }
 
         [TestMethod]
@@ -287,9 +345,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV17;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
