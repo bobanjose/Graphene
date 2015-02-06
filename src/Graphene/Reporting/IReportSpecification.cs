@@ -9,7 +9,6 @@ namespace Graphene.Reporting
     {
         Hour = 0,
         FifteenMinute = 1,
-        ThirtyMinute = 2,
         FiveMinute = 3,
         Minute = 4,
         Day = 5,

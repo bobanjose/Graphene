@@ -217,7 +217,7 @@ namespace Graphene.Tests.Reporting
             AggregationResults<CustomerVisitTracker> report = Container<CustomerVisitTracker>.Where(new CustomerFilter
             {
                 Gender = "M",
-            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
 
             Assert.IsTrue(report.Results[0].Total >= 10);
             Assert.IsTrue(report.Results[0].Occurrence >= 1);
@@ -227,7 +227,7 @@ namespace Graphene.Tests.Reporting
 
         [TestMethod]
         public void
-            IntegrationTest_GivenFiltersAndNamedTrackersWith5MinuteResolution_AggreagetedResultsMatchForPartialFiltersWithMultipleRecordsMinuteResolution
+            IntegrationTest_GivenFiltersAndNamedTrackersWith5MinuteResolution_AggreagetedResultsMatchForPartialFiltersWithMultipleRecordsMulitpleResolution
             ()
         {
             var filter1 = new CustomerFilter
@@ -278,19 +278,7 @@ namespace Graphene.Tests.Reporting
             Assert.AreEqual(now.Day, report.Results[0].MesurementTimeUtc.Day);
             Assert.AreEqual(10, report.Results[0].Total);
             Assert.AreEqual(ReportResolution.FiveMinute, report.Resolution);
-
-            //30 minute
-            report = Container<PerformanceTracker>.Where(filter1)
-                .Report(now.Subtract(new TimeSpan(5000, 1, 0, 0)),
-                    now.Add(new TimeSpan(1, 0, 0)), ReportResolution.ThirtyMinute);
-
-            Assert.IsTrue(report.Results.Count() >= 1);
-            Assert.AreEqual(now.Year, report.Results[0].MesurementTimeUtc.Year);
-            Assert.AreEqual(now.Month, report.Results[0].MesurementTimeUtc.Month);
-            Assert.AreEqual(now.Day, report.Results[0].MesurementTimeUtc.Day);
-            Assert.AreEqual(10, report.Results[0].Total);
-            Assert.AreEqual(ReportResolution.ThirtyMinute, report.Resolution);
-
+            
             //day
             report = Container<PerformanceTracker>.Where(filter1)
                 .Report(now.Subtract(new TimeSpan(5000, 1, 0, 0)),
@@ -359,7 +347,7 @@ namespace Graphene.Tests.Reporting
             AggregationResults<PerformanceTracker> report = Container<PerformanceTracker>.Where(new CustomerFilter
             {
                 Gender = "M",
-            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
 
             Assert.IsTrue(report.Results.Count() >= 1);
             Assert.AreEqual(DateTime.Now.Year, report.Results[0].MesurementTimeUtc.Year);
