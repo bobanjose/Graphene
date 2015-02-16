@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Web.Http;
 using Graphene.Configuration;
@@ -8,84 +9,36 @@ using Graphene.Publishing;
 using Graphene.SQLServer;
 using log4net;
 using log4net.Repository.Hierarchy;
+using Microsoft.Data.Edm;
 
 namespace Graphene.API.Controllers
 {
     public class GraphenePersistController : ApiController
     {
-        private static IPersist _mongoPersist;
-        private static IPersist _sqlPersist;
+        private static IEnumerable<IPersist> _persisters;
 
-        private static readonly ILog _logger =
-           LogManager.GetLogger(typeof(GraphenePersistController));
+        private readonly ILogger _logger;
 
-        public GraphenePersistController()
+        public GraphenePersistController(ILogger logger, IEnumerable<IPersist> persisters)
         {
-            if (!string.IsNullOrWhiteSpace(
-                    ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString))
-                _mongoPersist = new PersistToMongo(ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString,
-                        new Log4NetLogger(_logger));
-
-            if (!string.IsNullOrWhiteSpace(
-                    ConfigurationManager.ConnectionStrings["SQLConnectionString"].ConnectionString))
-                _sqlPersist = new PersistToSQLServer(ConfigurationManager.ConnectionStrings["SQLConnectionString"].ConnectionString,
-                        new Log4NetLogger(_logger));
+            _logger = logger;
+            _persisters = persisters;
         }
 
         // POST api/values
         public void Post([FromBody] TrackerData trackerData)
         {
-            try
+            foreach (var persister in _persisters)
             {
-                if (_mongoPersist != null)
-                    _mongoPersist.Persist(trackerData);
+                try
+                {
+                    persister.Persist(trackerData);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex.Message, ex);
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.Error(ex.Message, ex);
-                throw;
-            }
-
-            try
-            {
-            if (_sqlPersist != null)
-                _sqlPersist.Persist(trackerData);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex.Message, ex);
-                throw;
-            }
-        }
-    }
-
-    internal class Log4NetLogger : ILogger
-    {
-        private readonly ILog _logger;
-
-        internal Log4NetLogger(ILog logger)
-        {
-            _logger = logger;
-        } 
-
-        public void Debug(string message)
-        {
-            _logger.Debug(message);
-        }
-
-        public void Info(string message)
-        {
-            _logger.Info(message);
-        }
-
-        public void Warn(string message)
-        {
-            _logger.Warn(message);
-        }
-
-        public void Error(string message, Exception ex)
-        {
-            _logger.Error(message);
         }
     }
 

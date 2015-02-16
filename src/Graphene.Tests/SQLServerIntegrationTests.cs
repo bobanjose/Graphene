@@ -37,7 +37,8 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
+                   new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
+                    //Persister = new PersistToService("http://localhost:60647/api/graphenepersist"),
                     ReportGenerator =
                         new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
                             _fakeLogger)

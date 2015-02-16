@@ -9,6 +9,7 @@ namespace Graphene.API.Controllers
         private readonly ILogger _logger;
         private readonly IReportGenerator _reportGenerator;
 
+
         public GrapheneReportController(ILogger logger, IReportGenerator reportGenerator)
         {
             _logger = logger;

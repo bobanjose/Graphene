@@ -6,8 +6,11 @@ using Autofac;
 using Autofac.Integration.WebApi;
 using Graphene.API.Models;
 using Graphene.Configuration;
+using Graphene.Mongo.Publishing;
 using Graphene.Mongo.Reporting;
+using Graphene.Publishing;
 using Graphene.Reporting;
+using Graphene.SQLServer;
 using Newtonsoft.Json.Converters;
 
 namespace Graphene.API
@@ -63,6 +66,32 @@ namespace Graphene.API
                 return mongoReportGenerator;
             }).As<IReportGenerator>();
 
+
+            if (ConfigurationManager.ConnectionStrings["MongoConnectionString"] != null && !string.IsNullOrWhiteSpace(
+                ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString))
+            {
+                builder.Register(x =>
+                {
+                    var _logger = x.Resolve<ILogger>();
+                    var mongoPersister =
+                        new PersistToMongo(
+                            ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString, _logger);
+                    return mongoPersister;
+                }).As<IPersist>();
+            }
+
+            if (ConfigurationManager.ConnectionStrings["SQLServerConnectionString"] != null && !string.IsNullOrWhiteSpace(
+                ConfigurationManager.ConnectionStrings["SQLServerConnectionString"].ConnectionString))
+            {
+                builder.Register(x =>
+                {
+                    var _logger = x.Resolve<ILogger>();
+                    var sqlPersister =
+                        new PersistToSQLServer(
+                            ConfigurationManager.ConnectionStrings["SQLServerConnectionString"].ConnectionString, _logger);
+                    return sqlPersister;
+                }).As<IPersist>();
+            }
 
             var container = builder.Build();
 
