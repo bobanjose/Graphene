@@ -40,5 +40,7 @@ namespace Graphene.Publishing
                 Configurator.Configuration.Logger.Error(ex.Message, ex);
             }
         }
+
+        public bool PersistPreAggregatedBuckets { get; set; }
     }
 }

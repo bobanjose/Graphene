@@ -4,7 +4,6 @@
     {
         /*IEnumerable<IAggregationResult> GeneratorReport(IReportSpecification specification);*/
 
-
         ITrackerReportResults BuildReport(IReportSpecification specification);
     }
 }

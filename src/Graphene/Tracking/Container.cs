@@ -44,7 +44,6 @@ namespace Graphene.Tracking
 
         public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by)
         {
-            
             try
             {
                 PropertyInfo pi = PropertyHelper<T1>.GetProperty(incAttr);
@@ -137,7 +136,7 @@ namespace Graphene.Tracking
 
     public abstract class ContainerBase
     {
-        internal abstract IEnumerable<TrackerData> GetTrackerData(bool flushAll);
+        internal abstract IEnumerable<TrackerData> GetTrackerData(bool flushAll, bool includePreAggregatedBuckets);
     }
 
     public class Container<T1> : ContainerBase where T1 : ITrackable, new()
@@ -170,7 +169,7 @@ namespace Graphene.Tracking
             return _trackerType.GetHashCode();
         }
 
-        internal override IEnumerable<TrackerData> GetTrackerData(bool flushAll)
+        internal override IEnumerable<TrackerData> GetTrackerData(bool flushAll, bool includePreAggregatedBuckets)
         {
             getCurrentBucket(flushAll);
             var trackerData = new List<TrackerData>();
@@ -195,25 +194,28 @@ namespace Graphene.Tracking
                         }
                     });
                 }
-                foreach (var lowRezBucket in bucket.LowResolutionBuckets)
+                if (includePreAggregatedBuckets)
                 {
-                    foreach (var counter in lowRezBucket.Counters.Values)
+                    foreach (var lowRezBucket in bucket.LowResolutionBuckets)
                     {
-                        trackerData.Add(new TrackerData((typeof(T1)).FullName, _tracker.MinResolution)
+                        foreach (var counter in lowRezBucket.Counters.Values)
                         {
-                            KeyFilter = counter.KeyFilter,
-                            Name = _tracker.Name,
-                            SearchFilters = counter.SearchTags.ToArray(),
-                            TimeSlot = lowRezBucket.TimeSlot,
-                            Measurement = new Measure
+                            trackerData.Add(new TrackerData((typeof (T1)).FullName, _tracker.MinResolution)
                             {
-                                _Occurrence = counter.Occurrence,
-                                _Total = counter.Total,
-                                NamedMetrics = counter.NamedMetrics,
-                                CoveredResolutions = lowRezBucket.CoveredResolutions,
-                                BucketResolution = lowRezBucket.BucketResolution
-                            }
-                        });
+                                KeyFilter = counter.KeyFilter,
+                                Name = _tracker.Name,
+                                SearchFilters = counter.SearchTags.ToArray(),
+                                TimeSlot = lowRezBucket.TimeSlot,
+                                Measurement = new Measure
+                                {
+                                    _Occurrence = counter.Occurrence,
+                                    _Total = counter.Total,
+                                    NamedMetrics = counter.NamedMetrics,
+                                    CoveredResolutions = lowRezBucket.CoveredResolutions,
+                                    BucketResolution = lowRezBucket.BucketResolution
+                                }
+                            });
+                        }
                     }
                 }
             }

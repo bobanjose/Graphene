@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Graphene.Attributes;
 using Graphene.Configuration;
@@ -22,6 +23,9 @@ namespace Graphene.Tests.Reporting
 
         private FakeLogger _fakeLogger = new FakeLogger();
 
+        private string SQLConnectionString =
+            @"Server=tcp:[server].database.windows.net;Database=Graphene;User ID=[user];Password=[pass];Trusted_Connection=False;Encrypt=True;";
+
         [TestMethod]
         public void IntegrationTest_GivenFilters_AggreagetedResultsMatch()
         {
@@ -37,10 +41,11 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                   new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
+                   new PersistToSQLServer(SQLConnectionString, _fakeLogger),
+                   //new PersistToSQLServer(SQLConnectionString, _fakeLogger),
                     //Persister = new PersistToService("http://localhost:60647/api/graphenepersist"),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
+                        new SQLReportGenerator(SQLConnectionString,
                             _fakeLogger)
                 }
                 );
@@ -74,9 +79,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(SQLConnectionString, _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
+                        new SQLReportGenerator(SQLConnectionString,
                             _fakeLogger)
                 }
                 );
@@ -131,9 +136,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(SQLConnectionString, _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
+                        new SQLReportGenerator(SQLConnectionString,
                             _fakeLogger)
                 }
                 );
@@ -165,9 +170,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(SQLConnectionString, _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
+                        new SQLReportGenerator(SQLConnectionString,
                             _fakeLogger)
                 }
                 );
@@ -204,9 +209,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(SQLConnectionString, _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
+                        new SQLReportGenerator(SQLConnectionString,
                             _fakeLogger)
                 }
                 );
@@ -244,9 +249,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV22;Trusted_Connection=True;", _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
+                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV22;Trusted_Connection=True;",
                             _fakeLogger)
                 }
                 );
@@ -255,7 +260,7 @@ namespace Graphene.Tests.Reporting
             Container<PerformanceTracker>.Where(filter1).IncrementBy(10);
 
             Configurator.ShutDown();
-
+            Thread.Sleep(1000);
             //minute
             AggregationResults<PerformanceTracker> report = Container<PerformanceTracker>.Where(filter1)
                 .Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)),
@@ -334,9 +339,9 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;", _fakeLogger),
+                        new PersistToSQLServer(SQLConnectionString, _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(@"Server=.\SQLServer2014;Database=GrapheneV20;Trusted_Connection=True;",
+                        new SQLReportGenerator(SQLConnectionString,
                             _fakeLogger)
                 }
                 );

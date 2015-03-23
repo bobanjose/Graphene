@@ -27,10 +27,11 @@ namespace Graphene.SQLServer
         private readonly string _connectionString;
         private readonly ILogger _logger;
 
-        public PersistToSQLServer(string connectionString, ILogger logger)
+        public PersistToSQLServer(string connectionString, ILogger logger, bool persistPreAggregatedBuckets = true)
         {
             _connectionString = connectionString;
             _logger = logger;
+            PersistPreAggregatedBuckets = persistPreAggregatedBuckets;
         }
 
         public void Persist(TrackerData trackerData)
@@ -44,6 +45,8 @@ namespace Graphene.SQLServer
                 _logger.Error(ex.Message, ex);
             }
         }
+
+        public bool PersistPreAggregatedBuckets { get; set; }
 
         private void persitTracker(TrackerData trackerData)
         {
