@@ -26,12 +26,14 @@ namespace Graphene.SQLServer
     {
         private readonly string _connectionString;
         private readonly ILogger _logger;
+        private readonly TimeSpan _offsetInterval;
 
-        public PersistToSQLServer(string connectionString, ILogger logger, bool persistPreAggregatedBuckets = true)
+        public PersistToSQLServer(string connectionString, ILogger logger, TimeSpan? offsetInterval = null, bool persistPreAggregatedBuckets = true)
         {
             _connectionString = connectionString;
             _logger = logger;
             PersistPreAggregatedBuckets = persistPreAggregatedBuckets;
+            _offsetInterval = offsetInterval.GetValueOrDefault();
         }
 
         public void Persist(TrackerData trackerData)
@@ -74,7 +76,7 @@ namespace Graphene.SQLServer
                     command.Parameters["@KeyFilter"].Value = trackerData.KeyFilter;
 
                     command.Parameters.Add("@TimeSlot", SqlDbType.DateTime);
-                    command.Parameters["@TimeSlot"].Value = trackerData.TimeSlot.ToUniversalTime();
+                    command.Parameters["@TimeSlot"].Value = trackerData.TimeSlot.ToUniversalTime().Subtract(_offsetInterval);
 
                     SqlParameter flParameter;
                     flParameter = command.Parameters.AddWithValue("@FilterList", createFilterDataTable(trackerData));
@@ -118,17 +120,37 @@ namespace Graphene.SQLServer
 
             foreach (var metrics in trackerData.Measurement.NamedMetrics)
             {
-                addToMeasurementTable(trackerData, table, trackerData.Measurement.BucketResolution, metrics.Key, metrics.Value);
+                addToMeasurementTable(trackerData, table, bucketResoltionToMinutes(trackerData.Measurement.BucketResolution), metrics.Key, metrics.Value);
             }
 
-            addToMeasurementTable(trackerData, table, trackerData.Measurement.BucketResolution, "_Occurrence", trackerData.Measurement._Occurrence);
-            addToMeasurementTable(trackerData, table, trackerData.Measurement.BucketResolution, "_Total", trackerData.Measurement._Total);
+            addToMeasurementTable(trackerData, table, bucketResoltionToMinutes(trackerData.Measurement.BucketResolution), "_Occurrence", trackerData.Measurement._Occurrence);
+            addToMeasurementTable(trackerData, table, bucketResoltionToMinutes(trackerData.Measurement.BucketResolution), "_Total", trackerData.Measurement._Total);
             return table;
         }
 
-        private static void addToMeasurementTable(TrackerData trackerData, DataTable table, Resolution measurementResolution, string metricName, long metricValue)
+        private static int bucketResoltionToMinutes(Resolution resolution)
         {
-            table.Rows.Add(metricName, metricValue, measurementResolution
+            switch (resolution)
+            {
+                case Resolution.Minute:
+                    return 1;
+                case Resolution.FiveMinute:
+                    return 5;
+                case Resolution.ThirtyMinute:
+                    return 30;
+                case Resolution.Hour:
+                    return 60;
+                case Resolution.Day:
+                    return 1440;
+                case Resolution.Month:
+                    return 43200;
+            }
+            throw new Exception("Unsupported Resolution");
+        }
+
+        private static void addToMeasurementTable(TrackerData trackerData, DataTable table, int measurementResolutionMinutes, string metricName, long metricValue)
+        {
+            table.Rows.Add(metricName, metricValue, measurementResolutionMinutes
                 , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Minute)
                 , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FiveMinute)
                 , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FifteenMinute)

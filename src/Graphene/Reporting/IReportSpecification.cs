@@ -29,6 +29,8 @@ namespace Graphene.Reporting
         IEnumerable<string> TypeNames { get; }
 
         ReportResolution Resolution { get; }
+
+        TimeSpan OffsetInterval { get; set; }
     }
 
     public interface IFilterConditions

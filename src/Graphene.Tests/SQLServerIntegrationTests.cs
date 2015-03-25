@@ -25,6 +25,7 @@ namespace Graphene.Tests.Reporting
 
         private string SQLConnectionString =
             @"Server=tcp:[server].database.windows.net;Database=Graphene;User ID=[user];Password=[pass];Trusted_Connection=False;Encrypt=True;";
+            
 
         [TestMethod]
         public void IntegrationTest_GivenFilters_AggreagetedResultsMatch()
