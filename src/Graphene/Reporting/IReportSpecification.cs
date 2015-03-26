@@ -30,7 +30,7 @@ namespace Graphene.Reporting
 
         ReportResolution Resolution { get; }
 
-        TimeSpan OffsetInterval { get; set; }
+        TimeSpan OffsetFromUtcInterval { get; set; }
     }
 
     public interface IFilterConditions

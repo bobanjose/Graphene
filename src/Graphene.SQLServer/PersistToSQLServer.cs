@@ -28,12 +28,12 @@ namespace Graphene.SQLServer
         private readonly ILogger _logger;
         private readonly TimeSpan _offsetInterval;
 
-        public PersistToSQLServer(string connectionString, ILogger logger, TimeSpan? offsetInterval = null, bool persistPreAggregatedBuckets = true)
+        public PersistToSQLServer(string connectionString, ILogger logger, TimeSpan? offsetFromUtcInterval = null, bool persistPreAggregatedBuckets = true)
         {
             _connectionString = connectionString;
             _logger = logger;
             PersistPreAggregatedBuckets = persistPreAggregatedBuckets;
-            _offsetInterval = offsetInterval.GetValueOrDefault();
+            _offsetInterval = offsetFromUtcInterval.GetValueOrDefault();
         }
 
         public void Persist(TrackerData trackerData)
@@ -76,7 +76,7 @@ namespace Graphene.SQLServer
                     command.Parameters["@KeyFilter"].Value = trackerData.KeyFilter;
 
                     command.Parameters.Add("@TimeSlot", SqlDbType.DateTime);
-                    command.Parameters["@TimeSlot"].Value = trackerData.TimeSlot.ToUniversalTime().Subtract(_offsetInterval);
+                    command.Parameters["@TimeSlot"].Value = trackerData.TimeSlot.ToUniversalTime().Add(_offsetInterval);
 
                     SqlParameter flParameter;
                     flParameter = command.Parameters.AddWithValue("@FilterList", createFilterDataTable(trackerData));

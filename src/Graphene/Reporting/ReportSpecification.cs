@@ -45,7 +45,7 @@ namespace Graphene.Reporting
         }
 
 
-        public TimeSpan OffsetInterval { get; set; }
+        public TimeSpan OffsetFromUtcInterval { get; set; }
 
         public IEnumerable<IFilterConditions> FilterCombinations
         {
@@ -128,7 +128,7 @@ namespace Graphene.Reporting
 
         }
 
-        public TimeSpan OffsetInterval { get; set; }
+        public TimeSpan OffsetFromUtcInterval { get; set; }
 
         public IEnumerable<IFilterConditions> FilterCombinations
         {

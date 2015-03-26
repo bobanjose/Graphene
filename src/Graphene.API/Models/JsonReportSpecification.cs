@@ -12,5 +12,6 @@ namespace Graphene.API.Models
         public DateTime ToDateUtc { get; set; }
         public IEnumerable<string> TypeNames { get; set; }
         public ReportResolution Resolution { get; set; }
+        public TimeSpan OffsetFromUtcInterval { get; set; }
     }
 }

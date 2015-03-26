@@ -25,7 +25,6 @@ namespace Graphene.Tests.Reporting
 
         private string SQLConnectionString =
             @"Server=tcp:[server].database.windows.net;Database=Graphene;User ID=[user];Password=[pass];Trusted_Connection=False;Encrypt=True;";
-            
 
         [TestMethod]
         public void IntegrationTest_GivenFilters_AggreagetedResultsMatch()
@@ -365,6 +364,48 @@ namespace Graphene.Tests.Reporting
 
             Assert.AreEqual(ReportResolution.Year, report.Resolution);
         }
+
+        [TestMethod]
+        public void IntegrationTest_GivenFiltersAndNamedTrackers_AggreagetedResultsMatch_WithTimeOffset()
+        {
+            var filter1 = new CustomerFilter
+            {
+                Environment_ServerName = "Env1",
+                Gender = "M",
+                State = "CA",
+                StoreID = Guid.NewGuid().ToString("D")
+            };
+
+            Configurator.Initialize(
+                new Settings
+                {
+                    Persister =
+                        new PersistToSQLServer(SQLConnectionString, _fakeLogger, new TimeSpan(-7,0,0)),
+                    ReportGenerator =
+                        new SQLReportGenerator(SQLConnectionString, _fakeLogger)
+                });
+
+            Container<CustomerVisitTracker>.Where(filter1).IncrementBy(10);
+
+            Configurator.ShutDown();
+
+            AggregationResults<CustomerVisitTracker> report = Container<CustomerVisitTracker>.Where(filter1)
+                .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Hour);
+
+            Assert.IsTrue(report.Results.Count() == 0);
+            Assert.AreEqual(ReportResolution.Hour, report.Resolution);
+
+            report = Container<CustomerVisitTracker>.Where(new CustomerFilter
+            {
+                Gender = "M",
+            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Hour, new TimeSpan(-7, 0, 0));
+
+            Assert.IsTrue(report.Results[0].Total >= 10);
+            Assert.IsTrue(report.Results[0].Occurrence >= 1);
+            Assert.IsTrue(report.Results.Count() >= 1);
+            Assert.AreEqual(ReportResolution.Hour, report.Resolution);
+        }
+
 
         public class TrackerWithCountProperties : ITrackable
         {

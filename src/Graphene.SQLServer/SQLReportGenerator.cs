@@ -37,10 +37,10 @@ namespace Graphene.SQLServer
                         command.CommandType = CommandType.StoredProcedure;
 
                         command.Parameters.Add("@StartDt", SqlDbType.DateTime);
-                        command.Parameters["@StartDt"].Value = specification.FromDateUtc.Subtract(specification.OffsetInterval);
+                        command.Parameters["@StartDt"].Value = specification.FromDateUtc.Add(specification.OffsetFromUtcInterval);
 
                         command.Parameters.Add("@EndDt", SqlDbType.DateTime);
-                        command.Parameters["@EndDt"].Value = specification.ToDateUtc.Subtract(specification.OffsetInterval);
+                        command.Parameters["@EndDt"].Value = specification.ToDateUtc.Add(specification.OffsetFromUtcInterval);
 
                         command.Parameters.Add("@Resolution", SqlDbType.SmallInt);
                         command.Parameters["@Resolution"].Value = (int)specification.Resolution;
