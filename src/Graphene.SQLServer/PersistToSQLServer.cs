@@ -10,6 +10,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -27,8 +28,9 @@ namespace Graphene.SQLServer
         private readonly string _connectionString;
         private readonly ILogger _logger;
         private readonly TimeSpan _offsetInterval;
+        private readonly int _maxRetries;
 
-        public PersistToSQLServer(string connectionString, ILogger logger, TimeSpan? offsetFromUtcInterval = null, bool persistPreAggregatedBuckets = true)
+        public PersistToSQLServer(string connectionString, ILogger logger, TimeSpan? offsetFromUtcInterval = null, bool persistPreAggregatedBuckets = true, int maxRetries = 3)
         {
             _connectionString = connectionString;
             _logger = logger;
@@ -40,11 +42,32 @@ namespace Graphene.SQLServer
         {
             try
             {
-                persitTracker(trackerData);
+                Persist(trackerData, 0);
             }
             catch (Exception ex)
             {
                 _logger.Error(ex.Message, ex);
+            }
+        }
+
+        private void Persist(TrackerData trackerData, int retryCount)
+        {
+            try
+            {
+                persitTracker(trackerData);
+            }
+           catch (DbException ex)
+            {
+                if (retryCount < _maxRetries)
+                {
+                    _logger.Warn(ex.Message + ". Retrying.");
+                    Persist(trackerData, retryCount+1);
+                }
+                else
+                {
+                    _logger.Error(ex.Message, ex);
+                    throw;
+                }
             }
         }
 
@@ -136,6 +159,8 @@ namespace Graphene.SQLServer
                     return 1;
                 case Resolution.FiveMinute:
                     return 5;
+                case Resolution.FifteenMinute:
+                    return 15;
                 case Resolution.ThirtyMinute:
                     return 30;
                 case Resolution.Hour:
