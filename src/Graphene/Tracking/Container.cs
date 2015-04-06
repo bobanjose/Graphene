@@ -44,7 +44,6 @@ namespace Graphene.Tracking
 
         public AddNamedMetric<T1> Increment(Expression<Func<T1, long>> incAttr, long by)
         {
-            
             try
             {
                 PropertyInfo pi = PropertyHelper<T1>.GetProperty(incAttr);
@@ -129,7 +128,15 @@ namespace Graphene.Tracking
 
         public AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportResolution resolution)
         {
+            return Report(fromUtc, toUtc, resolution, null);
+        }
+
+        public AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportResolution resolution, TimeSpan? offsetInterval)
+        {
             var reportSpecs = new ReportSpecification<T, T1>(fromUtc, toUtc, resolution, Filter);
+
+            if (offsetInterval != null)
+                reportSpecs.OffsetFromUtcInterval = offsetInterval.GetValueOrDefault();
 
             return Reporter<T, T1>.Report(fromUtc, toUtc, reportSpecs);
         }
@@ -137,7 +144,7 @@ namespace Graphene.Tracking
 
     public abstract class ContainerBase
     {
-        internal abstract IEnumerable<TrackerData> GetTrackerData(bool flushAll);
+        internal abstract IEnumerable<TrackerData> GetTrackerData(bool flushAll, bool includePreAggregatedBuckets);
     }
 
     public class Container<T1> : ContainerBase where T1 : ITrackable, new()
@@ -170,7 +177,7 @@ namespace Graphene.Tracking
             return _trackerType.GetHashCode();
         }
 
-        internal override IEnumerable<TrackerData> GetTrackerData(bool flushAll)
+        internal override IEnumerable<TrackerData> GetTrackerData(bool flushAll, bool includePreAggregatedBuckets)
         {
             getCurrentBucket(flushAll);
             var trackerData = new List<TrackerData>();
@@ -179,7 +186,7 @@ namespace Graphene.Tracking
                 Bucket bucket = _queuedBucket.Dequeue();
                 foreach (var counter in bucket.Counters.Values)
                 {
-                    trackerData.Add(new TrackerData((typeof (T1)).FullName)
+                    trackerData.Add(new TrackerData((typeof (T1)).FullName, _tracker.MinResolution)
                     {
                         KeyFilter = counter.KeyFilter,
                         Name = _tracker.Name,
@@ -190,28 +197,33 @@ namespace Graphene.Tracking
                             _Occurrence = counter.Occurrence,
                             _Total = counter.Total,
                             NamedMetrics = counter.NamedMetrics,
-                            CoveredResolutions = bucket.CoveredResolutions
+                            CoveredResolutions = bucket.CoveredResolutions,
+                            BucketResolution = bucket.BucketResolution
                         }
                     });
                 }
-                foreach (var lowRezBucket in bucket.LowResolutionBuckets)
+                if (includePreAggregatedBuckets)
                 {
-                    foreach (var counter in lowRezBucket.Counters.Values)
+                    foreach (var lowRezBucket in bucket.LowResolutionBuckets)
                     {
-                        trackerData.Add(new TrackerData((typeof(T1)).FullName)
+                        foreach (var counter in lowRezBucket.Counters.Values)
                         {
-                            KeyFilter = counter.KeyFilter,
-                            Name = _tracker.Name,
-                            SearchFilters = counter.SearchTags.ToArray(),
-                            TimeSlot = lowRezBucket.TimeSlot,
-                            Measurement = new Measure
+                            trackerData.Add(new TrackerData((typeof (T1)).FullName, _tracker.MinResolution)
                             {
-                                _Occurrence = counter.Occurrence,
-                                _Total = counter.Total,
-                                NamedMetrics = counter.NamedMetrics,
-                                CoveredResolutions = lowRezBucket.CoveredResolutions
-                            }
-                        });
+                                KeyFilter = counter.KeyFilter,
+                                Name = _tracker.Name,
+                                SearchFilters = counter.SearchTags.ToArray(),
+                                TimeSlot = lowRezBucket.TimeSlot,
+                                Measurement = new Measure
+                                {
+                                    _Occurrence = counter.Occurrence,
+                                    _Total = counter.Total,
+                                    NamedMetrics = counter.NamedMetrics,
+                                    CoveredResolutions = lowRezBucket.CoveredResolutions,
+                                    BucketResolution = lowRezBucket.BucketResolution
+                                }
+                            });
+                        }
                     }
                 }
             }

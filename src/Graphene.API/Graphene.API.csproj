@@ -214,6 +214,10 @@
       <Project>{6c72e5c2-a7b7-42b2-9b47-edad7758fad7}</Project>
       <Name>Graphene.Mongo</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Graphene.SQLServer\Graphene.SQLServer.csproj">
+      <Project>{b8d19f64-84d6-4f82-b1bd-d5a6626e34ec}</Project>
+      <Name>Graphene.SQLServer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Graphene\Graphene.csproj">
       <Project>{df87eb29-8e53-4fed-a524-867ab76d71ca}</Project>
       <Name>Graphene</Name>

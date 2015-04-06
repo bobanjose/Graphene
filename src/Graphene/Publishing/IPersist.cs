@@ -17,5 +17,6 @@ namespace Graphene.Publishing
     {
         void Persist(TrackerData trackerData);
 
+        bool PersistPreAggregatedBuckets { get; }
     }
 }

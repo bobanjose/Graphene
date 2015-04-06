@@ -44,8 +44,8 @@ namespace Graphene.Reporting
             TypeNames = new[] {typeof (TTracker).FullName};
         }
 
-        
 
+        public TimeSpan OffsetFromUtcInterval { get; set; }
 
         public IEnumerable<IFilterConditions> FilterCombinations
         {
@@ -127,6 +127,8 @@ namespace Graphene.Reporting
             buildListOfMeasurementsForTracker(trackerType);
 
         }
+
+        public TimeSpan OffsetFromUtcInterval { get; set; }
 
         public IEnumerable<IFilterConditions> FilterCombinations
         {

@@ -21,7 +21,8 @@ namespace Graphene.Tracking
         private readonly DateTime _expiresAfter;
         private readonly object _syncLock = new object();
         private readonly List<Bucket> _lowRezBuckets = new List<Bucket>();
-        private readonly List<Resolution> _coveredResolutions = new List<Resolution>(); 
+        private readonly List<Resolution> _coveredResolutions = new List<Resolution>();
+        private Resolution _resolution;
 
         internal Bucket(int lifeTimeInSeconds, Resolution minResolution, DateTime? timeNow = null, bool isLargerTimespanBucket = false)
         {
@@ -30,6 +31,7 @@ namespace Graphene.Tracking
                 timeNow1 = timeNow.Value;
             _expiresAfter = timeNow1.AddSeconds(lifeTimeInSeconds);
             _counters = new ConcurrentDictionary<string, Counter>();
+            _resolution = minResolution;
             if (isLargerTimespanBucket)
                 _coveredResolutions.Add(minResolution);
             switch (minResolution)
@@ -42,7 +44,7 @@ namespace Graphene.Tracking
                 case Resolution.FifteenMinute:
                     TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(15));
                     if (!isLargerTimespanBucket)
-                        _coveredResolutions.AddRange(new[] { Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
+                        _coveredResolutions.AddRange(new[] { Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
                     break;
                 case Resolution.Hour:
                     TimeSlot = timeNow1.Round(TimeSpan.FromHours(1));
@@ -57,7 +59,7 @@ namespace Graphene.Tracking
                 case Resolution.Minute:
                     TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(1));
                     if (!isLargerTimespanBucket)
-                        _coveredResolutions.AddRange(new[] { Resolution.Minute });
+                        _coveredResolutions.AddRange(new[] { Resolution.Minute, Resolution.FiveMinute});
                     break;
                 case Resolution.Day:
                     TimeSlot = new DateTime(timeNow1.Year, timeNow1.Month, timeNow1.Day);
@@ -143,6 +145,11 @@ namespace Graphene.Tracking
         internal bool HasExpired
         {
             get { return DateTime.Now > _expiresAfter; }
+        }
+
+        internal Resolution BucketResolution
+        {
+            get { return _resolution; }
         }
 
         internal void IncrementCounter(long by)

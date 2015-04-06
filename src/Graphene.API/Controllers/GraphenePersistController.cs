@@ -1,22 +1,44 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Web.Http;
 using Graphene.Configuration;
 using Graphene.Data;
 using Graphene.Mongo.Publishing;
 using Graphene.Publishing;
+using Graphene.SQLServer;
+using log4net;
+using log4net.Repository.Hierarchy;
+using Microsoft.Data.Edm;
 
 namespace Graphene.API.Controllers
 {
     public class GraphenePersistController : ApiController
     {
-        private static readonly IPersist MongoPersist =
-            new PersistToMongo(ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString, new SysDiagLogger());
+        private static IEnumerable<IPersist> _persisters;
+
+        private readonly ILogger _logger;
+
+        public GraphenePersistController(ILogger logger, IEnumerable<IPersist> persisters)
+        {
+            _logger = logger;
+            _persisters = persisters;
+        }
 
         // POST api/values
         public void Post([FromBody] TrackerData trackerData)
         {
-            MongoPersist.Persist(trackerData);
+            foreach (var persister in _persisters)
+            {
+                try
+                {
+                    persister.Persist(trackerData);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex.Message, ex);
+                }
+            }
         }
     }
 

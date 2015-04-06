@@ -54,7 +54,7 @@ namespace Graphene.Publishing
 
                     foreach (
                         TrackerData td in
-                            trackerContainer.GetTrackerData(_trackerBlockCancellationTokenSource.IsCancellationRequested)
+                            trackerContainer.GetTrackerData(_trackerBlockCancellationTokenSource.IsCancellationRequested, Configurator.Configuration.Persister.PersistPreAggregatedBuckets)
                         )
                     {
                         _publisherBlock.Post(td);

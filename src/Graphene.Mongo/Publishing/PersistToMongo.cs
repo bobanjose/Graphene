@@ -25,6 +25,7 @@ namespace Graphene.Mongo.Publishing
             _mongoDatabase = _mongoServer.GetDatabase(databaseName);
             _mongoCollection = _mongoDatabase.GetCollection(COLLECTION_NAME);
             _logger = logger;
+            PersistPreAggregatedBuckets = false;
         }
 
         public void Persist(TrackerData trackerData)
@@ -53,5 +54,7 @@ namespace Graphene.Mongo.Publishing
                 _logger.Error(ex.Message, ex);
             }
         }
+
+        public bool PersistPreAggregatedBuckets { get; private set; }
     }
 }

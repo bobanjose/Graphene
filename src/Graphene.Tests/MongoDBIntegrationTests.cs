@@ -35,6 +35,8 @@ namespace Graphene.Tests
         public async void Persist(TrackerData trackerData)
         {
         }
+
+        public bool PersistPreAggregatedBuckets { get; set; }
     }
 
     public class CustomerAgeTracker : ITrackable
@@ -374,8 +376,8 @@ namespace Graphene.Tests
             Configurator.Initialize(
                 new Settings
                 {
-                    Persister = new PersistToMongo("mongodb://localhost:9001/Graphene",_fakeLogger),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene",_fakeLogger)
+                    Persister = new PersistToMongo("mongodb://localhost:27017/Graphene", _fakeLogger),
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:27017/Graphene", _fakeLogger)
                 }
                 );
 
@@ -465,7 +467,7 @@ namespace Graphene.Tests
                 }
                 );
 
-            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 0);
+            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 10);
             Thread.Sleep(new TimeSpan(0, 0, 5, 0));
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 5);
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 2);
@@ -490,8 +492,8 @@ namespace Graphene.Tests
             Configurator.Initialize(
                 new Settings
                 {
-                    Persister = new PersistToMongo("mongodb://localhost:9001/Graphene",_fakeLogger),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene",_fakeLogger)
+                    Persister = new PersistToMongo("mongodb://localhost:27017/Graphene",_fakeLogger),
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:27017/Graphene",_fakeLogger)
                 }
                 );
 
@@ -525,8 +527,8 @@ namespace Graphene.Tests
             Configurator.Initialize(
                 new Settings
                 {
-                    Persister = new PersistToMongo("mongodb://localhost:9001/Graphene",_fakeLogger),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger)
+                    Persister = new PersistToMongo("mongodb://localhost:27017/Graphene",_fakeLogger),
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:27017/Graphene", _fakeLogger)
                 }
                 );
 
@@ -559,8 +561,8 @@ namespace Graphene.Tests
             Configurator.Initialize(
                 new Settings
                 {
-                    Persister = new PersistToMongo("mongodb://localhost:9001/Graphene",_fakeLogger),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger)
+                    Persister = new PersistToMongo("mongodb://localhost:27017/Graphene",_fakeLogger),
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:27017/Graphene", _fakeLogger)
                 }
                 );
 
@@ -599,8 +601,8 @@ namespace Graphene.Tests
             Configurator.Initialize(
                 new Settings
                 {
-                    Persister = new PersistToMongo("mongodb://localhost:9001/Graphene",_fakeLogger),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger)
+                    Persister = new PersistToMongo("mongodb://localhost:27017/Graphene",_fakeLogger),
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:27017/Graphene", _fakeLogger)
                 }
                 );
 
@@ -650,10 +652,9 @@ namespace Graphene.Tests
                         ReportResolution.Day, filter1, filter2);
 
                 Assert.AreEqual(2, visitTrackerReportSpecification.FilterCombinations.Count());
-                Assert.AreEqual(4, visitTrackerReportSpecification.FilterCombinations.ElementAt(0).Filters.Count());
+                Assert.AreEqual(1, visitTrackerReportSpecification.FilterCombinations.ElementAt(0).Filters.Count());
                 Assert.AreEqual(visitTrackerReportSpecification.FilterCombinations.Count(fs => fs.Filters.Contains(
-                    string.Format("{0}::{1}",
-                        ("Environment_ServerName").ToUpper(), filter1.Environment_ServerName.ToUpper()))),1);
+                    string.Format("ENVIRONMENT_SERVERNAME::ENV1,,GENDER::M,,STATE::CA,,STOREID::1234"))),1);
             }
 
             [TestMethod]
