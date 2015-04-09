@@ -26,7 +26,7 @@ namespace Graphene.Tracking
 
         internal Bucket(int lifeTimeInSeconds, Resolution minResolution, DateTime? timeNow = null, bool isLargerTimespanBucket = false)
         {
-            DateTime timeNow1 = DateTime.Now;
+            DateTime timeNow1 = Configurator.Configuration.EvaluateDateTime();
             if (timeNow.HasValue)
                 timeNow1 = timeNow.Value;
             _expiresAfter = timeNow1.AddSeconds(lifeTimeInSeconds);
@@ -144,7 +144,7 @@ namespace Graphene.Tracking
 
         internal bool HasExpired
         {
-            get { return DateTime.Now > _expiresAfter; }
+            get { return Configurator.Configuration.EvaluateDateTime() > _expiresAfter; }
         }
 
         internal Resolution BucketResolution

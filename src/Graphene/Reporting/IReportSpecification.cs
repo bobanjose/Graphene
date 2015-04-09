@@ -22,15 +22,14 @@ namespace Graphene.Reporting
 
         IEnumerable<IMeasurement> Counters { get; }
 
-        DateTime FromDateUtc { get; }
+        DateTime FromDateTime { get; }
 
-        DateTime ToDateUtc { get; }
+        DateTime ToDateTime { get; }
 
         IEnumerable<string> TypeNames { get; }
 
         ReportResolution Resolution { get; }
 
-        TimeSpan OffsetFromUtcInterval { get; set; }
     }
 
     public interface IFilterConditions

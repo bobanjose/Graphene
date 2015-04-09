@@ -37,10 +37,10 @@ namespace Graphene.SQLServer
                         command.CommandType = CommandType.StoredProcedure;
 
                         command.Parameters.Add("@StartDt", SqlDbType.DateTime);
-                        command.Parameters["@StartDt"].Value = specification.FromDateUtc.Add(specification.OffsetFromUtcInterval);
+                        command.Parameters["@StartDt"].Value = specification.FromDateTime;
 
                         command.Parameters.Add("@EndDt", SqlDbType.DateTime);
-                        command.Parameters["@EndDt"].Value = specification.ToDateUtc.Add(specification.OffsetFromUtcInterval);
+                        command.Parameters["@EndDt"].Value = specification.ToDateTime;
 
                         command.Parameters.Add("@Resolution", SqlDbType.SmallInt);
                         command.Parameters["@Resolution"].Value = (int)specification.Resolution;
@@ -146,8 +146,8 @@ namespace Graphene.SQLServer
 
             public SqlTrackerResults(IReportSpecification specification)
             {
-                _fromDateUtc = specification.FromDateUtc;
-                _toDateUtc = specification.ToDateUtc;
+                _fromDateUtc = specification.FromDateTime;
+                _toDateUtc = specification.ToDateTime;
                 _resolution = specification.Resolution;
             }
 
