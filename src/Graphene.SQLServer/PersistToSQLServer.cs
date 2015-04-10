@@ -27,15 +27,16 @@ namespace Graphene.SQLServer
     {
         private readonly string _connectionString;
         private readonly ILogger _logger;
-        private readonly TimeSpan _offsetInterval;
+        private readonly bool _convertToUTC;
         private readonly int _maxRetries;
 
-        public PersistToSQLServer(string connectionString, ILogger logger, TimeSpan? offsetFromUtcInterval = null, bool persistPreAggregatedBuckets = true, int maxRetries = 3)
+        public PersistToSQLServer(string connectionString, ILogger logger, bool convertToUTC = false, bool persistPreAggregatedBuckets = true, int maxRetries = 3)
         {
             _connectionString = connectionString;
             _logger = logger;
             PersistPreAggregatedBuckets = persistPreAggregatedBuckets;
-            _offsetInterval = offsetFromUtcInterval.GetValueOrDefault();
+            _convertToUTC = convertToUTC;
+            _maxRetries = maxRetries;
         }
 
         public void Persist(TrackerData trackerData)
@@ -99,7 +100,7 @@ namespace Graphene.SQLServer
                     command.Parameters["@KeyFilter"].Value = trackerData.KeyFilter;
 
                     command.Parameters.Add("@TimeSlot", SqlDbType.DateTime);
-                    command.Parameters["@TimeSlot"].Value = trackerData.TimeSlot.ToUniversalTime().Add(_offsetInterval);
+                    command.Parameters["@TimeSlot"].Value = _convertToUTC ? trackerData.TimeSlot.ToUniversalTime() : trackerData.TimeSlot;
 
                     SqlParameter flParameter;
                     flParameter = command.Parameters.AddWithValue("@FilterList", createFilterDataTable(trackerData));

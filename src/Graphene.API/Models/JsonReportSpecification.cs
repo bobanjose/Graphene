@@ -8,8 +8,8 @@ namespace Graphene.API.Models
     {
         public IEnumerable<IFilterConditions> FilterCombinations { get; set; }
         public IEnumerable<IMeasurement> Counters { get; set; }
-        public DateTime FromDateUtc { get; set; }
-        public DateTime ToDateUtc { get; set; }
+        public DateTime FromDateTime { get; set; }
+        public DateTime ToDateTime { get; set; }
         public IEnumerable<string> TypeNames { get; set; }
         public ReportResolution Resolution { get; set; }
         public TimeSpan OffsetFromUtcInterval { get; set; }

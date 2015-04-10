@@ -186,8 +186,8 @@ namespace Graphene.Mongo.Reporting
             IMongoQuery orClause = createSearchClauseForAnyFilter(specification);
             IMongoQuery typeNameClause = createSearchClauseForAnyType(specification);
             // Query.EQ("TypeName", specification.TrackerTypeName);
-            IMongoQuery dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
-                Query.LTE("TimeSlot", specification.ToDateUtc));
+            IMongoQuery dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateTime),
+                Query.LTE("TimeSlot", specification.ToDateTime));
 
 
             var conditions = new BsonDocument(dateClause.ToBsonDocument());
@@ -325,8 +325,8 @@ namespace Graphene.Mongo.Reporting
 
             public MongoTrackerResults(IReportSpecification specification)
             {
-                _fromDateUtc = specification.FromDateUtc;
-                _toDateUtc = specification.ToDateUtc;
+                _fromDateUtc = specification.FromDateTime;
+                _toDateUtc = specification.ToDateTime;
                 _resolution = specification.Resolution;
             }
         
@@ -523,8 +523,8 @@ private static BsonDocument buildProjectionOrig(IReportSpecification specificati
         {
             IMongoQuery orClause = null; //createFilteredOrClause(specification);
             IMongoQuery typeNameClause = Query.EQ("TypeName", specification.Counters.First().TrackerTypeName);
-            IMongoQuery dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateUtc),
-                Query.LTE("TimeSlot", specification.ToDateUtc));
+            IMongoQuery dateClause = Query.And(Query.GTE("TimeSlot", specification.FromDateTime),
+                Query.LTE("TimeSlot", specification.ToDateTime));
 
             var conditions = new BsonDocument(dateClause.ToBsonDocument());
             conditions.AddRange(typeNameClause.ToBsonDocument());

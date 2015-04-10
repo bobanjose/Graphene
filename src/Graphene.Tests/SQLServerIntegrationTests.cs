@@ -24,7 +24,7 @@ namespace Graphene.Tests.Reporting
         private FakeLogger _fakeLogger = new FakeLogger();
 
         private string SQLConnectionString =
-            @"Server=tcp:[server].database.windows.net;Database=Graphene;User ID=[user];Password=[pass];Trusted_Connection=False;Encrypt=True;";
+            @"Server=.\SQLServer2014;Database=GrapheneV22;Trusted_Connection=True;";
 
         [TestMethod]
         public void IntegrationTest_GivenFilters_AggreagetedResultsMatch()
@@ -56,7 +56,7 @@ namespace Graphene.Tests.Reporting
 
             AggregationResults<CustomerVisitTracker> report =
                 Container<CustomerVisitTracker>.Where(filter1)
-                    .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+                    .Report(DateTime.Now.Subtract(new TimeSpan(1, 0, 0)), DateTime.Now.Add(new TimeSpan(1, 0, 0)));
 
             Assert.IsTrue(report.Results.Any());
             Assert.AreEqual(1, report.Results[0].Occurrence);
@@ -104,7 +104,7 @@ namespace Graphene.Tests.Reporting
 
             var report =
                 Container<TrackerWithCountProperties>.Where(filter1)
-                    .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+                    .Report(DateTime.Now.Subtract(new TimeSpan(1, 0, 0)), DateTime.Now.Add(new TimeSpan(1, 0, 0)));
 
             Assert.IsTrue(report.Results.Count() >= 1);
 
@@ -114,7 +114,7 @@ namespace Graphene.Tests.Reporting
                 new CustomerFilter
                 {
                     Gender = "M"
-                }).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+                }).Report(DateTime.Now.Subtract(new TimeSpan(1, 0, 0)), DateTime.Now.Add(new TimeSpan(1, 0, 0)));
 
             Assert.AreEqual(12, report.Results[0].Tracker.ElderlyCount);
             Assert.AreEqual(5, report.Results[0].Tracker.KidsCount);
@@ -143,17 +143,19 @@ namespace Graphene.Tests.Reporting
                 }
                 );
 
-            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 0);
+            Container<MinuteTrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 10);
             Thread.Sleep(new TimeSpan(0, 0, 5, 0));
-            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 5);
-            Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 2);
+            Container<MinuteTrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 5);
+            Container<MinuteTrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 2);
 
             Configurator.ShutDown();
 
-            AggregationResults<TrackerWithCountProperties> report = Container<TrackerWithCountProperties>.Where(new CustomerFilter
+            Thread.Sleep(1000);
+
+            AggregationResults<MinuteTrackerWithCountProperties> report = Container<MinuteTrackerWithCountProperties>.Where(new CustomerFilter
             {
                 StoreID = storeId
-            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+            }).Report(DateTime.Now.Subtract(new TimeSpan(0, 0, 2, 0)), DateTime.Now.Add(new TimeSpan(1, 0, 0)), ReportResolution.Minute);
 
             System.Diagnostics.Debug.Write(report.Results.Count());
 
@@ -183,8 +185,8 @@ namespace Graphene.Tests.Reporting
             Configurator.ShutDown();
 
             AggregationResults<TrackerWithCountProperties> report =
-                Container<TrackerWithCountProperties>.Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)),
-                    DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+                Container<TrackerWithCountProperties>.Report(DateTime.Now.Subtract(new TimeSpan(1, 0, 0)),
+                    DateTime.Now.Add(new TimeSpan(1, 0, 0)));
 
             Assert.IsTrue(report.Results.Count() >= 1);
             Assert.IsTrue(report.Results[0].Tracker.ElderlyCount >= 12);
@@ -223,7 +225,7 @@ namespace Graphene.Tests.Reporting
             AggregationResults<CustomerVisitTracker> report = Container<CustomerVisitTracker>.Where(new CustomerFilter
             {
                 Gender = "M",
-            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
+            }).Report(DateTime.Now.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.Now.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
 
             Assert.IsTrue(report.Results[0].Total >= 10);
             Assert.IsTrue(report.Results[0].Occurrence >= 1);
@@ -256,15 +258,15 @@ namespace Graphene.Tests.Reporting
                 }
                 );
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             Container<PerformanceTracker>.Where(filter1).IncrementBy(10);
 
             Configurator.ShutDown();
             Thread.Sleep(1000);
             //minute
             AggregationResults<PerformanceTracker> report = Container<PerformanceTracker>.Where(filter1)
-                .Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)),
-                    DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Minute);
+                .Report(DateTime.Now.Subtract(new TimeSpan(5000, 1, 0, 0)),
+                    DateTime.Now.Add(new TimeSpan(1, 0, 0)), ReportResolution.Minute);
 
             Assert.IsTrue(report.Results.Count() >= 1);
             Assert.AreEqual(now.Year, report.Results[0].MesurementTimeUtc.Year);
@@ -353,7 +355,7 @@ namespace Graphene.Tests.Reporting
             AggregationResults<PerformanceTracker> report = Container<PerformanceTracker>.Where(new CustomerFilter
             {
                 Gender = "M",
-            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
+            }).Report(DateTime.Now.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.Now.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
 
             Assert.IsTrue(report.Results.Count() >= 1);
             Assert.AreEqual(DateTime.Now.Year, report.Results[0].MesurementTimeUtc.Year);
@@ -380,9 +382,10 @@ namespace Graphene.Tests.Reporting
                 new Settings
                 {
                     Persister =
-                        new PersistToSQLServer(SQLConnectionString, _fakeLogger, new TimeSpan(-7,0,0)),
+                        new PersistToSQLServer(SQLConnectionString, _fakeLogger),
                     ReportGenerator =
-                        new SQLReportGenerator(SQLConnectionString, _fakeLogger)
+                        new SQLReportGenerator(SQLConnectionString, _fakeLogger),
+                    EvaluateDateTime = () => DateTime.UtcNow
                 });
 
             Container<CustomerVisitTracker>.Where(filter1).IncrementBy(10);
@@ -390,7 +393,7 @@ namespace Graphene.Tests.Reporting
             Configurator.ShutDown();
 
             AggregationResults<CustomerVisitTracker> report = Container<CustomerVisitTracker>.Where(filter1)
-                .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Hour);
+                .Report(DateTime.Now.Subtract(new TimeSpan(1, 0, 0)), DateTime.Now.Add(new TimeSpan(1, 0, 0)), ReportResolution.Hour);
 
             Assert.IsTrue(report.Results.Count() == 0);
             Assert.AreEqual(ReportResolution.Hour, report.Resolution);
@@ -433,6 +436,35 @@ namespace Graphene.Tests.Reporting
             public Resolution MinResolution
             {
                 get { return Resolution.Hour; }
+            }
+        }
+
+        public class MinuteTrackerWithCountProperties : ITrackable
+        {
+            [Measurement]
+            public long KidsCount { get; set; }
+
+            [Measurement]
+            public long MiddleAgedCount { get; set; }
+
+            [Measurement]
+            public long ElderlyCount { get; set; }
+
+            public long NotACounter { get; set; }
+
+            public string Name
+            {
+                get { return "Customer Age Tracker"; }
+            }
+
+            public string Description
+            {
+                get { return "Counts the number of customer visits"; }
+            }
+
+            public Resolution MinResolution
+            {
+                get { return Resolution.Minute; }
             }
         }
     }

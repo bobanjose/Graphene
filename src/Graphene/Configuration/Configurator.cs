@@ -19,6 +19,7 @@ namespace Graphene.Configuration
         public IPersist Persister { internal get; set; }
         public ILogger Logger { internal get; set; }
         public IReportGenerator ReportGenerator { internal get; set; }
+        public Func<DateTime> EvaluateDateTime { get; set; }
     }
 }
 
@@ -45,6 +46,8 @@ namespace Graphene
                 configuration.Logger = new SysDiagLogger();
             _configurator = configuration;
             _configurator.Logger.Debug("Graphene Initialized");
+            if (_configurator.EvaluateDateTime == null)
+                _configurator.EvaluateDateTime = () => DateTime.Now;
         }
 
         public static void ShutDown()
