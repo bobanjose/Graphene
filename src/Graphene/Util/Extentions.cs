@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Graphene.Configuration;
 using Graphene.Reporting;
 
 namespace Graphene.Util
@@ -96,7 +97,7 @@ namespace Graphene.Util
             return nvList;
         }
 
-        public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType)
+        public static TimeSpan RoundToMidPoint(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType)
         {
             return new TimeSpan(
                 Convert.ToInt64(Math.Round(
@@ -106,9 +107,36 @@ namespace Graphene.Util
                 );
         }
 
+        public static TimeSpan RoundToStart(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType)
+        {
+            return new TimeSpan(
+                Convert.ToInt64(Math.Round(
+                    ((time.Ticks - (roundingInterval.Ticks /2)) + 1) / (decimal)roundingInterval.Ticks,
+                    roundingType
+                    )) * roundingInterval.Ticks
+                );
+        }
+        
+        public static TimeSpan RoundToEnd(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType)
+        {
+            return new TimeSpan(
+                Convert.ToInt64(Math.Round(
+                    ((time.Ticks + (roundingInterval.Ticks / 2)) - 1) / (decimal)roundingInterval.Ticks,
+                    roundingType
+                    )) * roundingInterval.Ticks
+                );
+        }
+
         public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval)
         {
-            return Round(time, roundingInterval, MidpointRounding.ToEven);
+            TimeSpan roundedTimeSpan = new TimeSpan();
+            if (Configurator.Configuration.GrapheneRoundingMethod == TimespanRoundingMethod.Start)
+                roundedTimeSpan = RoundToStart(time, roundingInterval,MidpointRounding.AwayFromZero);
+            if (Configurator.Configuration.GrapheneRoundingMethod == TimespanRoundingMethod.End)
+                roundedTimeSpan = RoundToEnd(time, roundingInterval, MidpointRounding.AwayFromZero);
+            if (Configurator.Configuration.GrapheneRoundingMethod == TimespanRoundingMethod.MidPoint)
+                roundedTimeSpan = RoundToMidPoint(time, roundingInterval, MidpointRounding.ToEven);
+            return roundedTimeSpan;
         }
 
         public static DateTime Round(this DateTime datetime, TimeSpan roundingInterval)

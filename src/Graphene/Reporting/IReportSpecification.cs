@@ -30,6 +30,10 @@ namespace Graphene.Reporting
 
         ReportResolution Resolution { get; }
 
+        TimeSpan OffsetTotalsByHours { get; }
+
+        IEnumerable<IFilterConditions> ExcludeFilters { get; }
+
     }
 
     public interface IFilterConditions

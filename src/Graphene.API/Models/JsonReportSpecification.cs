@@ -12,6 +12,7 @@ namespace Graphene.API.Models
         public DateTime ToDateTime { get; set; }
         public IEnumerable<string> TypeNames { get; set; }
         public ReportResolution Resolution { get; set; }
-        public TimeSpan OffsetFromUtcInterval { get; set; }
+        public TimeSpan OffsetTotalsByHours { get; set; }
+        public IEnumerable<IFilterConditions> ExcludeFilters { get; set; }
     }
 }

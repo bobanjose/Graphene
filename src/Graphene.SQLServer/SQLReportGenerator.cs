@@ -33,7 +33,16 @@ namespace Graphene.SQLServer
                     connection.Open();
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandText = "dbo.GenerateReport";
+                        if (specification.OffsetTotalsByHours != TimeSpan.Zero && specification.OffsetTotalsByHours.Hours != 8)
+                        {
+                            command.CommandText = "dbo.GenerateReportWithOffsetTotals";
+                            command.Parameters.Add("@OffsetTotalsTo", SqlDbType.SmallInt);
+                            command.Parameters["@OffsetTotalsTo"].Value = specification.OffsetTotalsByHours.Hours;
+                        }
+                        else
+                        {
+                            command.CommandText = "dbo.GenerateReport";
+                        }
                         command.CommandType = CommandType.StoredProcedure;
 
                         command.Parameters.Add("@StartDt", SqlDbType.DateTime);
