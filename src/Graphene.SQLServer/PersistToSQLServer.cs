@@ -94,7 +94,7 @@ namespace Graphene.SQLServer
                     command.Parameters["@TypeName"].Value = trackerData.TypeName;
 
                     command.Parameters.Add("@MinResolution", SqlDbType.Int);
-                    command.Parameters["@MinResolution"].Value = bucketResoltionToMinutes(trackerData.MinResolution);
+                    command.Parameters["@MinResolution"].Value = bucketResolutionToMinutes(trackerData.MinResolution);
 
                     command.Parameters.Add("@KeyFilter", SqlDbType.NVarChar);
                     command.Parameters["@KeyFilter"].Value = trackerData.KeyFilter;
@@ -150,15 +150,15 @@ namespace Graphene.SQLServer
 
             foreach (var metrics in trackerData.Measurement.NamedMetrics)
             {
-                addToMeasurementTable(trackerData, table, bucketResoltionToMinutes(trackerData.Measurement.BucketResolution), metrics.Key, metrics.Value);
+                addToMeasurementTable(trackerData, table, bucketResolutionToMinutes(trackerData.Measurement.BucketResolution), metrics.Key, metrics.Value);
             }
 
-            addToMeasurementTable(trackerData, table, bucketResoltionToMinutes(trackerData.Measurement.BucketResolution), "_Occurrence", trackerData.Measurement._Occurrence);
-            addToMeasurementTable(trackerData, table, bucketResoltionToMinutes(trackerData.Measurement.BucketResolution), "_Total", trackerData.Measurement._Total);
+            addToMeasurementTable(trackerData, table, bucketResolutionToMinutes(trackerData.Measurement.BucketResolution), "_Occurrence", trackerData.Measurement._Occurrence);
+            addToMeasurementTable(trackerData, table, bucketResolutionToMinutes(trackerData.Measurement.BucketResolution), "_Total", trackerData.Measurement._Total);
             return table;
         }
 
-        private static int bucketResoltionToMinutes(Resolution resolution)
+        private static int bucketResolutionToMinutes(Resolution resolution)
         {
             switch (resolution)
             {
