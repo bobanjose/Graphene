@@ -33,7 +33,7 @@ namespace Graphene.SQLServer
                     connection.Open();
                     using (var command = connection.CreateCommand())
                     {
-                        if (specification.OffsetTotalsByHours != TimeSpan.Zero && specification.OffsetTotalsByHours.Hours != 8)
+                        if (specification.OffsetTotalsByHours != TimeSpan.Zero && specification.OffsetTotalsByHours.Hours != Configurator.DayTotalTZOffset().Hours)
                         {
                             command.CommandText = "dbo.GenerateReportWithOffsetTotals";
                             command.Parameters.Add("@OffsetTotalsTo", SqlDbType.SmallInt);

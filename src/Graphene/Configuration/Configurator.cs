@@ -29,7 +29,7 @@ namespace Graphene.Configuration
         public IReportGenerator ReportGenerator { internal get; set; }
         public Func<DateTime> EvaluateDateTime { get; set; }
         public TimespanRoundingMethod GrapheneRoundingMethod { internal get; set; }
-        public TimeSpan DayTotalTZOffset { internal get; set; }
+        public TimeSpan DayTotalTZOffset { get; set; }
     }
 }
 
@@ -99,6 +99,11 @@ namespace Graphene
             {
                 Configuration.Logger.Error(ex.Message, ex);
             }
+        }
+
+        public static TimeSpan DayTotalTZOffset()
+        {
+            return Configuration.DayTotalTZOffset;
         }
     }
 }
