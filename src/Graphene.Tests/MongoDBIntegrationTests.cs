@@ -601,8 +601,8 @@ namespace Graphene.Tests
             Configurator.Initialize(
                 new Settings
                 {
-                    Persister = new PersistToMongo("mongodb://localhost:27017/Graphene",_fakeLogger),
-                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:27017/Graphene", _fakeLogger)
+                    Persister = new PersistToMongo("mongodb://localhost:9001/Graphene",_fakeLogger),
+                    ReportGenerator = new MongoReportGenerator("mongodb://localhost:9001/Graphene", _fakeLogger)
                 }
                 );
 
@@ -616,7 +616,7 @@ namespace Graphene.Tests
             }).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
 
             Assert.IsTrue(report.Results.Count() >= 1);
-            Assert.AreEqual(DateTime.Now.Year, report.Results[0].MesurementTimeUtc.Year);
+            Assert.AreEqual(DateTime.UtcNow.Year, report.Results[0].MesurementTimeUtc.Year);
             Assert.AreEqual(1, report.Results[0].MesurementTimeUtc.Month);
             Assert.AreEqual(1, report.Results[0].MesurementTimeUtc.Day);
             Assert.AreEqual(0, report.Results[0].MesurementTimeUtc.Minute);
@@ -648,7 +648,7 @@ namespace Graphene.Tests
                 };
 
                 var visitTrackerReportSpecification =
-                    new ReportSpecification<CustomerFilter, CustomerVisitTracker>(DateTime.Now, DateTime.UtcNow,
+                    new ReportSpecification<CustomerFilter, CustomerVisitTracker>(DateTime.UtcNow, DateTime.UtcNow,
                         ReportResolution.Day, filter1, filter2);
 
                 Assert.AreEqual(2, visitTrackerReportSpecification.FilterCombinations.Count());

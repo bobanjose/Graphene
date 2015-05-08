@@ -10,8 +10,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Graphene.Configuration;
 using Graphene.Util;
 using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.Serialization;
 
 namespace Graphene.Tracking
 {
@@ -34,40 +36,34 @@ namespace Graphene.Tracking
             _resolution = minResolution;
             if (isLargerTimespanBucket)
                 _coveredResolutions.Add(minResolution);
+            TimeSlot = setTimeSlotDateTime(timeNow1, _resolution);
             switch (minResolution)
             {
+                case Resolution.Minute:
+                    if (!isLargerTimespanBucket)
+                        _coveredResolutions.AddRange(new[] { Resolution.Minute, Resolution.FiveMinute });
+                    break;
                 case Resolution.FiveMinute:
-                    TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(5));
                     if (!isLargerTimespanBucket)
                         _coveredResolutions.AddRange(new[] { Resolution.FiveMinute, Resolution.Minute});
                     break;
                 case Resolution.FifteenMinute:
-                    TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(15));
+                    if (!isLargerTimespanBucket)
+                        _coveredResolutions.AddRange(new[] { Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
+                    break;
+                case Resolution.ThirtyMinute:
                     if (!isLargerTimespanBucket)
                         _coveredResolutions.AddRange(new[] { Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
                     break;
                 case Resolution.Hour:
-                    TimeSlot = timeNow1.Round(TimeSpan.FromHours(1));
                     if (!isLargerTimespanBucket)
                         _coveredResolutions.AddRange(new[] { Resolution.Hour, Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
                     break;
-                case Resolution.ThirtyMinute:
-                    TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(30));
-                    if (!isLargerTimespanBucket)
-                        _coveredResolutions.AddRange(new[] { Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
-                    break;
-                case Resolution.Minute:
-                    TimeSlot = timeNow1.Round(TimeSpan.FromMinutes(1));
-                    if (!isLargerTimespanBucket)
-                        _coveredResolutions.AddRange(new[] { Resolution.Minute, Resolution.FiveMinute});
-                    break;
                 case Resolution.Day:
-                    TimeSlot = new DateTime(timeNow1.Year, timeNow1.Month, timeNow1.Day);
                     if (!isLargerTimespanBucket)
                         _coveredResolutions.AddRange(new[] { Resolution.Day, Resolution.Hour, Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
                     break;
                 case Resolution.Month:
-                    TimeSlot = new DateTime(timeNow1.Year, timeNow1.Month, 1);
                     if (!isLargerTimespanBucket)
                         _coveredResolutions.AddRange(new[] { Resolution.Month, Resolution.Day, Resolution.Hour, Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
                     break;
@@ -76,6 +72,7 @@ namespace Graphene.Tracking
                 initalizeLowRezBuckets(lifeTimeInSeconds, minResolution);
         }
 
+        
         private void initalizeLowRezBuckets(int lifeTimeInSeconds, Resolution minResolution)
         {
             switch (minResolution)
@@ -252,6 +249,81 @@ namespace Graphene.Tracking
                     }
                 }
             }
+        }
+
+        private DateTime setTimeSlotDateTime(DateTime timeNow, Resolution adjustmentResolution)
+        {
+            DateTime dateTimeToReturn = timeNow;
+            switch (adjustmentResolution)
+            {
+                case Resolution.Minute:
+                    dateTimeToReturn = timeNow.Round(TimeSpan.FromMinutes(1));
+                    break;
+                case Resolution.FiveMinute:
+                    dateTimeToReturn = timeNow.Round(TimeSpan.FromMinutes(5));
+                    break;
+                case Resolution.FifteenMinute:
+                    dateTimeToReturn = timeNow.Round(TimeSpan.FromMinutes(15));
+                    break;
+                case Resolution.ThirtyMinute:
+                    dateTimeToReturn = timeNow.Round(TimeSpan.FromMinutes(30));
+                    break;
+                case Resolution.Hour:
+                    dateTimeToReturn = timeNow.Round(TimeSpan.FromHours(1));
+                    break;
+                case Resolution.Day:
+                    dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day) +
+                                            Configurator.Configuration.DayTotalTZOffset.GetValueOrDefault(new TimeSpan(0,0,0));
+                    switch (Configurator.Configuration.GrapheneRoundingMethod)
+                    {
+                        case TimespanRoundingMethod.Start:
+                            if (dateTimeToReturn > timeNow)
+                             {
+                                 dateTimeToReturn = TimeSlot.AddDays(-1);
+                             }
+                            break;
+                        case TimespanRoundingMethod.End:
+                            if (dateTimeToReturn < timeNow)
+                             {
+                                 dateTimeToReturn = TimeSlot.AddDays(1);
+                             }
+                            break;
+                        case TimespanRoundingMethod.MidPoint:
+                            if (dateTimeToReturn > timeNow.AddMinutes(-30))
+                             {
+                                 dateTimeToReturn = TimeSlot.AddDays(-1);
+                             }
+                            break;
+                    }
+                    break;
+                case Resolution.Month:
+                    dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, 1) +
+                                            Configurator.Configuration.DayTotalTZOffset.GetValueOrDefault(new TimeSpan(0, 0, 0));
+                    switch (Configurator.Configuration.GrapheneRoundingMethod)
+                    {
+                        case TimespanRoundingMethod.Start:
+                            if (dateTimeToReturn > timeNow)
+                             {
+                                 dateTimeToReturn = TimeSlot.AddMonths(-1);
+                             }
+                            break;
+                        case TimespanRoundingMethod.End:
+                            if (dateTimeToReturn < timeNow)
+                             {
+                                 dateTimeToReturn = TimeSlot.AddMonths(1);
+                             }
+                            break;
+                        case TimespanRoundingMethod.MidPoint:
+                            if (dateTimeToReturn > timeNow.AddMinutes(-30))
+                             {
+                                 dateTimeToReturn = TimeSlot.AddMonths(-1);
+                             }
+                            break;
+                    }
+                    break;
+            }
+
+            return dateTimeToReturn;
         }
     }
 }

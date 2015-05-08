@@ -7,12 +7,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 using System;
+using System.Deployment.Internal;
+using System.Configuration;
 using Graphene.Configuration;
 using Graphene.Publishing;
 using Graphene.Reporting;
 
 namespace Graphene.Configuration
 {
+    public enum TimespanRoundingMethod
+    {
+        MidPoint = 0,
+        Start = 1,
+        End = 2
+    }
     public class Settings
     {
         internal bool Initialized { get; set; }
@@ -20,6 +28,8 @@ namespace Graphene.Configuration
         public ILogger Logger { internal get; set; }
         public IReportGenerator ReportGenerator { internal get; set; }
         public Func<DateTime> EvaluateDateTime { get; set; }
+        public TimespanRoundingMethod GrapheneRoundingMethod { internal get; set; }
+        public TimeSpan? DayTotalTZOffset { internal get; set; }
     }
 }
 
@@ -28,8 +38,7 @@ namespace Graphene
     public class Configurator
     {
         private static Settings _configurator;
-
-
+        
         internal static Settings Configuration
         {
             get { return _configurator; }
@@ -47,7 +56,21 @@ namespace Graphene
             _configurator = configuration;
             _configurator.Logger.Debug("Graphene Initialized");
             if (_configurator.EvaluateDateTime == null)
-                _configurator.EvaluateDateTime = () => DateTime.Now;
+                _configurator.EvaluateDateTime = () => DateTime.UtcNow;
+        }
+
+        public static bool FlushTrackers()
+        {
+            try
+            {
+                Publisher.FlushTrackers();
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            return true;
+
         }
 
         public static void ShutDown()

@@ -7,6 +7,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -17,80 +18,104 @@ namespace Graphene.Publishing
 {
     internal class Publisher
     {
-        private static readonly ActionBlock<ContainerBase> _trackerBlock;
-        private static readonly ActionBlock<TrackerData> _publisherBlock;
+        private static ActionBlock<ContainerBase> _trackerBlock;
+        private static ActionBlock<TrackerData> _publisherBlock;
 
         private static ContainerBase _firstTC;
 
-        private static readonly CancellationTokenSource _trackerBlockCancellationTokenSource =
-            new CancellationTokenSource();
+        private static CancellationTokenSource _trackerBlockCancellationTokenSource;
 
         private static bool _lastPersistanceComplete;
         private static bool _trackersRegisted;
+        private static DateTime lastPersistTime = DateTime.UtcNow;
 
+        private static List<ContainerBase> _trackers = new List<ContainerBase>();
+        
         static Publisher()
         {
-            _trackerBlock = new ActionBlock<ContainerBase>(async tc =>
-            {
-                try
-                {
-                    ContainerBase trackerContainer = tc;
-                    if (_firstTC == null)
-                        _firstTC = trackerContainer;
-                    else if (_firstTC == trackerContainer &&
-                             !_trackerBlockCancellationTokenSource.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            await
-                                Task.Delay(TimeSpan.FromSeconds(15), _trackerBlockCancellationTokenSource.Token)
-                                    .ConfigureAwait(false);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            Configurator.Configuration.Logger.Info("Task.Delay exiting");
-                        }
-                    }
+            initialize();
+        }
 
-                    foreach (
-                        TrackerData td in
-                            trackerContainer.GetTrackerData(_trackerBlockCancellationTokenSource.IsCancellationRequested, Configurator.Configuration.Persister.PersistPreAggregatedBuckets)
-                        )
+        private static void initialize()
+        {
+            _trackerBlockCancellationTokenSource = new CancellationTokenSource();
+            _lastPersistanceComplete = false;
+            _firstTC = null;
+
+            _trackerBlock = new ActionBlock<ContainerBase>((Func<ContainerBase, Task>) measureAccumulator);
+
+            _publisherBlock = new ActionBlock<TrackerData>((Action<TrackerData>) trackerWriter,
+                new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = 4});
+        }
+
+        private static void trackerWriter(TrackerData tc)
+        {
+            try
+            {
+                _lastPersistanceComplete = false;
+                Configurator.Configuration.Persister.Persist(tc);
+                _lastPersistanceComplete = true;
+                lastPersistTime = DateTime.UtcNow;
+            }
+            catch (Exception ex)
+            {
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
+                _lastPersistanceComplete = true;
+            }
+        }
+
+        private static async Task measureAccumulator(ContainerBase tc)
+        {
+            try
+            {
+                ContainerBase trackerContainer = tc;
+                if (_firstTC == null)
+                {
+                    _firstTC = trackerContainer;
+                }
+                else if (_firstTC == trackerContainer && !_trackerBlockCancellationTokenSource.IsCancellationRequested)
+                {
+                    try
                     {
-                        _publisherBlock.Post(td);
+                        await Task.Delay(TimeSpan.FromSeconds(15), _trackerBlockCancellationTokenSource.Token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Configurator.Configuration.Logger.Info("Task.Delay exiting");
                     }
                 }
-                catch (Exception ex)
-                {
-                    Configurator.Configuration.Logger.Error(ex.Message, ex);
-                }
-                finally
-                {
-                    if (!_trackerBlockCancellationTokenSource.IsCancellationRequested)
-                        _trackerBlock.Post(tc);
-                    else if (_trackerBlock.InputCount == 0)
-                        _trackerBlock.Complete();
-                }
-            });
 
-            _publisherBlock = new ActionBlock<TrackerData>(tc =>
+                postTrackers(trackerContainer, _trackerBlockCancellationTokenSource.IsCancellationRequested);
+            }
+            catch (Exception ex)
             {
-                try
+                Configurator.Configuration.Logger.Error(ex.Message, ex);
+            }
+            finally
+            {
+                if (!_trackerBlockCancellationTokenSource.IsCancellationRequested)
                 {
-                    _lastPersistanceComplete = false;
-                    Configurator.Configuration.Persister.Persist(tc);
-                    _lastPersistanceComplete = true;
+                    _trackerBlock.Post(tc);
                 }
-                catch (Exception ex)
+                else if (_trackerBlock.InputCount == 0)
                 {
-                    Configurator.Configuration.Logger.Error(ex.Message, ex);
-                    _lastPersistanceComplete = true;
+                    _trackerBlock.Complete();
                 }
-            }, new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = 4});
+            }
+        }
+
+        private static void postTrackers(ContainerBase trackerContainer, bool flushAll)
+        {
+            foreach (TrackerData td in
+                trackerContainer.GetTrackerData(flushAll, Configurator.Configuration.Persister.PersistPreAggregatedBuckets))
+            {
+                _publisherBlock.Post(td);
+            }
         }
 
         internal static void Register(ContainerBase trackerContainer)
         {
+            _trackers.Add(trackerContainer);
             _trackerBlock.Post(trackerContainer);
             _trackersRegisted = true;
         }
@@ -112,6 +137,31 @@ namespace Graphene.Publishing
                 Configurator.Configuration.Logger.Error(
                     _publisherBlock.InputCount + " messages could not be persisted.",
                     new Exception("Graphene couldn't persist all message to persister."));
+        }
+
+        public static void FlushTrackers()
+        {
+            if (!_trackersRegisted)
+                return;
+
+            ShutDown();
+            initialize();
+
+            foreach (var tracker in _trackers)
+            {
+                Register(tracker);
+            }
+            _trackers = new List<ContainerBase>();
+            
+            //var loopCount = 0;
+            //var nextPersist = lastPersistTime.AddSeconds(196) - DateTime.UtcNow.AddSeconds(-30);
+            //Thread.Sleep(Math.Max(nextPersist.Milliseconds, 180000));
+            //postTrackers(_firstTC, true);
+            //while ((_publisherBlock.InputCount > 0 || !_lastPersistanceComplete) && loopCount < 20)
+            //{
+            //    Thread.Sleep(11000);
+            //    loopCount++;
+            //}
         }
     }
 }

@@ -131,12 +131,12 @@ namespace Graphene.Tracking
             return Report(fromUtc, toUtc, resolution, null);
         }
 
-        public AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportResolution resolution, TimeSpan? offsetInterval)
+        public AggregationResults<T1> Report(DateTime fromUtc, DateTime toUtc, ReportResolution resolution, TimeSpan? offsetTotalsByHours)
         {
             var reportSpecs = new ReportSpecification<T, T1>(fromUtc, toUtc, resolution, Filter);
 
-            if (offsetInterval != null)
-                reportSpecs.OffsetFromUtcInterval = offsetInterval.GetValueOrDefault();
+            if (offsetTotalsByHours != null)
+                reportSpecs.OffsetTotalsByHours = offsetTotalsByHours.GetValueOrDefault();
 
             return Reporter<T, T1>.Report(fromUtc, toUtc, reportSpecs);
         }

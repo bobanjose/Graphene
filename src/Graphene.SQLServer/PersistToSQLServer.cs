@@ -94,7 +94,7 @@ namespace Graphene.SQLServer
                     command.Parameters["@TypeName"].Value = trackerData.TypeName;
 
                     command.Parameters.Add("@MinResolution", SqlDbType.Int);
-                    command.Parameters["@MinResolution"].Value = trackerData.MinResolution;
+                    command.Parameters["@MinResolution"].Value = bucketResoltionToMinutes(trackerData.MinResolution);
 
                     command.Parameters.Add("@KeyFilter", SqlDbType.NVarChar);
                     command.Parameters["@KeyFilter"].Value = trackerData.KeyFilter;
@@ -112,7 +112,13 @@ namespace Graphene.SQLServer
                     mParameter.SqlDbType = SqlDbType.Structured;
                     mParameter.TypeName = "dbo.Measurement";
 
-                    command.ExecuteNonQuery();
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        command.Transaction = transaction;
+                        command.CommandTimeout = command.CommandTimeout * 2;
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                    }
                 }
             }
         }
