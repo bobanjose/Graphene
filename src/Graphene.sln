@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene", "Graphene\Graphene.csproj", "{DF87EB29-8E53-4FED-A524-867AB76D71CA}"
 EndProject
@@ -20,8 +20,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{3197A5
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Mongo", "Graphene.Mongo\Graphene.Mongo.csproj", "{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Mongo.IntegrationTests", "Graphene.Mongo.IntegrationTests\Graphene.Mongo.IntegrationTests.csproj", "{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Log4net", "Graphene.Log4net\Graphene.Log4net.csproj", "{2E8A1E16-A54C-42D8-9C89-67B83E7FA03F}"
 EndProject
@@ -51,10 +49,6 @@ Global
 		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C72E5C2-A7B7-42B2-9B47-EDAD7758FAD7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{30D2C9FC-F83F-4ED8-BF93-C8A4C89E264E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2E8A1E16-A54C-42D8-9C89-67B83E7FA03F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2E8A1E16-A54C-42D8-9C89-67B83E7FA03F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E8A1E16-A54C-42D8-9C89-67B83E7FA03F}.Release|Any CPU.ActiveCfg = Release|Any CPU

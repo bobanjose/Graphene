@@ -7,6 +7,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -17,23 +18,33 @@ namespace Graphene.Publishing
 {
     internal class Publisher
     {
-        private static readonly ActionBlock<ContainerBase> _trackerBlock;
-        private static readonly ActionBlock<TrackerData> _publisherBlock;
+        private static ActionBlock<ContainerBase> _trackerBlock;
+        private static ActionBlock<TrackerData> _publisherBlock;
 
         private static ContainerBase _firstTC;
 
-        private static readonly CancellationTokenSource _trackerBlockCancellationTokenSource =
-            new CancellationTokenSource();
+        private static CancellationTokenSource _trackerBlockCancellationTokenSource;
 
         private static bool _lastPersistanceComplete;
         private static bool _trackersRegisted;
         private static DateTime lastPersistTime = DateTime.UtcNow;
+        private static List<ContainerBase> _trackers = new List<ContainerBase>();
         
         static Publisher()
         {
-            _trackerBlock = new ActionBlock<ContainerBase>((Func<ContainerBase, Task>) MeasureAccumulator);
+            initialize();
+        }
 
-            _publisherBlock = new ActionBlock<TrackerData>((Action<TrackerData>) trackerWriter, new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = 4});
+        private static void initialize()
+        {
+            _trackerBlockCancellationTokenSource = new CancellationTokenSource();
+            _lastPersistanceComplete = false;
+            _firstTC = null;
+
+            _trackerBlock = new ActionBlock<ContainerBase>((Func<ContainerBase, Task>) measureAccumulator);
+
+            _publisherBlock = new ActionBlock<TrackerData>((Action<TrackerData>) trackerWriter,
+                new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = 4});
         }
 
         private static void trackerWriter(TrackerData tc)
@@ -52,7 +63,8 @@ namespace Graphene.Publishing
             }
         }
 
-        private static async Task MeasureAccumulator(ContainerBase tc)
+        private static async Task measureAccumulator(ContainerBase tc)
+
         {
             try
             {
@@ -73,7 +85,7 @@ namespace Graphene.Publishing
                     }
                 }
 
-                PostTrackers(trackerContainer, _trackerBlockCancellationTokenSource.IsCancellationRequested);
+                postTrackers(trackerContainer, _trackerBlockCancellationTokenSource.IsCancellationRequested);
             }
             catch (Exception ex)
             {
@@ -92,7 +104,7 @@ namespace Graphene.Publishing
             }
         }
 
-        private static void PostTrackers(ContainerBase trackerContainer, bool flushAll)
+        private static void postTrackers(ContainerBase trackerContainer, bool flushAll)
         {
             foreach (TrackerData td in
                 trackerContainer.GetTrackerData(flushAll, Configurator.Configuration.Persister.PersistPreAggregatedBuckets))
@@ -103,6 +115,7 @@ namespace Graphene.Publishing
 
         internal static void Register(ContainerBase trackerContainer)
         {
+            _trackers.Add(trackerContainer);
             _trackerBlock.Post(trackerContainer);
             _trackersRegisted = true;
         }
@@ -131,15 +144,24 @@ namespace Graphene.Publishing
             if (!_trackersRegisted)
                 return;
 
-            var loopCount = 0;
-            var nextPersist = lastPersistTime.AddSeconds(196) - DateTime.UtcNow.AddSeconds(-30);
-            Thread.Sleep(Math.Max(nextPersist.Milliseconds, 180000));
-            PostTrackers(_firstTC, true);
-            while ((_publisherBlock.InputCount > 0 || !_lastPersistanceComplete) && loopCount < 20)
+            ShutDown();
+            initialize();
+
+            foreach (var tracker in _trackers)
             {
-                Thread.Sleep(11000);
-                loopCount++;
+                Register(tracker);
             }
+            _trackers = new List<ContainerBase>();
+            
+            //var loopCount = 0;
+            //var nextPersist = lastPersistTime.AddSeconds(196) - DateTime.UtcNow.AddSeconds(-30);
+            //Thread.Sleep(Math.Max(nextPersist.Milliseconds, 180000));
+            //postTrackers(_firstTC, true);
+            //while ((_publisherBlock.InputCount > 0 || !_lastPersistanceComplete) && loopCount < 20)
+            //{
+            //    Thread.Sleep(11000);
+            //    loopCount++;
+            //}
         }
     }
 }

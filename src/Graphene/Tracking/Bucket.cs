@@ -272,8 +272,7 @@ namespace Graphene.Tracking
                     dateTimeToReturn = timeNow.Round(TimeSpan.FromHours(1));
                     break;
                 case Resolution.Day:
-                    dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day) +
-                                            Configurator.Configuration.DayTotalTZOffset;
+                    dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day) + Configurator.Configuration.DayTotalTZOffset;
                     switch (Configurator.Configuration.GrapheneRoundingMethod)
                     {
                         case TimespanRoundingMethod.Start:
@@ -297,7 +296,7 @@ namespace Graphene.Tracking
                     }
                     break;
                 case Resolution.Month:
-                    dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, 1) + 
+                    dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, 1) +
                                             Configurator.Configuration.DayTotalTZOffset;
                     switch (Configurator.Configuration.GrapheneRoundingMethod)
                     {
