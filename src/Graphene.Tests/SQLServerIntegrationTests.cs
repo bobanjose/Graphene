@@ -132,7 +132,7 @@ namespace Graphene.Tests.Reporting
         }
 
        
-       // [TestMethod]
+        [TestMethod]
         public void IntegrationTest_GivenFiltersAndNamedTrackers_AggregatedResultsMatchForPartialFilters_5MinuteResolution()
         {
             string storeId = Guid.NewGuid().ToString("D");
@@ -173,7 +173,7 @@ namespace Graphene.Tests.Reporting
             Assert.AreEqual(53, report.Results[1].Tracker.KidsCount);
         }
 
-       // [TestMethod]
+        [TestMethod]
         public void IntegrationTest_GivenFiltersAndNamedTrackers_AggregatedResultsMatchForPartialFilters_HourResolution()
         {
             string storeId = Guid.NewGuid().ToString("D");
