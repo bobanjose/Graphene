@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Graphene.SQLServer</id>
+    <version>$version$</version>
+    <title>Graphene SQL Server Adaptor</title>
+    <authors>Boban Jose</authors>
+    <owners>Boban Jose</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      SQL Server adaptor for Graphene.
+      https://github.com/bobanjose/Graphene/blob/master/README.md
+	  SQL Server DB Generation Scripts: 
+	  https://github.com/bobanjose/Graphene/blob/master/src/Graphene.SQLServer/GrapheneCreateDB.sql
+    </description>
+    <releaseNotes>https://github.com/bobanjose/Graphene/blob/master/README.md </releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>Graphene SQL Server Graphite BI Aggregation Aggregator Performance Metrics Reporting</tags>
+    <dependencies>
+		<dependency id="Graphene" version="2.0.0"/>
+    </dependencies>
+  </metadata>
+</package>
