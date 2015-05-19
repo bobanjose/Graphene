@@ -147,11 +147,13 @@ namespace Graphene.Publishing
             ShutDown();
             initialize();
 
-            foreach (var tracker in _trackers)
+            var currentTrackers = _trackers;
+            _trackers = new List<ContainerBase>();
+
+            foreach (var tracker in currentTrackers)
             {
                 Register(tracker);
             }
-            _trackers = new List<ContainerBase>();
             
             //var loopCount = 0;
             //var nextPersist = lastPersistTime.AddSeconds(196) - DateTime.UtcNow.AddSeconds(-30);

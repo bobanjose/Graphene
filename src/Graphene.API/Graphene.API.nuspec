@@ -4,15 +4,14 @@
     <id>Graphene.API</id>
     <version>$version$</version>
     <authors>RelayHealth</authors>
-    <owners>McKesson / RelayHealth.com</owners>
-    <licenseUrl>http://www.relayhealth.com</licenseUrl>
-    <projectUrl>http://www.relayhealth.com</projectUrl>
+    <owners>McKesson/RelayHealth</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://github.com/bobanjose/Graphene/blob/master/README.md</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The Graphene.API deployment package, built on 2/17/2014</description>
     <releaseNotes />
     <dependencies>
       <dependency id="Graphene" version="0.2.1"/>
     </dependencies>
-
   </metadata>
 </package>
