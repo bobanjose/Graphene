@@ -14,7 +14,7 @@ namespace Graphene.Reporting
         /// </summary>
         Dictionary<string, string> KeyFilters { get; }
         
-        DateTime? MesurementTimeUtc { get; }
+        DateTime MesurementTimeUtc { get; }
         
         IEnumerable<IMeasurementResult> MeasurementValues { get; }
 

@@ -101,7 +101,7 @@ namespace Graphene.Tools.Migrate
                     
                     if (trackerTypeName != null)
                     {
-                        trackerData = new TrackerData(trackerTypeName, Resolution.Hour);
+                        trackerData = new TrackerData(trackerTypeName);
                         foreach (var element in trackerDocument.Elements)
                         {
                             switch (element.Name)

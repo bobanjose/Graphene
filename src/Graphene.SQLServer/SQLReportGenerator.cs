@@ -246,9 +246,9 @@ namespace Graphene.SQLServer
 
                 public Dictionary<string, string> KeyFilters { get; private set; }
 
-                public DateTime? MesurementTimeUtc
+                public DateTime MesurementTimeUtc
                 {
-                    get { return _mesurementTimeUtc; }
+                    get { return _mesurementTimeUtc.GetValueOrDefault(); }
                     set { _mesurementTimeUtc = value; }
                 }
 
@@ -308,7 +308,7 @@ namespace Graphene.SQLServer
         {
             public SqlMeasurementResult(IMeasurement inboundMeasurement, long value)
             {
-                Value = value;
+                Value = value.ToString();
                 PropertyName = inboundMeasurement.PropertyName;
                 DisplayName = inboundMeasurement.DisplayName;
                 Description = inboundMeasurement.Description;
@@ -326,7 +326,7 @@ namespace Graphene.SQLServer
 
             public string FullyQualifiedPropertyName { get; private set; }
 
-            public long Value { get; private set; }
+            public string Value { get; private set; }
         }
 
         public class SqlMeasurement : IMeasurement

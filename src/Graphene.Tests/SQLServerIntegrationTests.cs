@@ -23,7 +23,7 @@ namespace Graphene.Tests.Reporting
 
         private const string SQLConnectionString =
             //@"Server=tcp:[server].database.windows.net;Database=Graphene;User ID=[user];Password=[pass];Trusted_Connection=False;Encrypt=True;";
-            @"Server=.\SQLServer2014;Database=GrapheneV22;Trusted_Connection=True;";  
+           @"Server=tcp:hcpif9we3v.database.windows.net;Database=Graphene;User ID=Fr4nk13@hcpif9we3v;Password=(Temp123)_@!;Trusted_Connection=False;Encrypt=True;";
 
         private bool _testConfiguratorInitialized;
 

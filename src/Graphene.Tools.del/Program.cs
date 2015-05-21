@@ -60,7 +60,7 @@ namespace Graphene.Tools
                 targetSqlConnectionString = arguments["sc"];
             }
 
-            if (arguments.ContainsKey("deleteaftermigration"))
+           if (arguments.ContainsKey("deleteaftermigration"))
             {
                 try
                 {
