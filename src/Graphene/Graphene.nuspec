@@ -10,7 +10,9 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
       A scaleable and easy to use BI framework writing in C#. Graphene can be used to track various Metrics similar to Graphite.
-      It pre-aggregates the data and uses a document store (like MongoDB/RavenDB).
+
+      The pre-aggregated data can be stored in SQL Server or MongoDB.
+
       https://github.com/bobanjose/Graphene/blob/master/README.md
     </description>
     <releaseNotes>https://github.com/bobanjose/Graphene/blob/master/README.md </releaseNotes>

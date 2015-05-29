@@ -8,10 +8,13 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>https://github.com/bobanjose/Graphene/blob/master/README.md</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>The Graphene.API deployment package, built on 2/17/2014</description>
+    <description>Graphene API allows for a Graphene to be set up in a client server multi tiered configuration where the Graphene client talks to the API instead of the DB directly.</description>
     <releaseNotes />
     <dependencies>
       <dependency id="Graphene" version="0.2.1"/>
     </dependencies>
   </metadata>
+  <files>
+    <file src="bin\*.*" target="bin" />
+  </files>
 </package>
