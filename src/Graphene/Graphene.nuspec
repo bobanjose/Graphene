@@ -17,8 +17,7 @@
     <copyright>Copyright 2014</copyright>
     <tags>Graphene Graphite BI Aggregation Aggregator Performance metrics Reporting</tags>
     <dependencies>
-      <dependency id="mongocsharpdriver"/>
-      <dependency id="Microsoft.Tpl.Dataflow"/>
+      <dependency id="Microsoft.Tpl.Dataflow" version="4.5.14"/>
       <dependency id="Newtonsoft.Json" version="6.0.0" />
     </dependencies>
   </metadata>

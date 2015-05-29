@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Graphene.Tools</id>
+    <version>$version$</version>
+    <title>Graphene Tools</title>
+    <authors>Boban Jose</authors>
+    <owners>Boban Jose</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      Graphene Tools to help migrate from Mongo to SQL other utility classes
+    </description>
+    <releaseNotes>https://github.com/bobanjose/Graphene/blob/master/README.md </releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags></tags>
+    <dependencies>
+		<dependency id="Graphene" version="2.0.0"/>
+    </dependencies>
+  </metadata>
+</package>
