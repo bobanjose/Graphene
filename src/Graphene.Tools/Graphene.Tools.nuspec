@@ -19,6 +19,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\*.*" target="bin" />
+    <file src="bin\Release\*.*" target="bin" />
   </files>
 </package>
