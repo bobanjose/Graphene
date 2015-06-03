@@ -389,9 +389,9 @@ namespace Graphene.Mongo.Reporting
 
                 public Dictionary<string, string> KeyFilters { get; private set; }
 
-                public DateTime? MesurementTimeUtc
+                public DateTime MesurementTimeUtc
                 {
-                    get { return _mesurementTimeUtc; }
+                    get { return _mesurementTimeUtc.GetValueOrDefault(); }
                     set { _mesurementTimeUtc = value; }
                 }
 
@@ -422,7 +422,7 @@ namespace Graphene.Mongo.Reporting
                 {
                     public MongoMeasurementResult(IMeasurement inboundMeasurement, string value)
                     {
-                        Value = Convert.ToInt64(value);
+                        Value = value;
                         PropertyName = inboundMeasurement.PropertyName;
                         DisplayName = inboundMeasurement.DisplayName;
                         Description = inboundMeasurement.Description;
@@ -440,7 +440,7 @@ namespace Graphene.Mongo.Reporting
 
                     public string FullyQualifiedPropertyName { get; private set; }
 
-                    public long Value { get; private set; }
+                    public string Value { get; private set; }
                 }
             }
         }

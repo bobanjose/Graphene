@@ -41,7 +41,7 @@ namespace Graphene.Reporting
             foreach (IAggregationResult aggregationResult in trackerReportResults.AggregationResults)
             {
                 var aggResult = new AggregationResult<T1>();
-                aggResult.MesurementTimeUtc = aggregationResult.MesurementTimeUtc.GetValueOrDefault();
+                aggResult.MesurementTimeUtc = aggregationResult.MesurementTimeUtc;
 
 
                 aggResult.Occurrence = aggregationResult.Occurence;

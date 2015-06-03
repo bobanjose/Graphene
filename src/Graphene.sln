@@ -25,7 +25,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Log4net", "Graphen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.SQLServer", "Graphene.SQLServer\Graphene.SQLServer.csproj", "{B8D19F64-84D6-4F82-B1BD-D5A6626E34EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Tools", "Graphene.Tools\Graphene.Tools.csproj", "{D030B85F-EDDB-4532-8C29-02794E0CCFA4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphene.Tools", "Graphene.Tools\Graphene.Tools.csproj", "{11E69DC6-DE0A-4E8D-BBCD-16A0A108D1B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,10 +57,10 @@ Global
 		{B8D19F64-84D6-4F82-B1BD-D5A6626E34EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8D19F64-84D6-4F82-B1BD-D5A6626E34EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8D19F64-84D6-4F82-B1BD-D5A6626E34EC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D030B85F-EDDB-4532-8C29-02794E0CCFA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D030B85F-EDDB-4532-8C29-02794E0CCFA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D030B85F-EDDB-4532-8C29-02794E0CCFA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D030B85F-EDDB-4532-8C29-02794E0CCFA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11E69DC6-DE0A-4E8D-BBCD-16A0A108D1B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11E69DC6-DE0A-4E8D-BBCD-16A0A108D1B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11E69DC6-DE0A-4E8D-BBCD-16A0A108D1B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11E69DC6-DE0A-4E8D-BBCD-16A0A108D1B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
