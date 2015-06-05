@@ -16,6 +16,6 @@
   </metadata>
   <files>
     <file src="bin\*.*" target="bin" />
-    <file src="*.config" target="*.config" />
+    <file src="*.config"/>
   </files>
 </package>
