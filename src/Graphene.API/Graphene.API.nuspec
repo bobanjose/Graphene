@@ -17,5 +17,6 @@
   <files>
     <file src="bin\*.*" target="bin" />
     <file src="web.config"/>
+    <file src="Global.asax"/>
   </files>
 </package>
