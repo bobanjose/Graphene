@@ -75,9 +75,14 @@ namespace Graphene
 
         public static void ShutDown()
         {
+            ShutDown(30);
+        }
+
+        public static void ShutDown(int timeoutInSeconds)
+        {
             try
             {
-                Publisher.ShutDown();
+                Publisher.ShutDown(timeoutInSeconds);
             }
             catch (Exception ex)
             {

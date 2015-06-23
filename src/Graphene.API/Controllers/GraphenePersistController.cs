@@ -28,6 +28,11 @@ namespace Graphene.API.Controllers
         // POST api/values
         public void Post([FromBody] TrackerData trackerData)
         {
+            if (trackerData.Measurement == null)
+                throw new Exception("TrackerData.Measurement is null - Form Body = " + Request.Content.ReadAsStringAsync().Result);
+            if (trackerData.Measurement.CoveredResolutions == null)
+                throw new Exception("TrackerData.Measurement.CoveredResolutions is null - Form Body = " + Request.Content.ReadAsStringAsync().Result);
+
             foreach (var persister in _persisters)
             {
                 try

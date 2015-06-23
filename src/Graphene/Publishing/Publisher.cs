@@ -120,7 +120,7 @@ namespace Graphene.Publishing
             _trackersRegisted = true;
         }
 
-        internal static void ShutDown()
+        internal static void ShutDown(int timeoutInSeconds)
         {
             if (!_trackersRegisted)
                 return;
@@ -130,7 +130,7 @@ namespace Graphene.Publishing
             int loopCount = 0;
             while ((_publisherBlock.InputCount > 0 || !_lastPersistanceComplete) && loopCount < 20)
             {
-                Thread.Sleep(100);
+                Thread.Sleep((timeoutInSeconds*1000/20));
                 loopCount++;
             }
             if (_publisherBlock.InputCount > 0)
@@ -144,7 +144,7 @@ namespace Graphene.Publishing
             if (!_trackersRegisted)
                 return;
 
-            ShutDown();
+            ShutDown(30);
             initialize();
 
             var currentTrackers = _trackers;

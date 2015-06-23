@@ -39,7 +39,7 @@ namespace Graphene.Configuration
         public void Error(string message, Exception ex)
         {
             if (_logger.IsErrorEnabled)
-                _logger.Error(message);
+                _logger.Error(message + "---" + ex.StackTrace);
         }
     }
 }
