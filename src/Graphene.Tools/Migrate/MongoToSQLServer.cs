@@ -154,11 +154,11 @@ namespace Graphene.Tools.Migrate
 
         private static IEnumerable<Tuple<DateTime, DateTime>> createRange(DateTime start, DateTime end, int days = 2)
         {
-            var ret = new Tuple<DateTime, DateTime>(start, start.AddDays(days));
+            var ret = new Tuple<DateTime, DateTime>(start, start.AddDays(days) > end ? end : start.AddDays(days));
             do
             {
                 yield return ret;
-                ret = new Tuple<DateTime, DateTime>(ret.Item2, ret.Item2.AddDays(days));
+                ret = new Tuple<DateTime, DateTime>(ret.Item2, ret.Item2.AddDays(days) > end ? end : ret.Item2.AddDays(days));
             } while (ret.Item2 <= end);
         }
 

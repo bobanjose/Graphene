@@ -29,7 +29,7 @@ namespace Graphene.Configuration
         public IReportGenerator ReportGenerator { internal get; set; }
         public Func<DateTime> EvaluateDateTime { get; set; }
         public TimespanRoundingMethod GrapheneRoundingMethod { internal get; set; }
-        public TimeSpan? DayTotalTZOffset { internal get; set; }
+        public TimeSpan DayTotalTZOffset { internal get; set; }
     }
 }
 
@@ -54,6 +54,22 @@ namespace Graphene
             if (configuration.Logger == null)
                 configuration.Logger = new SysDiagLogger();
             _configurator = configuration;
+            TimespanRoundingMethod roundMethod;
+            Enum.TryParse(ConfigurationManager.AppSettings["RoundingMethod"],true, out roundMethod);
+            if (Enum.IsDefined(typeof (TimespanRoundingMethod), roundMethod))
+            {
+                _configurator.GrapheneRoundingMethod = roundMethod;
+            }
+            int offsetHours;
+            int.TryParse(ConfigurationManager.AppSettings["MidnightOffsetForTotals"], out offsetHours);
+            if (offsetHours >= -11 && offsetHours <= 14)
+            {
+                _configurator.DayTotalTZOffset = new TimeSpan(offsetHours, 0, 0);
+            }
+            else
+            {
+                _configurator.DayTotalTZOffset = new TimeSpan(0,0,0);
+            }
             _configurator.Logger.Debug("Graphene Initialized");
             if (_configurator.EvaluateDateTime == null)
                 _configurator.EvaluateDateTime = () => DateTime.UtcNow;
@@ -83,6 +99,11 @@ namespace Graphene
             {
                 Configuration.Logger.Error(ex.Message, ex);
             }
+        }
+
+        public static TimeSpan DayTotalTZOffset()
+        {
+            return Configuration.DayTotalTZOffset;
         }
     }
 }

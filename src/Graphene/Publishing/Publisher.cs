@@ -28,7 +28,6 @@ namespace Graphene.Publishing
         private static bool _lastPersistanceComplete;
         private static bool _trackersRegisted;
         private static DateTime lastPersistTime = DateTime.UtcNow;
-
         private static List<ContainerBase> _trackers = new List<ContainerBase>();
         
         static Publisher()
@@ -65,6 +64,7 @@ namespace Graphene.Publishing
         }
 
         private static async Task measureAccumulator(ContainerBase tc)
+
         {
             try
             {
