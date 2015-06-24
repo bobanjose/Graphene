@@ -278,19 +278,19 @@ namespace Graphene.Tracking
                         case TimespanRoundingMethod.Start:
                             if (dateTimeToReturn > timeNow)
                              {
-                                 dateTimeToReturn = TimeSlot.AddDays(-1);
+                                 dateTimeToReturn = timeNow.AddDays(-1);
                              }
                             break;
                         case TimespanRoundingMethod.End:
                             if (dateTimeToReturn < timeNow)
                              {
-                                 dateTimeToReturn = TimeSlot.AddDays(1);
+                                 dateTimeToReturn = timeNow.AddDays(1);
                              }
                             break;
                         case TimespanRoundingMethod.MidPoint:
                             if (dateTimeToReturn > timeNow.AddMinutes(-30))
                              {
-                                 dateTimeToReturn = TimeSlot.AddDays(-1);
+                                 dateTimeToReturn = timeNow.AddDays(-1);
                              }
                             break;
                     }
@@ -303,19 +303,19 @@ namespace Graphene.Tracking
                         case TimespanRoundingMethod.Start:
                             if (dateTimeToReturn > timeNow)
                              {
-                                 dateTimeToReturn = TimeSlot.AddMonths(-1);
+                                 dateTimeToReturn = timeNow.AddMonths(-1);
                              }
                             break;
                         case TimespanRoundingMethod.End:
                             if (dateTimeToReturn < timeNow)
                              {
-                                 dateTimeToReturn = TimeSlot.AddMonths(1);
+                                 dateTimeToReturn = timeNow.AddMonths(1);
                              }
                             break;
                         case TimespanRoundingMethod.MidPoint:
                             if (dateTimeToReturn > timeNow.AddMinutes(-30))
                              {
-                                 dateTimeToReturn = TimeSlot.AddMonths(-1);
+                                 dateTimeToReturn = timeNow.AddMonths(-1);
                              }
                             break;
                     }

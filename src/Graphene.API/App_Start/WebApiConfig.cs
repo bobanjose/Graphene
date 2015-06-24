@@ -99,7 +99,8 @@ namespace Graphene.API
             var resolver = new AutofacWebApiDependencyResolver(container);
 
             GlobalConfiguration.Configuration.DependencyResolver = resolver;
-
+            
+            container.Resolve<ILogger>().Info("Autofac Registered");
         }
     }
 
