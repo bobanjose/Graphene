@@ -253,7 +253,7 @@ namespace Graphene.Tracking
 
         private DateTime setTimeSlotDateTime(DateTime timeNow, Resolution adjustmentResolution)
         {
-            DateTime dateTimeToReturn = timeNow;
+            DateTime dateTimeToReturn = DateTime.SpecifyKind(timeNow, DateTimeKind.Utc); ;
             switch (adjustmentResolution)
             {
                 case Resolution.Minute:
