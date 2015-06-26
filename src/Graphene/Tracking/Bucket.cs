@@ -253,7 +253,7 @@ namespace Graphene.Tracking
 
         private DateTime setTimeSlotDateTime(DateTime timeNow, Resolution adjustmentResolution)
         {
-            DateTime dateTimeToReturn = timeNow;
+            DateTime dateTimeToReturn = DateTime.SpecifyKind(timeNow, DateTimeKind.Utc); ;
             switch (adjustmentResolution)
             {
                 case Resolution.Minute:
@@ -272,8 +272,7 @@ namespace Graphene.Tracking
                     dateTimeToReturn = timeNow.Round(TimeSpan.FromHours(1));
                     break;
                 case Resolution.Day:
-                    dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day) +
-                                            Configurator.Configuration.DayTotalTZOffset.GetValueOrDefault(new TimeSpan(0,0,0));
+                    dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day) + Configurator.Configuration.DayTotalTZOffset;
                     switch (Configurator.Configuration.GrapheneRoundingMethod)
                     {
                         case TimespanRoundingMethod.Start:
@@ -298,7 +297,7 @@ namespace Graphene.Tracking
                     break;
                 case Resolution.Month:
                     dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, 1) +
-                                            Configurator.Configuration.DayTotalTZOffset.GetValueOrDefault(new TimeSpan(0, 0, 0));
+                                            Configurator.Configuration.DayTotalTZOffset;
                     switch (Configurator.Configuration.GrapheneRoundingMethod)
                     {
                         case TimespanRoundingMethod.Start:
