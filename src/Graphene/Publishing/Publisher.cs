@@ -51,7 +51,6 @@ namespace Graphene.Publishing
         {
             try
             {
-                tc.TimeSlot = DateTime.SpecifyKind(tc.TimeSlot,DateTimeKind.Utc);
                 _lastPersistanceComplete = false;
                 Configurator.Configuration.Persister.Persist(tc);
                 _lastPersistanceComplete = true;

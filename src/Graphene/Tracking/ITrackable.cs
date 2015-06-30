@@ -10,6 +10,7 @@ namespace Graphene.Tracking
 {
     public enum Resolution
     {
+        NA = -1,
         Hour = 0,
         FifteenMinute = 1,
         ThirtyMinute = 2,

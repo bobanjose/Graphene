@@ -7,6 +7,7 @@ using Graphene.Data;
 using Graphene.Mongo.Publishing;
 using Graphene.Publishing;
 using Graphene.SQLServer;
+using Graphene.Tracking;
 using log4net;
 using log4net.Repository.Hierarchy;
 using Microsoft.Data.Edm;
@@ -31,7 +32,7 @@ namespace Graphene.API.Controllers
             if (trackerData.Measurement == null)
                 throw new Exception("TrackerData.Measurement is null - Form Body = " + Request.Content.ReadAsStringAsync().Result);
             if (trackerData.Measurement.CoveredResolutions == null)
-                throw new Exception("TrackerData.Measurement.CoveredResolutions is null - Form Body = " + Request.Content.ReadAsStringAsync().Result);
+                trackerData.OverrideMinResolution(Resolution.NA);
 
             foreach (var persister in _persisters)
             {

@@ -162,6 +162,8 @@ namespace Graphene.SQLServer
         {
             switch (resolution)
             {
+                case Resolution.NA:
+                    return -1;
                 case Resolution.Minute:
                     return 1;
                 case Resolution.FiveMinute:
@@ -182,14 +184,17 @@ namespace Graphene.SQLServer
 
         private static void addToMeasurementTable(TrackerData trackerData, DataTable table, int measurementResolutionMinutes, string metricName, long metricValue)
         {
-            table.Rows.Add(metricName, metricValue, measurementResolutionMinutes
-                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Minute)
-                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FiveMinute)
-                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FifteenMinute)
-                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.ThirtyMinute)
-                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Hour)
-                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Day)
-                , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Month));
+            if (trackerData.Measurement.CoveredResolutions != null)
+            {
+                table.Rows.Add(metricName, metricValue, measurementResolutionMinutes
+                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Minute)
+                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FiveMinute)
+                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FifteenMinute)
+                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.ThirtyMinute)
+                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Hour)
+                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Day)
+                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Month));
+            }
         }
     }
 }

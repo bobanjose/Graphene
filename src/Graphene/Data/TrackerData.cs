@@ -33,6 +33,12 @@ namespace Graphene.Data
             MinResolution = minResolution;
         }
 
+        [Obsolete("Temporary measure to accomodate older version of Graphene Client")]
+        public void OverrideMinResolution(Resolution newMinResolution)
+        {
+            MinResolution = newMinResolution;
+        }
+
         public string _id
         {
             get { return String.Concat(TypeName, TimeSlot.ToUniversalTime(), KeyFilter).Replace(" ", ""); }
