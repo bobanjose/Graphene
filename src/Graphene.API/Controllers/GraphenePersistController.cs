@@ -32,7 +32,10 @@ namespace Graphene.API.Controllers
             if (trackerData.Measurement == null)
                 throw new Exception("TrackerData.Measurement is null - Form Body = " + Request.Content.ReadAsStringAsync().Result);
             if (trackerData.Measurement.CoveredResolutions == null)
+            {
                 trackerData.OverrideMinResolution(Resolution.NA);
+                trackerData.Measurement.CoveredResolutions = new List<Resolution>();
+            }
 
             foreach (var persister in _persisters)
             {
