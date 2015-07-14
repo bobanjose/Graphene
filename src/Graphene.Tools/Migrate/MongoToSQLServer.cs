@@ -89,8 +89,8 @@ namespace Graphene.Tools.Migrate
         {
             _deleteRecordAfterMigration = deleteRecordAfterMigration;
 
-            _startDate = (startDate == DateTime.MinValue ? DateTime.Parse(ConfigurationManager.AppSettings["StartDate"]) : startDate);
-            _endDate = (endDate == DateTime.MaxValue ? DateTime.Parse(ConfigurationManager.AppSettings["EndDate"]) : endDate);
+            _startDate =(startDate == DateTime.MinValue ? DateTime.Parse(ConfigurationManager.AppSettings["StartDate"]) : startDate).ToUniversalTime();
+            _endDate = (endDate == DateTime.MaxValue ? DateTime.Parse(ConfigurationManager.AppSettings["EndDate"]) : endDate).ToUniversalTime();
             _daysInRange = daysInRange == -1 ? int.Parse(ConfigurationManager.AppSettings["TimeSpanInDays"]) : daysInRange;
 
             var dates = getDateRange(_startDate, _endDate, _daysInRange);
@@ -137,12 +137,12 @@ namespace Graphene.Tools.Migrate
             if (rows == 0)
             {
                 Console.WriteLine("(+{0:N3}) Processing {1} to {2}: nothing to do",
-                    (DateTime.Now - StartTime).TotalSeconds, start, end);
+                    (DateTime.Now - StartTime).TotalSeconds, start.ToUniversalTime(), end.ToUniversalTime());
             }
             else
             {
                 Console.WriteLine("(+{0:N3}) Processing {1} to {2}: completed ({3} records in {4:N3}s)",
-                    (DateTime.Now - StartTime).TotalSeconds, start, end, rows,
+                    (DateTime.Now - StartTime).TotalSeconds, start.ToUniversalTime(), end.ToUniversalTime(), rows,
                     (DateTime.Now - batchBegin).TotalSeconds);
             }
         }
