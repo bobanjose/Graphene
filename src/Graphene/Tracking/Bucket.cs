@@ -30,7 +30,7 @@ namespace Graphene.Tracking
         {
             DateTime timeNow1 = Configurator.Configuration.EvaluateDateTime();
             if (timeNow.HasValue)
-                timeNow1 = timeNow.Value;
+                timeNow1 = DateTime.SpecifyKind(timeNow.Value,DateTimeKind.Utc);
             _expiresAfter = timeNow1.AddSeconds(lifeTimeInSeconds);
             _counters = new ConcurrentDictionary<string, Counter>();
             _resolution = minResolution;
@@ -41,7 +41,7 @@ namespace Graphene.Tracking
             {
                 case Resolution.Minute:
                     if (!isLargerTimespanBucket)
-                        _coveredResolutions.AddRange(new[] { Resolution.Minute, Resolution.FiveMinute });
+                        _coveredResolutions.AddRange(new[] { Resolution.Minute});
                     break;
                 case Resolution.FiveMinute:
                     if (!isLargerTimespanBucket)
@@ -49,7 +49,7 @@ namespace Graphene.Tracking
                     break;
                 case Resolution.FifteenMinute:
                     if (!isLargerTimespanBucket)
-                        _coveredResolutions.AddRange(new[] { Resolution.ThirtyMinute, Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
+                        _coveredResolutions.AddRange(new[] {Resolution.FifteenMinute, Resolution.FiveMinute, Resolution.Minute });
                     break;
                 case Resolution.ThirtyMinute:
                     if (!isLargerTimespanBucket)
@@ -253,7 +253,7 @@ namespace Graphene.Tracking
 
         private DateTime setTimeSlotDateTime(DateTime timeNow, Resolution adjustmentResolution)
         {
-            DateTime dateTimeToReturn = DateTime.SpecifyKind(timeNow, DateTimeKind.Utc); ;
+            DateTime dateTimeToReturn = DateTime.SpecifyKind(timeNow, DateTimeKind.Utc);
             switch (adjustmentResolution)
             {
                 case Resolution.Minute:
@@ -272,7 +272,7 @@ namespace Graphene.Tracking
                     dateTimeToReturn = timeNow.Round(TimeSpan.FromHours(1));
                     break;
                 case Resolution.Day:
-                    dateTimeToReturn = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day) + Configurator.Configuration.DayTotalTZOffset;
+                    dateTimeToReturn = DateTime.SpecifyKind((new DateTime(timeNow.Year, timeNow.Month, timeNow.Day) + Configurator.Configuration.DayTotalTZOffset),DateTimeKind.Utc);
                     switch (Configurator.Configuration.GrapheneRoundingMethod)
                     {
                         case TimespanRoundingMethod.Start:
