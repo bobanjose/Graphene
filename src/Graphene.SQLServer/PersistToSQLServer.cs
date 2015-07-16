@@ -29,12 +29,13 @@ namespace Graphene.SQLServer
         private readonly ILogger _logger;
         private readonly bool _convertToUTC;
         private readonly int _maxRetries;
+        private static bool _persistPreAggregatedBuckets;
 
-        public PersistToSQLServer(string connectionString, ILogger logger, bool convertToUTC = false, bool persistPreAggregatedBuckets = true, int maxRetries = 3)
+        public PersistToSQLServer(string connectionString, ILogger logger, bool convertToUTC = false, bool persistPreAggregatedBuckets = false, int maxRetries = 3)
         {
             _connectionString = connectionString;
             _logger = logger;
-            PersistPreAggregatedBuckets = persistPreAggregatedBuckets;
+            _persistPreAggregatedBuckets = PersistPreAggregatedBuckets = persistPreAggregatedBuckets;
             _convertToUTC = convertToUTC;
             _maxRetries = maxRetries;
         }
@@ -186,14 +187,21 @@ namespace Graphene.SQLServer
         {
             if (trackerData.Measurement.CoveredResolutions != null)
             {
-                table.Rows.Add(metricName, metricValue, measurementResolutionMinutes
-                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Minute)
-                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FiveMinute)
-                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FifteenMinute)
-                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.ThirtyMinute)
-                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Hour)
-                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Day)
-                    , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Month));
+                if (_persistPreAggregatedBuckets)
+                {
+                    table.Rows.Add(metricName, metricValue, measurementResolutionMinutes
+                        , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Minute)
+                        , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FiveMinute)
+                        , trackerData.Measurement.CoveredResolutions.Contains(Resolution.FifteenMinute)
+                        , trackerData.Measurement.CoveredResolutions.Contains(Resolution.ThirtyMinute)
+                        , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Hour)
+                        , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Day)
+                        , trackerData.Measurement.CoveredResolutions.Contains(Resolution.Month));
+                }
+                else
+                {
+                    table.Rows.Add(metricName, metricValue, measurementResolutionMinutes, 0, 0, 0, 0, 0, 0, 0);
+                }
             }
         }
     }

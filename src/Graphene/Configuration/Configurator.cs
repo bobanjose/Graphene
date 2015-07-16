@@ -72,7 +72,7 @@ namespace Graphene
             }
             _configurator.Logger.Debug("Graphene Initialized");
             if (_configurator.EvaluateDateTime == null)
-                _configurator.EvaluateDateTime = () => DateTime.UtcNow;
+                _configurator.EvaluateDateTime = () => DateTime.SpecifyKind(DateTime.UtcNow,DateTimeKind.Utc);
         }
 
         public static bool FlushTrackers()
