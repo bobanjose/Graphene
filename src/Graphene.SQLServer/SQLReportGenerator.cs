@@ -11,10 +11,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Graphene.Configuration;
-using Graphene.Data;
 using Graphene.Reporting;
 
 namespace Graphene.SQLServer
@@ -41,16 +38,21 @@ namespace Graphene.SQLServer
                     connection.Open();
                     using (var command = connection.CreateCommand())
                     {
-                        if (specification.OffsetTotalsByHours != TimeSpan.Zero && specification.OffsetTotalsByHours.Hours != Configurator.DayTotalTZOffset().Hours)
+                        if (Configurator.UseBuckets && (specification.OffsetTotalsByHours == TimeSpan.Zero
+                                                        |
+                                                        specification.OffsetTotalsByHours.Hours !=
+                                                        Configurator.DayTotalTZOffset().Hours))
                         {
-                            command.CommandText = "dbo.GenerateReportWithOffsetTotals";
-                            command.Parameters.Add("@OffsetTotalsTo", SqlDbType.SmallInt);
-                            command.Parameters["@OffsetTotalsTo"].Value = specification.OffsetTotalsByHours.Hours;
+                            command.CommandText = "dbo.GenerateReportUsingBuckets";
                         }
                         else
                         {
                             command.CommandText = "dbo.GenerateReport";
+                            command.Parameters.Add("@OffsetTotalsTo", SqlDbType.SmallInt);
+                            command.Parameters["@OffsetTotalsTo"].Value = specification.OffsetTotalsByHours.Hours;
+
                         }
+
                         command.CommandType = CommandType.StoredProcedure;
 
                         command.Parameters.Add("@StartDt", SqlDbType.DateTime);

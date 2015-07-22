@@ -7,7 +7,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 using System;
-using System.Deployment.Internal;
 using System.Configuration;
 using Graphene.Configuration;
 using Graphene.Publishing;
@@ -30,6 +29,7 @@ namespace Graphene.Configuration
         public Func<DateTime> EvaluateDateTime { get; set; }
         public TimespanRoundingMethod GrapheneRoundingMethod { internal get; set; }
         public TimeSpan DayTotalTZOffset { internal get; set; }
+        public bool UseBuckets { internal get; set; }
     }
 }
 
@@ -70,6 +70,10 @@ namespace Graphene
             {
                 _configurator.DayTotalTZOffset = new TimeSpan(0,0,0);
             }
+            bool useBuckets;
+            bool.TryParse(ConfigurationManager.AppSettings["UseBuckets"], out useBuckets);
+            _configurator.UseBuckets = useBuckets;
+
             _configurator.Logger.Debug("Graphene Initialized");
             if (_configurator.EvaluateDateTime == null)
                 _configurator.EvaluateDateTime = () => DateTime.SpecifyKind(DateTime.UtcNow,DateTimeKind.Utc);
@@ -109,6 +113,11 @@ namespace Graphene
         public static TimeSpan DayTotalTZOffset()
         {
             return Configuration.DayTotalTZOffset;
+        }
+
+        public static bool UseBuckets
+        {
+            get { return Configuration.UseBuckets; }
         }
     }
 }

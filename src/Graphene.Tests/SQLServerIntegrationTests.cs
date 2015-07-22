@@ -10,48 +10,41 @@ using Graphene.Tests.Fakes;
 using Graphene.Tracking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Graphene.Tests.Reporting
+namespace Graphene.Tests
 {
     [TestClass]
-    public class SQLReportingTests
+    public class sql_reporting_tests
     {
         //*****************************************************************************************************************
         //Most of the tests below are integration type tests and can only be run in isolation (individually)
         //*****************************************************************************************************************
 
-        private readonly FakeLogger _fakeLogger = new FakeLogger();
+        private static readonly FakeLogger FakeLogger = new FakeLogger();
 
-        private const string SQLConnectionString =
+        private const string SQL_CONNECTION_STRING =
             //@"Server=tcp:[server].database.windows.net;Database=Graphene;User ID=[user];Password=[pass];Trusted_Connection=False;Encrypt=True;";
-            @"Server=.\SQLServer2014;Database=GrapheneV22;Trusted_Connection=True;";  
+            @"Server=.\MSSQLSERVER2014;Database=Graphene;Trusted_Connection=True;"; 
 
-        private bool _testConfiguratorInitialized;
+        private static bool _testConfiguratorInitialized;
+        
 
-        private void Initialize()
+        [ClassInitialize]
+        public static void Init(TestContext testContext)
         {
             if (!_testConfiguratorInitialized)
             {
                 Configurator.Initialize(
                 new Settings
                 {
-                    Persister = new PersistToSQLServer(SQLConnectionString, _fakeLogger),
-                    ReportGenerator = new SQLReportGenerator(SQLConnectionString, _fakeLogger)
-                }
-                );
+                    Persister = new PersistToSQLServer(SQL_CONNECTION_STRING, FakeLogger),
+                    ReportGenerator = new SQLReportGenerator(SQL_CONNECTION_STRING, FakeLogger)
+                });
                 _testConfiguratorInitialized = true;
             }
         }
 
-/*
-        private void Shutdown()
-        {
-            Configurator.ShutDown();
-            _testConfiguratorInitialized = false;
-        }
-*/
-
         [TestMethod]
-        public void IntegrationTest_GivenFilters_AggregatedResultsMatch()
+        public void integration_test_given_filters_aggregated_results_match()
         {
             var filter1 = new CustomerFilter
             {
@@ -61,31 +54,21 @@ namespace Graphene.Tests.Reporting
                 StoreID = Guid.NewGuid().ToString("D")
             };
 
-            Initialize();
-
             Container<CustomerVisitTracker>.Where(filter1).IncrementBy(18);
-            var report = Container<CustomerVisitTracker>.Where(filter1).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6, 0)),DateTime.UtcNow.Add(new TimeSpan(1, 0, 0))); 
-            var waitCounter = 0;
-            var reportResultCount = 0;
-            while (waitCounter++ < 2 && reportResultCount < 1)
-            {
-                Configurator.FlushTrackers(); 
+            Configurator.FlushTrackers(); 
 
-                report = Container<CustomerVisitTracker>.Where(filter1)
-                            .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6 * waitCounter, 0)),
-                                    DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
-                
-                reportResultCount = report.Results.Count();
-                Debug.Write("Report Count: " + report.Results.Count() 
+            var report = Container<CustomerVisitTracker>.Where(filter1).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6, 0)),DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+
+            Debug.Write("Report Count: " + report.Results.Count() 
                             + " StoreId: " + filter1.StoreID);
-            }
+            
             Assert.IsTrue(report.Results.Any());
             Assert.AreEqual(1, report.Results[0].Occurrence);
             Assert.AreEqual(18, report.Results[0].Total);
         }
 
         [TestMethod]
-        public void IntegrationTest_GivenFiltersAndNamedTrackers_AggregatedResultsMatch()
+        public void integration_test_given_filters_and_named_trackers_aggregated_results_match()
         {
             var filter1 = new CustomerFilter
             {
@@ -95,44 +78,27 @@ namespace Graphene.Tests.Reporting
                 StoreID = Guid.NewGuid().ToString("D")
             };
 
-            Initialize();
-
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 17);
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 7);
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 27);
 
-            var report = Container<TrackerWithCountProperties>.Where(filter1).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6, 0)),DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
-            var waitCounter = 0;
-            var reportResultCount = 0;
-            while (waitCounter++ < 2 && reportResultCount < 1)
-            {
-                Configurator.FlushTrackers(); 
+            Configurator.FlushTrackers();
 
-                report = Container<TrackerWithCountProperties>.Where(filter1)
-                        .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6 * waitCounter, 0)),
-                                DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+            var report = Container<TrackerWithCountProperties>.Where(new CustomerFilter { Gender = "M", StoreID = filter1.StoreID})
+                           .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6 , 0)),
+                                   DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
 
-                reportResultCount = report.Results.Count();
-                Debug.Write("Report Count: " + report.Results.Count() 
-                             + " StoreId: " + filter1.StoreID);
-            }
-            Assert.IsTrue(reportResultCount >= 1);
-
-            var report2 = Container<TrackerWithCountProperties>.Where(new CustomerFilter{Gender = "M"})
-                            .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6 * waitCounter, 0)), 
-                                    DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
-
-            Debug.Write("Report2 Count: " + report2.Results.Count() 
+            Debug.Write("Report Count: " + report.Results.Count()
                         + " StoreId: " + filter1.StoreID + "  ");
 
+            Assert.IsTrue(report.Results.Any());
             Assert.AreEqual(44, report.Results[0].Tracker.ElderlyCount);
             Assert.AreEqual(7, report.Results[0].Tracker.KidsCount);
-            
         }
 
        
         [TestMethod]
-        public void IntegrationTest_GivenFiltersAndNamedTrackers_AggregatedResultsMatchForPartialFilters_5MinuteResolution()
+        public void integration_test_given_filters_and_named_trackers_aggregated_results_match_for_partial_filters_5_minute_resolution()
         {
             string storeId = Guid.NewGuid().ToString("D");
             var filter1 = new CustomerFilter
@@ -142,38 +108,29 @@ namespace Graphene.Tests.Reporting
                 State = "CA",
                 StoreID = storeId
             };
-
-            Initialize();
+           
             Container<FiveMinuteTrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 73);
             Thread.Sleep(new TimeSpan(0, 0, 7, 10));
             Container<FiveMinuteTrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 53);
             Container<FiveMinuteTrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 23);
 
+            Configurator.FlushTrackers(); 
+
             var report = Container<FiveMinuteTrackerWithCountProperties>.Where(new CustomerFilter{StoreID = storeId}).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
-            var waitCounter = 0;
-            var reportResultCount = 0;
-            while (waitCounter++ < 2 && reportResultCount < 2)
-            {
-                Configurator.FlushTrackers(); 
 
-                report = Container<FiveMinuteTrackerWithCountProperties>
-                            .Where(new CustomerFilter{StoreID = storeId})
-                            .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6, 0)), 
-                                    DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+            Debug.Write("Report Count: " + report.Results.Count()
+                         + " StoreId: " + filter1.StoreID);
 
-                reportResultCount = report.Results.Count();
-                Debug.Write("Report Count: " + report.Results.Count() 
-                            + " StoreId: " + filter1.StoreID);
-            }
             Assert.IsTrue(report.Results.Count() >= 2);
             Assert.AreEqual(73, report.Results[0].Tracker.ElderlyCount);
             Assert.AreEqual(0, report.Results[0].Tracker.KidsCount);
             Assert.AreEqual(23, report.Results[1].Tracker.ElderlyCount);
             Assert.AreEqual(53, report.Results[1].Tracker.KidsCount);
+           
         }
 
         [TestMethod]
-        public void IntegrationTest_GivenFiltersAndNamedTrackers_AggregatedResultsMatchForPartialFilters_HourResolution()
+        public void integration_test_given_filters_and_named_trackers_aggregated_results_match_for_partial_filters_hour_resolution()
         {
             string storeId = Guid.NewGuid().ToString("D");
             var filter1 = new CustomerFilter
@@ -183,7 +140,6 @@ namespace Graphene.Tests.Reporting
                 State = "CA",
                 StoreID = storeId
             };
-            Initialize();
             var startHour = DateTime.UtcNow.Hour;
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 74);
             Thread.Sleep(new TimeSpan(0, 0, 5, 0));
@@ -191,52 +147,31 @@ namespace Graphene.Tests.Reporting
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.KidsCount, 54);
             Container<TrackerWithCountProperties>.Where(filter1).Increment(t => t.ElderlyCount, 24);
 
+            Configurator.FlushTrackers(); 
+
             var report = Container<TrackerWithCountProperties>.Where(new CustomerFilter{StoreID = storeId}).Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
-            var waitCounter = 0;
-            var reportResultCount = 0;
-            while (waitCounter++ < 3 && (
-                (reportResultCount < 1 && startHour == endHour) || startHour != endHour))
-            {
-                Configurator.FlushTrackers(); 
 
-                report = Container<TrackerWithCountProperties>
-                            .Where(new CustomerFilter{StoreID = storeId})
-                            .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6 * waitCounter, 0)), 
-                                    DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+            Debug.Write("Report Count: " + report.Results.Count()
+                           + " StoreId: " + filter1.StoreID);
 
-
-                reportResultCount = report.Results.Count(); 
-                Debug.Write("Report Count: " + report.Results.Count() 
-                            + " StoreId: " + filter1.StoreID);
-            }
             Assert.IsTrue(report.Results.Any());
             Assert.AreEqual(startHour != endHour ? 24 : 98, report.Results[0].Tracker.ElderlyCount);
             Assert.AreEqual(54, report.Results[0].Tracker.KidsCount);
         }
 
         [TestMethod]
-        public void IntegrationTest_WithoutFiltersAndUsingNamedTrackers_AggregatedResultsMatch()
+        public void integration_test_without_filters_and_using_named_trackers_aggregated_results_match()
         {
-            Initialize();
             Container<TrackerWithCountProperties>.Increment(t => t.ElderlyCount, 15);
             Container<TrackerWithCountProperties>.Increment(t => t.KidsCount, 55);
             Container<TrackerWithCountProperties>.Increment(t => t.ElderlyCount, 5);
 
-            var report = Container<TrackerWithCountProperties>.Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 6, 0)));
-            var waitCounter = 0;
-            var reportResultCount = 0;
-            while (waitCounter++ < 2 && reportResultCount < 1)
-            {
-                Configurator.FlushTrackers(); 
+            Configurator.FlushTrackers(); 
 
-                report = Container<TrackerWithCountProperties>
-                                .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6*waitCounter, 0)),
-                                        DateTime.UtcNow.Add(new TimeSpan(1, 6, 0)));
-                
-                reportResultCount = report.Results.Count();
-                Debug.Write("Report Count: " + report.Results.Count()
+            var report = Container<TrackerWithCountProperties>.Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)));
+
+            Debug.Write("Report Count: " + report.Results.Count()
                             + " StoreId: <EmptyString>  ");
-            }
 
             Assert.IsTrue(report.Results.Any());
             Assert.IsTrue(report.Results[0].Tracker.ElderlyCount >= 20);
@@ -244,8 +179,7 @@ namespace Graphene.Tests.Reporting
         }
 
         [TestMethod]
-        public void
-            IntegrationTest_GivenFiltersAndNamedTrackers_AggregatedResultsMatchForPartialFiltersWithMultipleRecordsDefault
+        public void integration_test_given_filters_and_named_trackers_aggregated_results_match_for_partial_filters_with_multiple_records_default
             ()
         {
             var filter1 = new CustomerFilter
@@ -256,25 +190,14 @@ namespace Graphene.Tests.Reporting
                 StoreID = Guid.NewGuid().ToString("D")
             };
             
-            Initialize();
             Container<CustomerVisitTracker>.Where(filter1).IncrementBy(16);
 
+            Configurator.FlushTrackers(); 
+
             var report = Container<CustomerVisitTracker>.Where(new CustomerFilter { Gender = "M", }).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
-            var waitCounter = 0;
-            var reportResultCount = 0;
-            while (waitCounter++ < 2 && reportResultCount < 1)
-            {
-                Configurator.FlushTrackers(); 
 
-                report = Container<CustomerVisitTracker>.Where(new CustomerFilter{Gender = "M",})
-                            .Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)),
-                                    DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), 
-                                    ReportResolution.Year);
-
-                reportResultCount = report.Results.Count(); 
-                Debug.Write("Report Count: " + report.Results.Count() 
-                            + " StoreId: " + filter1.StoreID + "  ");
-            }
+            Debug.Write("Report Count: " + report.Results.Count()
+                           + " StoreId: " + filter1.StoreID + "  ");
 
             Assert.IsTrue(report.Results[0].Total >= 16);
             Assert.IsTrue(report.Results[0].Occurrence >= 1);
@@ -283,9 +206,7 @@ namespace Graphene.Tests.Reporting
         }
 
         [TestMethod]
-        public void
-            IntegrationTest_GivenFiltersAndNamedTrackersWith5MinuteResolution_AggregatedResultsMatchForPartialFiltersWithMultipleRecordsMulitpleResolution
-            ()
+        public void integration_test_given_filters_and_named_trackers_with5_minute_resolution_aggregated_results_match_for_partial_filters_with_multiple_records_mulitple_resolution()
         {
             var filter1 = new CustomerFilter
             {
@@ -295,27 +216,15 @@ namespace Graphene.Tests.Reporting
                 StoreID = Guid.NewGuid().ToString("D")
             };
 
-            Initialize();
             var now = DateTime.UtcNow;
+            
             Container<PerformanceTracker>.Where(filter1).IncrementBy(11);
+            Configurator.FlushTrackers(); 
 
-            var report = Container<PerformanceTracker>.Where(filter1).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)),DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Minute);
-            var waitCounter = 0;
-            var reportResultCount = 0;
-            while (waitCounter++ < 2 && reportResultCount < 1)
-            {
-                Configurator.FlushTrackers(); 
+            var report = Container<PerformanceTracker>.Where(filter1).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)),DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Minute, TimeSpan.Zero);
 
-                //minute
-                report = Container<PerformanceTracker>.Where(filter1)
-                        .Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)),
-                                DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), 
-                                ReportResolution.Minute);
-                
-                reportResultCount = report.Results.Count(); 
-                Debug.Write("Report Count: " + report.Results.Count() 
-                            + " StoreId: " + filter1.StoreID + "  ");
-            }
+            Debug.Write("Report Count: " + report.Results.Count()
+                          + " StoreId: " + filter1.StoreID + "  ");
 
             Assert.IsTrue(report.Results.Any());
             Assert.AreEqual(now.Year, report.Results[0].MesurementTimeUtc.Year);
@@ -390,8 +299,7 @@ namespace Graphene.Tests.Reporting
         }
 
         [TestMethod]
-        public void
-            IntegrationTest_GivenFiltersAndNamedTrackersWith5MinuteResolution_AggregatedResultsMatchForPartialFiltersWithMultipleRecordsDefaultResolution
+        public void integration_test_given_filters_and_named_trackers_with5_minute_resolution_aggregated_results_match_for_partial_filters_with_multiple_records_default_resolution
             ()
         {
             var filter1 = new CustomerFilter
@@ -401,26 +309,15 @@ namespace Graphene.Tests.Reporting
                 State = "CA",
                 StoreID = Guid.NewGuid().ToString("D")
             };
-
-            Initialize();
+         
             Container<PerformanceTracker>.Where(filter1).IncrementBy(12);
 
-            var report = Container<PerformanceTracker>.Where(new CustomerFilter{Gender = "M",}).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)),DateTime.Now.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
-            var waitCounter = 0;
-            var reportResultCount = 0;
-            while (waitCounter++ < 2 && reportResultCount < 1)
-            {
-                Configurator.FlushTrackers(); 
+            Configurator.FlushTrackers();
 
-                report = Container<PerformanceTracker>.Where(new CustomerFilter {Gender = "M",})
-                         .Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)),
-                                 DateTime.Now.Add(new TimeSpan(1, 0, 0)),
-                                 ReportResolution.Year);
-
-                reportResultCount = report.Results.Count();
-                Debug.Write("Report Count: " + report.Results.Count() 
+            var report = Container<PerformanceTracker>.Where(new CustomerFilter { Gender = "M", }).Report(DateTime.UtcNow.Subtract(new TimeSpan(5000, 1, 0, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Year);
+            Debug.Write("Report Count: " + report.Results.Count()
                             + " StoreId: " + filter1.StoreID + "  ");
-            }
+
             Assert.IsTrue(report.Results.Any());
             Assert.AreEqual(DateTime.UtcNow.Year, report.Results[0].MesurementTimeUtc.Year);
             Assert.AreEqual(1, report.Results[0].MesurementTimeUtc.Month);
@@ -432,7 +329,7 @@ namespace Graphene.Tests.Reporting
         }
 
         [TestMethod]
-        public void IntegrationTest_GivenFiltersAndNamedTrackers_AggregatedResultsMatch_WithTimeOffset()
+        public void integration_test_given_filters_and_named_trackers_aggregated_results_match_with_time_offset()
         {
             var filter1 = new CustomerFilter
             {
@@ -441,35 +338,27 @@ namespace Graphene.Tests.Reporting
                 State = "CA",
                 StoreID = Guid.NewGuid().ToString("D")
             };
-
-            Initialize();
+           
             var startHour = DateTime.UtcNow.Hour;
             Container<CustomerVisitTracker>.Where(filter1).IncrementBy(19);
 
+            Configurator.FlushTrackers();
+
             var report = Container<CustomerVisitTracker>.Where(filter1)
                 .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6, 0)), DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Hour);
-            var waitCounter = 0;
-            var reportResultCount = 0;
-            while (waitCounter++ < 2 && reportResultCount < 1)
-            {
-                Configurator.FlushTrackers();
-                report = Container<CustomerVisitTracker>.Where(filter1)
-                    .Report(DateTime.UtcNow.Subtract(new TimeSpan(1, 6 * waitCounter, 0)),
-                            DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)),
-                            ReportResolution.Hour);
 
-                reportResultCount = report.Results.Count(); 
-                Debug.Write("Report Count: " + report.Results.Count() 
-                            + " StoreId: " + filter1.StoreID + "  ");
-            }
+            Debug.Write("Report Count: " + report.Results.Count()
+                           + " StoreId: " + filter1.StoreID + "  ");
+
             Assert.IsTrue(report.Results.Any());
             Assert.AreEqual(ReportResolution.Hour, report.Resolution);
 
+         
             var endHour = DateTime.UtcNow.Hour;
             report = Container<CustomerVisitTracker>.Where(new CustomerFilter
             {
                 Gender = "M",
-            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(((startHour != endHour)? 2:1), 6 * waitCounter, 0)),
+            }).Report(DateTime.UtcNow.Subtract(new TimeSpan(((startHour != endHour)? 2:1), 6, 0)),
                       DateTime.UtcNow.Add(new TimeSpan(1, 0, 0)), ReportResolution.Hour, 
                       new TimeSpan(-7, 0, 0));
 

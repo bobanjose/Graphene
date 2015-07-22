@@ -19,9 +19,7 @@ using Graphene.Mongo.Publishing;
 using Graphene.Mongo.Reporting;
 using Graphene.Publishing;
 using Graphene.Reporting;
-using Graphene.SQLServer;
 using Graphene.Tests.Fakes;
-using Graphene.Tests.Reporting;
 using Graphene.Tracking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
