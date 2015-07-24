@@ -80,13 +80,13 @@ namespace Graphene.Reporting
             get { return _counters; }
         }
 
-        public DateTime FromDateTime
+        public DateTime FromDateUtc
         {
             get { return _fromDateTime; }
         }
 
 
-        public DateTime ToDateTime
+        public DateTime ToDateUtc
         {
             get { return _toDateTime; }
         }
@@ -211,12 +211,12 @@ namespace Graphene.Reporting
         }
 
 
-        public DateTime FromDateTime
+        public DateTime FromDateUtc
         {
             get { return _fromDateTime; }
         }
 
-        public DateTime ToDateTime
+        public DateTime ToDateUtc
         {
             get { return _toDateTime; }
         }
