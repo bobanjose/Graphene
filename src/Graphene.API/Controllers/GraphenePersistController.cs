@@ -35,6 +35,7 @@ namespace Graphene.API.Controllers
             {
                 trackerData.OverrideMinResolution(Resolution.NA);
                 trackerData.Measurement.CoveredResolutions = new List<Resolution>();
+                trackerData.TimeSlot = trackerData.TimeSlot.ToUniversalTime();
             }
             else
             {
