@@ -22,9 +22,9 @@ namespace Graphene.Reporting
 
         IEnumerable<IMeasurement> Counters { get; }
 
-        DateTime FromDateTime { get; }
+        DateTime FromDateUtc { get; }
 
-        DateTime ToDateTime { get; }
+        DateTime ToDateUtc { get; }
 
         IEnumerable<string> TypeNames { get; }
 
