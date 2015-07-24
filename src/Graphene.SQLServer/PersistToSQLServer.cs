@@ -77,7 +77,7 @@ namespace Graphene.SQLServer
 
         private void persitTracker(TrackerData trackerData)
         {
-            if (trackerData.MinResolution == Resolution.NA)
+            if (trackerData.MinResolution == Resolution.NA || trackerData.TimeSlot.Kind == DateTimeKind.Local)
                 trackerData.TimeSlot = trackerData.TimeSlot.ToUniversalTime();
             using (var connection = new SqlConnection(_connectionString))
             {
