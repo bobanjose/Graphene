@@ -30,7 +30,15 @@ namespace Graphene.Tracking
         {
             DateTime timeNow1 = Configurator.Configuration.EvaluateDateTime();
             if (timeNow.HasValue)
-                timeNow1 = DateTime.SpecifyKind(timeNow.Value,DateTimeKind.Utc);
+            {
+                timeNow1 = timeNow.Value;
+
+                if (timeNow1.Kind == DateTimeKind.Unspecified)
+                {
+                    timeNow1 = DateTime.SpecifyKind(timeNow1, DateTimeKind.Utc);
+                }
+                    
+            }
             _expiresAfter = timeNow1.AddSeconds(lifeTimeInSeconds);
             _counters = new ConcurrentDictionary<string, Counter>();
             _resolution = minResolution;
@@ -253,7 +261,7 @@ namespace Graphene.Tracking
 
         private DateTime setTimeSlotDateTime(DateTime timeNow, Resolution adjustmentResolution)
         {
-            DateTime dateTimeToReturn = DateTime.SpecifyKind(timeNow, DateTimeKind.Utc);
+            DateTime dateTimeToReturn = timeNow;
             switch (adjustmentResolution)
             {
                 case Resolution.Minute:

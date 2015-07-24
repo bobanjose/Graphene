@@ -37,6 +37,11 @@ namespace Graphene.API.Controllers
                 trackerData.Measurement.CoveredResolutions = new List<Resolution>();
             }
 
+            if (trackerData.TimeSlot.Kind == DateTimeKind.Unspecified)
+            {
+                trackerData.TimeSlot = DateTime.SpecifyKind(trackerData.TimeSlot,DateTimeKind.Utc) ;
+            }
+
             foreach (var persister in _persisters)
             {
                 try
