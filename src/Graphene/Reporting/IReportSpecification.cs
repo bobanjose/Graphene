@@ -15,6 +15,11 @@ namespace Graphene.Reporting
         Month = 6,
         Year = 7
     }
+    public enum ReportSourceType
+    {
+        MongoReportGenerator,
+        SQLReportGenerator
+    }
 
     public interface IReportSpecification
     {
@@ -34,6 +39,7 @@ namespace Graphene.Reporting
 
         IEnumerable<IFilterConditions> ExcludeFilters { get; }
 
+        ReportSourceType? ReportSourceType { get; set; }
     }
 
     public interface IFilterConditions

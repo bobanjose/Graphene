@@ -14,5 +14,6 @@ namespace Graphene.API.Models
         public ReportResolution Resolution { get; set; }
         public TimeSpan OffsetTotalsByHours { get; set; }
         public IEnumerable<IFilterConditions> ExcludeFilters { get; set; }
+        public ReportSourceType? ReportSourceType { get; set; }
     }
 }
