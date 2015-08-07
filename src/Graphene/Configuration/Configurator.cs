@@ -11,6 +11,8 @@ using System.Configuration;
 using Graphene.Configuration;
 using Graphene.Publishing;
 using Graphene.Reporting;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace Graphene.Configuration
 {
@@ -30,6 +32,7 @@ namespace Graphene.Configuration
         public TimespanRoundingMethod GrapheneRoundingMethod { internal get; set; }
         public TimeSpan DayTotalTZOffset { internal get; set; }
         public bool UseBuckets { internal get; set; }
+        public ReportSourceType DefaultReportSource { internal get; set; }
     }
 }
 
@@ -37,6 +40,7 @@ namespace Graphene
 {
     public class Configurator
     {
+        private const string APP_SETTINGS_USEBUCKETS = "UseBuckets";
         private static Settings _configurator;
         
         internal static Settings Configuration
@@ -60,20 +64,10 @@ namespace Graphene
             {
                 _configurator.GrapheneRoundingMethod = roundMethod;
             }
-            int offsetHours;
-            int.TryParse(ConfigurationManager.AppSettings["MidnightOffsetForTotals"], out offsetHours);
-            if (offsetHours >= -11 && offsetHours <= 14)
-            {
-                _configurator.DayTotalTZOffset = new TimeSpan(offsetHours, 0, 0);
-            }
-            else
-            {
-                _configurator.DayTotalTZOffset = new TimeSpan(0,0,0);
-            }
-            bool useBuckets;
-            bool.TryParse(ConfigurationManager.AppSettings["UseBuckets"], out useBuckets);
-            _configurator.UseBuckets = useBuckets;
 
+            _configurator.DayTotalTZOffset = getDayTotalTimeZoneOffset();
+            _configurator.UseBuckets = getConfiguration<bool>(APP_SETTINGS_USEBUCKETS);
+            _configurator.DefaultReportSource = getDefaultReportSource();
             _configurator.Logger.Debug("Graphene Initialized");
             if (_configurator.EvaluateDateTime == null)
                 _configurator.EvaluateDateTime = () => DateTime.UtcNow;
@@ -112,12 +106,65 @@ namespace Graphene
 
         public static TimeSpan DayTotalTZOffset()
         {
-            return Configuration.DayTotalTZOffset;
+            return _configurator == null || (!_configurator.Initialized)
+                ? getDayTotalTimeZoneOffset()
+                : _configurator.DayTotalTZOffset;
         }
 
         public static bool UseBuckets
         {
-            get { return Configuration.UseBuckets; }
+            get
+            {
+                return _configurator == null || (!_configurator.Initialized)
+                    ? getConfiguration<bool>(APP_SETTINGS_USEBUCKETS)
+                    : _configurator.UseBuckets;
+            }
+        }
+
+        public static ReportSourceType DefaultReportSource
+        {
+            get
+            {
+                return _configurator == null || (!_configurator.Initialized)
+                    ? getDefaultReportSource()
+                    : _configurator.DefaultReportSource;
+            }
+        }
+
+        internal static TimeSpan getDayTotalTimeZoneOffset()
+        {
+            TimeSpan dayTotalTzOffset;
+            var offsetHours = getConfiguration<int>("MidnightOffsetForTotals");
+            if (offsetHours >= -11 && offsetHours <= 14)
+            {
+                dayTotalTzOffset = new TimeSpan(offsetHours, 0, 0);
+            }
+            else
+            {
+                dayTotalTzOffset = new TimeSpan(0, 0, 0);
+            }
+            return dayTotalTzOffset;
+        }
+
+        internal static ReportSourceType getDefaultReportSource()
+        {
+            ReportSourceType defaultReportSource;
+            Enum.TryParse(ConfigurationManager.AppSettings["DefaultReportSource"], out defaultReportSource);
+            return defaultReportSource;
+        }
+
+        internal static T getConfiguration<T>(string name)
+        {
+            try
+            {
+                var converter = TypeDescriptor.GetConverter(typeof (T));
+                var converted = converter.ConvertFrom(ConfigurationManager.AppSettings[name]);
+                return (T) converted;
+            }
+            catch
+            {
+                return default(T);
+            }
         }
     }
 }

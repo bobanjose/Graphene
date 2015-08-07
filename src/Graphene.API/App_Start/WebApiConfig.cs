@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Web.Http;
 using Autofac;
 using Autofac.Integration.WebApi;
+using Graphene.API.Controllers;
 using Graphene.API.Models;
 using Graphene.Configuration;
 using Graphene.Mongo.Publishing;
@@ -17,6 +18,9 @@ namespace Graphene.API
 {
     public static class WebApiConfig
     {
+        private static ConnectionStringSettings _mongoConnectionStringSettings;
+        private static ConnectionStringSettings _sqlConnectionStringSettings;
+
         public static void Register(HttpConfiguration config)
         {
             config.Routes.MapHttpRoute("DefaultApi", "api/{controller}/{id}", new {id = RouteParameter.Optional}
@@ -49,50 +53,59 @@ namespace Graphene.API
             builder.RegisterType<GrapheneLog4NetLogger>().As<ILogger>();
 
             // Build the container.
-            
+
             // Configure Web API with the dependency resolver.
-            
-            
+
+
 
             // Graphene.Configurator.Initialize(new Settings() { Persister = new PersistToMongo(container.Resolve<IConfiguration>().ReportingStoreConnectionString), Logger = container.Resolve<ILogger>() });
-            
 
-            builder.Register(x =>
-            {
-                var _logger = x.Resolve<ILogger>();
-                var mongoReportGenerator =
-                    new MongoReportGenerator(
-                        ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString, _logger);
-                return mongoReportGenerator;
-            }).As<IReportGenerator>();
-
-
-            if (ConfigurationManager.ConnectionStrings["MongoConnectionString"] != null && !string.IsNullOrWhiteSpace(
-                ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString))
+            _mongoConnectionStringSettings = ConfigurationManager.ConnectionStrings["MongoConnectionString"];
+            if (_mongoConnectionStringSettings != null && !string.IsNullOrWhiteSpace(
+                _mongoConnectionStringSettings.ConnectionString))
             {
                 builder.Register(x =>
                 {
-                    var _logger = x.Resolve<ILogger>();
+                    var logger = x.Resolve<ILogger>();
                     var mongoPersister =
                         new PersistToMongo(
-                            ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString, _logger);
+                            _mongoConnectionStringSettings.ConnectionString, logger);
                     return mongoPersister;
                 }).As<IPersist>();
+
+                builder.Register(x =>
+                {
+                    var logger = x.Resolve<ILogger>();
+                    var mongoReportGenerator =
+                        new MongoReportGenerator(
+                            _mongoConnectionStringSettings.ConnectionString, logger);
+                    return mongoReportGenerator;
+                }).As<IReportGenerator>();
             }
 
-            if (ConfigurationManager.ConnectionStrings["SQLServerConnectionString"] != null && !string.IsNullOrWhiteSpace(
-                ConfigurationManager.ConnectionStrings["SQLServerConnectionString"].ConnectionString))
+            _sqlConnectionStringSettings = ConfigurationManager.ConnectionStrings["SQLServerConnectionString"];
+            if (_sqlConnectionStringSettings != null && !string.IsNullOrWhiteSpace(
+                _sqlConnectionStringSettings.ConnectionString))
             {
                 builder.Register(x =>
                 {
                     var _logger = x.Resolve<ILogger>();
                     var sqlPersister =
                         new PersistToSQLServer(
-                            ConfigurationManager.ConnectionStrings["SQLServerConnectionString"].ConnectionString, _logger);
+                            _sqlConnectionStringSettings.ConnectionString, _logger);
                     return sqlPersister;
                 }).As<IPersist>();
-            }
 
+                builder.Register(x =>
+                {
+                    var _logger = x.Resolve<ILogger>();
+                    var sqlReportGenerator =
+                        new SQLReportGenerator(
+                            _sqlConnectionStringSettings.ConnectionString, _logger);
+                    return sqlReportGenerator;
+                }).As<IReportGenerator>();
+            }
+            
             var container = builder.Build();
 
             // Create the depenedency resolver.

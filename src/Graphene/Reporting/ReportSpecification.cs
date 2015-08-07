@@ -110,6 +110,8 @@ namespace Graphene.Reporting
             set { _offsetTotalsByHours = value; }
         }
 
+        public ReportSourceType? ReportSourceType { get; set; }
+
         private void buildFilterList(params TFilter[] filters)
         {
             _filterCombinations = filters.Select(x => new FilterConditions<TFilter>(x)).Where(fc => fc.Filters.Any()).ToList();
@@ -239,6 +241,7 @@ namespace Graphene.Reporting
             get { return _offsetTotalsByHours; }
             set { _offsetTotalsByHours = value; }
         }
+       public ReportSourceType? ReportSourceType { get; set; }
 
         private void buildListOfMeasurementsForTracker(IEnumerable<Type> trackables)
         {
