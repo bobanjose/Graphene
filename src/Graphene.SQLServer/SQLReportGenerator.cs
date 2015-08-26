@@ -74,6 +74,11 @@ namespace Graphene.SQLServer
                         tnParameter.SqlDbType = SqlDbType.Structured;
                         tnParameter.TypeName = "dbo.TypeName";
 
+                        SqlParameter xFlParameter;
+                        xFlParameter = command.Parameters.AddWithValue("@ExcludeFilterList", createFilterDataTable(specification,true));
+                        xFlParameter.SqlDbType = SqlDbType.Structured;
+                        xFlParameter.TypeName = "dbo.FilterList";
+
                         var sqlReader = command.ExecuteReader();
 
                         string query = command.CommandText;
@@ -283,14 +288,25 @@ namespace Graphene.SQLServer
             }
         }
 
-        private DataTable createFilterDataTable(IReportSpecification specifications)
+        private DataTable createFilterDataTable(IReportSpecification specifications, bool excludeList = false)
         {
             var table = new DataTable();
             table.Columns.Add("Filter", typeof (string));
-            foreach (var filter in specifications.FilterCombinations)
+            if (!excludeList)
             {
-                if (filter.Filters != null && filter.Filters.Any())
-                    table.Rows.Add(filter.Filters.First());
+                foreach (var filter in specifications.FilterCombinations)
+                {
+                    if (filter.Filters != null && filter.Filters.Any())
+                        table.Rows.Add(filter.Filters.First());
+                }
+            }
+            else
+            {
+                foreach (var filter in specifications.ExcludeFilters)
+                {
+                    if (filter.Filters != null && filter.Filters.Any())
+                        table.Rows.Add(filter.Filters.First());
+                } 
             }
             return table;
         }
