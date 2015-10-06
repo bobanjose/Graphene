@@ -7,7 +7,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
-using Graphene.Configuration;
 using Graphene.Data;
 using Graphene.SQLServer;
 using MongoDB.Bson;
@@ -64,7 +63,7 @@ namespace Graphene.Tools.Migrate
     {
         private readonly string _sqlConnectionString;
         private static MongoCollection<TrackerDataPoint> _mongoCollection;
-        private readonly ILogger _logger;
+        private readonly StreamWriter logStream;
         private bool _stopCalled;
         private static readonly int DegreeOfParallelism = int.Parse(ConfigurationManager.AppSettings["DegreeOfParallelism"]);
         private static readonly DateTime StartTime = DateTime.Now;
@@ -73,7 +72,7 @@ namespace Graphene.Tools.Migrate
         private DateTime _endDate;
         private int _daysInRange;
 
-        public MongoToSQLServer(string sqlConnectionString, string mongoConnectionString, ILogger logger)
+        public MongoToSQLServer(string sqlConnectionString, string mongoConnectionString, StreamWriter logger)
         {
             _sqlConnectionString = sqlConnectionString;
             string _mongoConnectionString = mongoConnectionString;
@@ -82,7 +81,7 @@ namespace Graphene.Tools.Migrate
             string databaseName = MongoUrl.Create(_mongoConnectionString).DatabaseName;
             MongoDatabase mongoDatabase = mongoServer.GetDatabase(databaseName);
             _mongoCollection = mongoDatabase.GetCollection<TrackerDataPoint>("TrackerData");
-            _logger = logger;
+            logStream = logger;
         }
 
         public void Start(bool deleteRecordAfterMigration, DateTime startDate, DateTime endDate, int daysInRange = -1)
@@ -99,20 +98,19 @@ namespace Graphene.Tools.Migrate
                 range => processDateRange(range.Item1, range.Item2, sqlIds.ToList()));
 
             var end = DateTime.Now;
-            Console.WriteLine("Job end: {0}", end.ToString("MM/dd/yy HH:mm:ss"));
-            Console.WriteLine("Document Transfer took {0} total", (end - StartTime).ToString("d'd 'hh'h 'mm'm 'ss's'"));
-            Console.WriteLine("Beginning data conversion {0}", DateTime.Now.ToString("MM/dd/yy HH:mm:ss"));
+            logStream.WriteLine("Job end: {0}", end.ToString("MM/dd/yy HH:mm:ss"));
+            logStream.WriteLine("Document Transfer took {0} total", (end - StartTime).ToString("d'd 'hh'h 'mm'm 'ss's'"));
+            logStream.WriteLine("Beginning data conversion {0}", DateTime.Now.ToString("MM/dd/yy HH:mm:ss"));
             startBulkConversion();
-            Console.WriteLine("Data conversion ended {0}", DateTime.Now.ToString("MM/dd/yy HH:mm:ss"));
-            Console.WriteLine("Data conversion took {0} total", (DateTime.Now - end).ToString("d'd 'hh'h 'mm'm 'ss's'"));
-            Console.WriteLine("Full Migration took {0} total", (DateTime.Now - StartTime).ToString("d'd 'hh'h 'mm'm 'ss's'"));
-            Console.WriteLine("Press enter to finalize.");
+            logStream.WriteLine("Data conversion ended {0}", DateTime.Now.ToString("MM/dd/yy HH:mm:ss"));
+            logStream.WriteLine("Data conversion took {0} total", (DateTime.Now - end).ToString("d'd 'hh'h 'mm'm 'ss's'"));
+            logStream.WriteLine("Full Migration took {0} total", (DateTime.Now - StartTime).ToString("d'd 'hh'h 'mm'm 'ss's'"));
         }
 
         private void processDateRange(DateTime start, DateTime end, List<string> sqlIds)
         {
             var batchBegin = DateTime.Now;
-            Console.WriteLine("(+{0:N3}) Processing {1} to {2}", (batchBegin - StartTime).TotalSeconds, start, end);
+            logStream.WriteLine("(+{0:N3}) Processing {1} to {2}", (batchBegin - StartTime).TotalSeconds, start, end);
 
             int rows;
             
@@ -136,15 +134,18 @@ namespace Graphene.Tools.Migrate
             
             if (rows == 0)
             {
-                Console.WriteLine("(+{0:N3}) Processing {1} to {2}: nothing to do",
+                logStream.WriteLine("(+{0:N3}) Processing {1} to {2}: nothing to do",
                     (DateTime.Now - StartTime).TotalSeconds, start.ToUniversalTime(), end.ToUniversalTime());
             }
             else
             {
-                Console.WriteLine("(+{0:N3}) Processing {1} to {2}: completed ({3} records in {4:N3}s)",
+                logStream.WriteLine("(+{0:N3}) Processing {1} to {2}: completed ({3} records in {4:N3}s)",
                     (DateTime.Now - StartTime).TotalSeconds, start.ToUniversalTime(), end.ToUniversalTime(), rows,
                     (DateTime.Now - batchBegin).TotalSeconds);
             }
+            GC.Collect();
+            GC.Collect();
+            GC.Collect();
         }
 
         private static IEnumerable<Tuple<DateTime, DateTime>> getDateRange(DateTime startDate, DateTime endDate, int daysInRange)
@@ -201,7 +202,7 @@ namespace Graphene.Tools.Migrate
                 }
                 catch (SqlException ex)
                 {
-                    Console.WriteLine("Unable to connect to Sql Server database.");
+                    logStream.WriteLine("Unable to connect to Sql Server database.");
                     if (ex.Number != 10060)
                     {
                         throw;
@@ -243,7 +244,7 @@ namespace Graphene.Tools.Migrate
                     }
                     catch (InvalidOperationException)
                     {
-                        Console.WriteLine("Cannot load document ids to skip.");
+                        logStream.WriteLine("Cannot load document ids to skip.");
                         throw;
                     }
                     while (result.Read())

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
+using System.Security.AccessControl;
 using Graphene.Configuration;
 using Graphene.Tools.Migrate;
 
@@ -22,17 +24,26 @@ namespace Graphene.Tools
                 }
             }
             var paraValid = true;
-            var mongoConnectionString = string.Empty;
-            var targetSqlConnectionString = string.Empty;
+            string mongoConnectionString;
+            string targetSqlConnectionString;
             var startDate = DateTime.MinValue;
             var endDate = DateTime.MaxValue;
             var daysInSpan = -1;
 
             var deleteRecordAfterMigration = false;
+            var logFilePath = ConfigurationManager.AppSettings["LogFileLocation"];
+            Boolean appendLog;
+            Boolean.TryParse(ConfigurationManager.AppSettings["AppendLogs"], out appendLog);
+            if (String.IsNullOrEmpty(logFilePath))
+            {
+                logFilePath = @"E:\Logs\GrapheneMigration.log"; 
+            }
+            var logStream = new StreamWriter(logFilePath,appendLog);
+            logStream.AutoFlush = true;
 
             if (!arguments.ContainsKey("mc"))
             {
-                Console.WriteLine("Missing prameter mc with Mongo Source DB Connection String");
+                logStream.WriteLine("Parameter mc with Mongo Source DB Connection String not provided on command line. Checking config file.");
                 mongoConnectionString = ConfigurationManager.AppSettings["MongoDBConnectionString"];
                 if (String.IsNullOrEmpty(mongoConnectionString) ||
                     String.IsNullOrWhiteSpace(mongoConnectionString))
@@ -47,7 +58,7 @@ namespace Graphene.Tools
 
             if (!arguments.ContainsKey("sc"))
             {
-                Console.WriteLine("Missing prameter sc with SQL Connection String");
+                logStream.WriteLine("Parameter sc with SQL Connection String not provided on command line. Checking config file.");
                 targetSqlConnectionString = ConfigurationManager.AppSettings["MSSQLConnectionString"];
                 if (String.IsNullOrEmpty(targetSqlConnectionString) ||
                     String.IsNullOrWhiteSpace(targetSqlConnectionString))
@@ -68,7 +79,7 @@ namespace Graphene.Tools
                 }
                 catch
                 {
-                    Console.WriteLine("Invalid value for paramter deleteaftermigration");
+                    logStream.WriteLine("Invalid value for paramter deleteaftermigration");
                     paraValid = false;
                 }
             }
@@ -81,7 +92,7 @@ namespace Graphene.Tools
                 }
                 catch
                 {
-                    Console.WriteLine("Invalid value for paramter startdate");
+                    logStream.WriteLine("Invalid value for paramter startdate");
                     paraValid = false;
                 }
             }
@@ -94,7 +105,7 @@ namespace Graphene.Tools
                 }
                 catch
                 {
-                    Console.WriteLine("Invalid value for paramter enddate");
+                    logStream.WriteLine("Invalid value for paramter enddate");
                     paraValid = false;
                 }
             }
@@ -107,15 +118,14 @@ namespace Graphene.Tools
                 }
                 catch
                 {
-                    Console.WriteLine("Invalid value for paramter timespansindays");
+                    logStream.WriteLine("Invalid value for paramter timespansindays");
                     paraValid = false;
                 }
             }
 
             if (paraValid)
             {
-                ILogger _logger = new MigrateConsoleLogger();
-                var _mongoToSqlServerMigrator = new MongoToSQLServer(targetSqlConnectionString, mongoConnectionString, _logger);
+                var _mongoToSqlServerMigrator = new MongoToSQLServer(targetSqlConnectionString, mongoConnectionString, logStream);
                 Console.CancelKeyPress += delegate
                 {
                     _mongoToSqlServerMigrator.Stop();
@@ -124,7 +134,6 @@ namespace Graphene.Tools
                 _mongoToSqlServerMigrator.Start(deleteRecordAfterMigration, startDate, endDate, daysInSpan);
             }
 
-            Console.ReadLine();
         }
     }
 
