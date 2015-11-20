@@ -8,18 +8,14 @@
 
 
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Graphene.Configuration;
 using Graphene.Data;
 using Graphene.Publishing;
 using Graphene.Tracking;
-using Microsoft.SqlServer.Server;
+using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 
 namespace Graphene.SQLServer
 {
@@ -29,15 +25,19 @@ namespace Graphene.SQLServer
         private readonly ILogger _logger;
         private readonly bool _convertToUTC;
         private readonly int _maxRetries;
+        private readonly int _initialRetry;
+        private readonly int _incrementalRetry;
         private static bool _persistPreAggregatedBuckets;
 
-        public PersistToSQLServer(string connectionString, ILogger logger, bool convertToUTC = false, bool persistPreAggregatedBuckets = false, int maxRetries = 3)
+        public PersistToSQLServer(string connectionString, ILogger logger, bool convertToUTC = false, bool persistPreAggregatedBuckets = false, int maxRetries = 5, int initialRetry = 200, int incrementalRetry = 300)
         {
             _connectionString = connectionString;
             _logger = logger;
             _persistPreAggregatedBuckets = PersistPreAggregatedBuckets = persistPreAggregatedBuckets;
             _convertToUTC = convertToUTC;
             _maxRetries = maxRetries;
+            _initialRetry = initialRetry;
+            _incrementalRetry = incrementalRetry;
         }
 
         public void Persist(TrackerData trackerData)
@@ -48,29 +48,16 @@ namespace Graphene.SQLServer
             }
             catch (Exception ex)
             {
-                _logger.Error(ex.Message, ex);
+                var message = new StringBuilder();
+                message.AppendLine(ex.Message);
+                message.AppendFormat("Tracker Data: TypeName: {0} KeyFilter: {1} TimeSlot: {2}", trackerData.TypeName, trackerData.KeyFilter, trackerData.TimeSlot);
+                _logger.Error(message.ToString(), ex);
             }
         }
 
         private void Persist(TrackerData trackerData, int retryCount)
         {
-            try
-            {
-                persitTracker(trackerData);
-            }
-           catch (DbException ex)
-            {
-                if (retryCount < _maxRetries)
-                {
-                    _logger.Warn(ex.Message + ". Retrying.");
-                    Persist(trackerData, retryCount+1);
-                }
-                else
-                {
-                    _logger.Error(ex.Message, ex);
-                    throw;
-                }
-            }
+            persitTracker(trackerData);
         }
 
         public bool PersistPreAggregatedBuckets { get; set; }
@@ -79,16 +66,20 @@ namespace Graphene.SQLServer
         {
             if (trackerData.MinResolution == Resolution.NA || trackerData.TimeSlot.Kind == DateTimeKind.Local)
                 trackerData.TimeSlot = trackerData.TimeSlot.ToUniversalTime();
+
+            var retryStrategy = new Incremental(_maxRetries, TimeSpan.FromMilliseconds(_initialRetry), TimeSpan.FromSeconds(_incrementalRetry));
+            var retryPolicy = new RetryPolicy<SqlDatabaseTransientErrorDetectionStrategy>(retryStrategy);
+
             using (var connection = new SqlConnection(_connectionString))
             {
-                connection.Open();
+                connection.OpenWithRetry(retryPolicy);
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = "dbo.UpdateTracker";
                     command.CommandType = CommandType.StoredProcedure;
 
                     command.Parameters.Add("@TrackerID", SqlDbType.NVarChar);
-                    command.Parameters["@TrackerID"].Value = String.Concat(trackerData.TypeName, "-", trackerData.KeyFilter).Replace(" ", "");
+                    command.Parameters["@TrackerID"].Value = String.Format("{0}{1}",trackerData.TypeName, trackerData.KeyFilter).Replace(" ", "");
 
                     command.Parameters.Add("@Name", SqlDbType.NVarChar);
                     command.Parameters["@Name"].Value = trackerData.Name;
@@ -119,7 +110,7 @@ namespace Graphene.SQLServer
                     {
                         command.Transaction = transaction;
                         command.CommandTimeout = command.CommandTimeout * 2;
-                        command.ExecuteNonQuery();
+                        command.ExecuteNonQueryWithRetry(retryPolicy);
                         transaction.Commit();
                     }
                 }

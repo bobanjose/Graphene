@@ -87,12 +87,17 @@ namespace Graphene.API
             if (_sqlConnectionStringSettings != null && !string.IsNullOrWhiteSpace(
                 _sqlConnectionStringSettings.ConnectionString))
             {
+                var tempNumber = 5;
+                var maxRetries = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_MaxRetries"], 5);
+                var initialRetry = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_InitialRetryTime"], 200);
+                var incrementalRetry = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_IncrementalRetryTime"], 400);
+
                 builder.Register(x =>
                 {
                     var _logger = x.Resolve<ILogger>();
                     var sqlPersister =
                         new PersistToSQLServer(
-                            _sqlConnectionStringSettings.ConnectionString, _logger);
+                            _sqlConnectionStringSettings.ConnectionString, _logger, maxRetries: maxRetries, initialRetry: initialRetry, incrementalRetry: incrementalRetry);
                     return sqlPersister;
                 }).As<IPersist>();
 
@@ -119,7 +124,6 @@ namespace Graphene.API
 
     public class JsonConverterReportSpecificationConverter : CustomCreationConverter<IReportSpecification>
     {
-        
         public override IReportSpecification Create(Type objectType)
         {
             return new JsonReportSpecification();
@@ -132,9 +136,6 @@ namespace Graphene.API
         {
             return new JsonFilterCondition();
         }
-
-     
-        
     }
 
     public class JsonConverterMeasurementConverter : CustomCreationConverter<IMeasurement>
@@ -143,7 +144,14 @@ namespace Graphene.API
         {
             return new JsonMeasurement();
         }
+    }
 
-      
+    public static class IntExtensions
+    {
+        public static int TryParse(this int number, string stringNumber, int defaultNumber)
+        {
+            var parseNumber = 0;
+            return int.TryParse(stringNumber, out parseNumber) ? parseNumber : defaultNumber;
+        }
     }
 }
