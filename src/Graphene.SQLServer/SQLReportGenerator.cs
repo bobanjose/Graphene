@@ -13,6 +13,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using Graphene.Configuration;
 using Graphene.Reporting;
+using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 
 namespace Graphene.SQLServer
 {
@@ -20,11 +21,17 @@ namespace Graphene.SQLServer
     {
         private readonly string _connectionString;
         private readonly ILogger _logger;
+        private readonly int _maxRetries;
+        private readonly int _initialRetry;
+        private readonly int _incrementalRetry;
 
-        public SQLReportGenerator(string connectionString, ILogger logger)
+        public SQLReportGenerator(string connectionString, ILogger logger, int maxRetries = 3, int initialRetry = 100, int incrementalRetry = 200)
         {
             _connectionString = connectionString;
             _logger = logger;
+            _maxRetries = maxRetries;
+            _initialRetry = initialRetry;
+            _incrementalRetry = incrementalRetry;
         }
 
         public ITrackerReportResults BuildReport(IReportSpecification specification)
@@ -33,9 +40,12 @@ namespace Graphene.SQLServer
             {
                 var results = new SqlTrackerResults(specification);
 
+                var retryStrategy = new Incremental(_maxRetries, TimeSpan.FromMilliseconds(_initialRetry), TimeSpan.FromSeconds(_incrementalRetry));
+                var retryPolicy = new RetryPolicy<SqlDatabaseTransientErrorDetectionStrategy>(retryStrategy);
+
                 using (var connection = new SqlConnection(_connectionString))
                 {
-                    connection.Open();
+                    connection.OpenWithRetry(retryPolicy);
                     using (var command = connection.CreateCommand())
                     {
                         if (Configurator.UseBuckets && (specification.OffsetTotalsByHours == TimeSpan.Zero
@@ -79,7 +89,7 @@ namespace Graphene.SQLServer
                         xFlParameter.SqlDbType = SqlDbType.Structured;
                         xFlParameter.TypeName = "dbo.FilterList";
 
-                        var sqlReader = command.ExecuteReader();
+                        var sqlReader = command.ExecuteReaderWithRetry(retryPolicy);
 
                         string query = command.CommandText;
 
@@ -302,11 +312,14 @@ namespace Graphene.SQLServer
             }
             else
             {
-                foreach (var filter in specifications.ExcludeFilters)
+                if (specifications.ExcludeFilters != null)
                 {
-                    if (filter.Filters != null && filter.Filters.Any())
-                        table.Rows.Add(filter.Filters.First());
-                } 
+                    foreach (var filter in specifications.ExcludeFilters)
+                    {
+                        if (filter.Filters != null && filter.Filters.Any())
+                            table.Rows.Add(filter.Filters.First());
+                    }
+                }
             }
             return table;
         }
