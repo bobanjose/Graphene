@@ -24,14 +24,16 @@ namespace Graphene.SQLServer
         private readonly int _maxRetries;
         private readonly int _initialRetry;
         private readonly int _incrementalRetry;
+        private readonly int _commandTimeout;
 
-        public SQLReportGenerator(string connectionString, ILogger logger, int maxRetries = 3, int initialRetry = 100, int incrementalRetry = 200)
+        public SQLReportGenerator(string connectionString, ILogger logger, int maxRetries = 3, int initialRetry = 100, int incrementalRetry = 200, int commandTimeout = 300)
         {
             _connectionString = connectionString;
             _logger = logger;
             _maxRetries = maxRetries;
             _initialRetry = initialRetry;
             _incrementalRetry = incrementalRetry;
+            _commandTimeout = commandTimeout;
         }
 
         public ITrackerReportResults BuildReport(IReportSpecification specification)
@@ -46,12 +48,11 @@ namespace Graphene.SQLServer
                 using (var connection = new SqlConnection(_connectionString))
                 {
                     connection.OpenWithRetry(retryPolicy);
+
                     using (var command = connection.CreateCommand())
                     {
-                        if (Configurator.UseBuckets && (specification.OffsetTotalsByHours == TimeSpan.Zero
-                                                        |
-                                                        specification.OffsetTotalsByHours.Hours !=
-                                                        Configurator.DayTotalTZOffset().Hours))
+                        if (Configurator.UseBuckets && (specification.OffsetTotalsByHours == TimeSpan.Zero |
+                                                        specification.OffsetTotalsByHours.Hours != Configurator.DayTotalTZOffset().Hours))
                         {
                             command.CommandText = "dbo.GenerateReportUsingBuckets";
                         }
@@ -63,6 +64,7 @@ namespace Graphene.SQLServer
 
                         }
 
+                        command.CommandTimeout = _commandTimeout;
                         command.CommandType = CommandType.StoredProcedure;
 
                         command.Parameters.Add("@StartDt", SqlDbType.DateTime);
