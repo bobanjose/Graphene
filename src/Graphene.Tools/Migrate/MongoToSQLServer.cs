@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
-using Graphene.Data;
-using Graphene.SQLServer;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
+using System.Threading;
 using System.Xml;
+using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 
 
 namespace Graphene.Tools.Migrate
@@ -63,16 +60,21 @@ namespace Graphene.Tools.Migrate
     {
         private readonly string _sqlConnectionString;
         private static MongoCollection<TrackerDataPoint> _mongoCollection;
-        private readonly StreamWriter logStream;
-        private bool _stopCalled;
+        private readonly NewLogSerializer logStream;
+        internal bool _stopCalled;
         private static readonly int DegreeOfParallelism = int.Parse(ConfigurationManager.AppSettings["DegreeOfParallelism"]);
         private static readonly DateTime StartTime = DateTime.Now;
-        private static bool _deleteRecordAfterMigration;
+        internal static bool _deleteRecordAfterMigration;
         private DateTime _startDate;
         private DateTime _endDate;
         private int _daysInRange;
+        private bool _getAllSqlIds;
+        private int _maxRetries;
+        private int _initialRetry;
+        private int _incrementalRetry;
 
-        public MongoToSQLServer(string sqlConnectionString, string mongoConnectionString, StreamWriter logger)
+
+        public MongoToSQLServer(string sqlConnectionString, string mongoConnectionString, NewLogSerializer logger)
         {
             _sqlConnectionString = sqlConnectionString;
             string _mongoConnectionString = mongoConnectionString;
@@ -92,10 +94,19 @@ namespace Graphene.Tools.Migrate
             _endDate = (endDate == DateTime.MaxValue ? DateTime.Parse(ConfigurationManager.AppSettings["EndDate"]) : endDate).ToUniversalTime();
             _daysInRange = daysInRange == -1 ? int.Parse(ConfigurationManager.AppSettings["TimeSpanInDays"]) : daysInRange;
 
+            int.TryParse(ConfigurationManager.AppSettings["SQLServer_MaxRetries"], out _maxRetries);
+            if (_maxRetries == 0) _maxRetries = 5;
+            int.TryParse(ConfigurationManager.AppSettings["SQLServer_InitialRetryTime"], out _initialRetry);
+            if (_initialRetry == 0) _initialRetry = 200;
+            int.TryParse(ConfigurationManager.AppSettings["SQLServer_IncrementalRetryTime"], out _incrementalRetry);
+            if (_incrementalRetry == 0) _incrementalRetry = 400;
+
+            bool.TryParse((ConfigurationManager.AppSettings["GetAllSqlIds"]), out _getAllSqlIds);
+
             var dates = getDateRange(_startDate, _endDate, _daysInRange);
-            var sqlIds = getSqlIds();
+            var sqlIds = (_getAllSqlIds) ? getSqlIds() : null;
             Parallel.ForEach(dates, new ParallelOptions {MaxDegreeOfParallelism = DegreeOfParallelism},
-                range => processDateRange(range.Item1, range.Item2, sqlIds.ToList()));
+                range => processDateRange(range.Item1, range.Item2, sqlIds));
 
             var end = DateTime.Now;
             logStream.WriteLine("Job end: {0}", end.ToString("MM/dd/yy HH:mm:ss"));
@@ -107,47 +118,59 @@ namespace Graphene.Tools.Migrate
             logStream.WriteLine("Full Migration took {0} total", (DateTime.Now - StartTime).ToString("d'd 'hh'h 'mm'm 'ss's'"));
         }
 
-        private void processDateRange(DateTime start, DateTime end, List<string> sqlIds)
+        private void processDateRange(DateTime start, DateTime end, HashSet<string> sqlIds)
         {
-            var batchBegin = DateTime.Now;
-            logStream.WriteLine("(+{0:N3}) Processing {1} to {2}", (batchBegin - StartTime).TotalSeconds, start, end);
-
-            int rows;
-            
-            var constraints = new List<IMongoQuery>
+            try
             {
-                Query.GTE("TimeSlot", start),
-                Query.LT("TimeSlot", end),
-            };
+                var batchBegin = DateTime.Now;
+                logStream.WriteLine("(+{0:N3}) Processing {1} to {2}", (batchBegin - StartTime).TotalSeconds, start, end);
 
-            var mongoRecords =
-                _mongoCollection.Find(Query.And(constraints))
+                var constraints = new List<IMongoQuery>
+                {
+                    Query.GTE("TimeSlot", start),
+                    Query.LT("TimeSlot", end),
+                };
+
+                var mongoRecords =
+                    _mongoCollection.Find(Query.And(constraints))
+                        .ToList();
+
+                var sqlIdsToExclude = _getAllSqlIds ? sqlIds : getDocumentIdsFromSql(start, end);
+
+                var recordsToMove = mongoRecords
+                    .Where(tdp => !sqlIdsToExclude.Contains(tdp.Id))
                     .ToList();
+                mongoRecords = null;
+                GC.Collect();
 
-            var recordsToMove = mongoRecords
-                .Where(tdp => !sqlIds.Contains(tdp.Id))
-                .ToList();
+                var table = CreateDataTable(recordsToMove);
+                insertRecords(table, start, end);
+                var rows = table.Rows.Count;
+                table = null;
 
-            var table = CreateDataTable(recordsToMove);
-            insertRecords(table);
-            rows = table.Rows.Count;
-            
-            if (rows == 0)
-            {
-                logStream.WriteLine("(+{0:N3}) Processing {1} to {2}: nothing to do",
-                    (DateTime.Now - StartTime).TotalSeconds, start.ToUniversalTime(), end.ToUniversalTime());
+                if (rows == 0)
+                {
+                    logStream.WriteLine("(+{0:N3}) Processing {1} to {2}: nothing to do",
+                        (DateTime.Now - StartTime).TotalSeconds, start.ToUniversalTime(), end.ToUniversalTime());
+                }
+                else
+                {
+                    logStream.WriteLine("(+{0:N3}) Processing {1} to {2}: completed ({3} records in {4:N3}s)",
+                        (DateTime.Now - StartTime).TotalSeconds, start.ToUniversalTime(), end.ToUniversalTime(), rows,
+                        (DateTime.Now - batchBegin).TotalSeconds);
+                }
+                GC.Collect();
+                GC.Collect();
+                GC.Collect();
             }
-            else
+            catch (Exception e)
             {
-                logStream.WriteLine("(+{0:N3}) Processing {1} to {2}: completed ({3} records in {4:N3}s)",
-                    (DateTime.Now - StartTime).TotalSeconds, start.ToUniversalTime(), end.ToUniversalTime(), rows,
-                    (DateTime.Now - batchBegin).TotalSeconds);
+                logStream.WriteLine(e.ToString());
+                throw;
             }
-            GC.Collect();
-            GC.Collect();
-            GC.Collect();
         }
 
+        
         private static IEnumerable<Tuple<DateTime, DateTime>> getDateRange(DateTime startDate, DateTime endDate, int daysInRange)
         {
             return createRange(startDate, endDate, daysInRange);
@@ -188,17 +211,23 @@ namespace Graphene.Tools.Migrate
             }
         }
 
-        private IEnumerable<string> getSqlIds()
+        private HashSet<string> getSqlIds()
         {
             var sqlConnStr = _sqlConnectionString;
             var sqlTableName = ConfigurationManager.AppSettings["SQLTableName"];
 
             List<string> idsList = new List<string>();
+
+
+            var retryStrategy = new Incremental(_maxRetries, TimeSpan.FromMilliseconds(_initialRetry), TimeSpan.FromSeconds(_incrementalRetry));
+            var retryPolicy = new RetryPolicy<SqlDatabaseTransientErrorDetectionStrategy>(retryStrategy);
+
+
             using (var conn = new SqlConnection(sqlConnStr))
             {
                 try
                 {
-                    conn.Open();
+                    conn.OpenWithRetry(retryPolicy);
                 }
                 catch (SqlException ex)
                 {
@@ -208,9 +237,9 @@ namespace Graphene.Tools.Migrate
                         throw;
                     }
                 }
-                SqlDataReader result;
                 using (var cmd = new SqlCommand("SELECT Tracker_Document_Id FROM " + sqlTableName, conn))
                 {
+                    SqlDataReader result;
                     try
                     {
                         result = cmd.ExecuteReader();
@@ -253,10 +282,57 @@ namespace Graphene.Tools.Migrate
                     }
                 }
             }
-            return idsList;
+            return new HashSet<string>(idsList);
+        }
+        private HashSet<string> getDocumentIdsFromSql(DateTime start, DateTime end)
+        {
+            var sqlConnStr = _sqlConnectionString;
+
+            List<string> idsList = new List<string>();
+            using (var conn = new SqlConnection(sqlConnStr))
+            {
+                try
+                {
+                    conn.Open();
+                }
+                catch (SqlException ex)
+                {
+                    logStream.WriteLine("Unable to connect to Sql Server database.");
+                    if (ex.Number != 10060)
+                    {
+                        throw;
+                    }
+                }
+                using (var cmd = new SqlCommand("SELECT Tracker_Document_Id FROM TrackerDocumentsWithDates_Vw WHERE TimeSlotDate BETWEEN @startDate AND @endDate AND document_converted_by_bulk_load IN ('Y','N')", conn))
+                {
+                    SqlParameter startDate = new SqlParameter("@startDate", SqlDbType.DateTime) {Value = start};
+                    SqlParameter endDate = new SqlParameter("@endDate", SqlDbType.DateTime) {Value = end};
+
+
+                    cmd.Parameters.Add(startDate);
+                    cmd.Parameters.Add(endDate);
+
+                    SqlDataReader result;
+                    try
+                    {
+                        result = cmd.ExecuteReader();
+
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        logStream.WriteLine("Cannot load document ids to skip.");
+                        throw;
+                    }
+                    while (result.Read())
+                    {
+                        idsList.Add((string)result[0]);
+                    }
+                }
+            }
+            return new HashSet<string>(idsList);
         }
 
-        private static void insertRecords(DataTable values)
+        private void insertRecords(DataTable values, DateTime start, DateTime end)
         {
             var sqlConnStr = ConfigurationManager.AppSettings["MSSQLConnectionString"];
             var sqlTableName = ConfigurationManager.AppSettings["SQLTableName"];
@@ -267,15 +343,38 @@ namespace Graphene.Tools.Migrate
                 {
                     using (new SqlCommandBuilder(adapter))
                     {
-                        try
+                        var retries = 0;
+                        int MAX_RETRIES = 3;
+                        bool noError = true;
+                        while (retries < MAX_RETRIES && noError)
                         {
-                            adapter.FillLoadOption = LoadOption.Upsert;
-                            adapter.Update(values);
-                        }
-                        catch (SqlException ex)
-                        {
-                            if (ex.Number != 2627)
-                                throw;
+                            if (retries > 0)
+                            {
+                                Thread.Sleep(1000);
+                            }
+                            try
+                            {
+                                adapter.FillLoadOption = LoadOption.Upsert;
+                                adapter.SelectCommand.CommandTimeout = 0;
+                                adapter.Update(values);
+                               
+                            }
+                            catch (SqlException ex)
+                            {
+                                noError = false;
+                                if (ex.Number != 2627)
+                                {
+                                    logStream.WriteLine("Start = " + start.ToString("MM/dd/yy HH:mm:ss") + ", end = " +
+                                                        end.ToString("MM/dd/yy HH:mm:ss") + ", DataTable rowcount = " +
+                                                        values.Rows.Count);
+                                    logStream.WriteLine(ex.ToString());
+                                    if (retries >= MAX_RETRIES)
+                                    {
+                                        throw;
+                                    }
+                                }
+                            }
+                            retries++;
                         }
                     }
                 }
