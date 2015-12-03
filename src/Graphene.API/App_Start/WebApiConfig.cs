@@ -91,6 +91,7 @@ namespace Graphene.API
                 var maxRetries = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_MaxRetries"], 5);
                 var initialRetry = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_InitialRetryTime"], 200);
                 var incrementalRetry = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_IncrementalRetryTime"], 400);
+                var commandTimeout = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_CommandTimeout"], 300);
 
                 builder.Register(x =>
                 {
@@ -106,7 +107,7 @@ namespace Graphene.API
                     var _logger = x.Resolve<ILogger>();
                     var sqlReportGenerator =
                         new SQLReportGenerator(
-                            _sqlConnectionStringSettings.ConnectionString, _logger);
+                            _sqlConnectionStringSettings.ConnectionString, _logger, maxRetries, initialRetry, incrementalRetry, commandTimeout);
                     return sqlReportGenerator;
                 }).As<IReportGenerator>();
             }

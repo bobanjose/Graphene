@@ -29,7 +29,7 @@ namespace Graphene.SQLServer
         private readonly int _incrementalRetry;
         private static bool _persistPreAggregatedBuckets;
 
-        public PersistToSQLServer(string connectionString, ILogger logger, bool convertToUTC = false, bool persistPreAggregatedBuckets = false, int maxRetries = 5, int initialRetry = 200, int incrementalRetry = 300)
+        public PersistToSQLServer(string connectionString, ILogger logger, bool convertToUTC = false, bool persistPreAggregatedBuckets = false, int maxRetries = 5, int initialRetry = 200, int incrementalRetry = 400)
         {
             _connectionString = connectionString;
             _logger = logger;
