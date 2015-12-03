@@ -4,12 +4,8 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
 using System.Threading;
-using System.Timers;
-using Graphene.Configuration;
 using Graphene.Tools.Migrate;
-using Timer = System.Timers.Timer;
 
 namespace Graphene.Tools
 {
@@ -200,7 +196,7 @@ namespace Graphene.Tools
 
             var messages = _messages;
             _messages = null;
-            messages?.ToList()?.ForEach(_writer.WriteLine);
+            messages?.ToList().ForEach(_writer.WriteLine);
 
             var writer = _writer;
             _writer = null;
@@ -211,59 +207,4 @@ namespace Graphene.Tools
         internal void WriteLine(string format, params object[] args) => WriteLine(string.Format(format, args));
     }
 
-    //public class LogSerializer : IDisposable
-    //{
-    //    private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-    //    private StreamWriter _writer;
-    //    private ConcurrentQueue<string> _messages;
-    //    private Timer _timer;
-
-    //    public LogSerializer(StreamWriter writer)
-    //    {
-    //        _writer = writer;
-    //        _messages = new ConcurrentQueue<string>();
-    //        _timer = new Timer {AutoReset = true, Interval = 50};
-    //        _timer.Elapsed += TimerOnElapsed;
-    //        _timer.Start();
-    //    }
-
-    //    private void TimerOnElapsed(object sender, ElapsedEventArgs elapsedEventArgs)
-    //    {
-    //        if (_lock.TryEnterReadLock(1))
-    //        {
-    //            string result;
-    //            if (_messages.TryDequeue(out result))
-    //            {
-    //                    _writer.WriteLine(result);
-    //            }
-    //            _writer.Flush();
-    //            _lock.ExitReadLock();
-    //        }
-    //    }
-
-    //    public void WriteLine(string message)
-    //    {
-    //        _messages.Enqueue(message);
-    //    }
-
-
-    //    public void Dispose()
-    //    {
-    //        var timer = _timer;
-    //        _timer = null;
-    //        timer?.Stop();
-
-    //        var messages = _messages;
-    //        _messages = null;
-    //        messages?.ToList()?.ForEach(_writer.WriteLine);
-
-    //        var writer = _writer;
-    //        _writer = null;
-    //        writer?.Flush();
-    //        writer?.Dispose();
-    //    }
-
-    //    internal void WriteLine(string format, params object[] args) => WriteLine(string.Format(format, args));
-        
-    //    }
 }
