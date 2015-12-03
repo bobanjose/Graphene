@@ -93,7 +93,6 @@ namespace Graphene.Tools.Migrate
             _startDate =(startDate == DateTime.MinValue ? DateTime.Parse(ConfigurationManager.AppSettings["StartDate"]) : startDate).ToUniversalTime();
             _endDate = (endDate == DateTime.MaxValue ? DateTime.Parse(ConfigurationManager.AppSettings["EndDate"]) : endDate).ToUniversalTime();
             _daysInRange = daysInRange == -1 ? int.Parse(ConfigurationManager.AppSettings["TimeSpanInDays"]) : daysInRange;
-            int success;
 
             int.TryParse(ConfigurationManager.AppSettings["SQLServer_MaxRetries"], out _maxRetries);
             if (_maxRetries == 0) _maxRetries = 5;

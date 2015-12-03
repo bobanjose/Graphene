@@ -4,12 +4,8 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
 using System.Threading;
-using System.Timers;
-using Graphene.Configuration;
 using Graphene.Tools.Migrate;
-using Timer = System.Timers.Timer;
 
 namespace Graphene.Tools
 {
@@ -200,7 +196,7 @@ namespace Graphene.Tools
 
             var messages = _messages;
             _messages = null;
-            messages?.ToList()?.ForEach(_writer.WriteLine);
+            messages?.ToList().ForEach(_writer.WriteLine);
 
             var writer = _writer;
             _writer = null;
