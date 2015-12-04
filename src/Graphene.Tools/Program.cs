@@ -196,15 +196,24 @@ namespace Graphene.Tools
 
             var messages = _messages;
             _messages = null;
-            messages?.ToList().ForEach(_writer.WriteLine);
+            if (messages != null)
+            {
+                messages.ToList().ForEach(_writer.WriteLine);
+            }
 
             var writer = _writer;
             _writer = null;
-            writer?.Flush();
-            writer?.Dispose();
+            if (writer != null)
+            {
+                writer.Flush();
+                writer.Dispose();
+            }
         }
 
-        internal void WriteLine(string format, params object[] args) => WriteLine(string.Format(format, args));
+        internal void WriteLine(string format, params object[] args)
+        {
+            WriteLine(string.Format(format, args));
+        }
     }
 
 }
