@@ -9,6 +9,7 @@
 
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Text;
 using Graphene.Configuration;
@@ -25,19 +26,21 @@ namespace Graphene.SQLServer
         private readonly ILogger _logger;
         private readonly bool _convertToUTC;
         private readonly int _maxRetries;
-        private readonly int _initialRetry;
-        private readonly int _incrementalRetry;
+        private readonly int _minBackoff;
+        private readonly int _maxBackoff;
+        private readonly int _deltaBackoff;
         private static bool _persistPreAggregatedBuckets;
 
-        public PersistToSQLServer(string connectionString, ILogger logger, bool convertToUTC = false, bool persistPreAggregatedBuckets = false, int maxRetries = 5, int initialRetry = 200, int incrementalRetry = 400)
+        public PersistToSQLServer(string connectionString, ILogger logger, bool convertToUTC = false, bool persistPreAggregatedBuckets = false, int maxRetries = 5, int minBackoff = 1, int maxBackoff = 30, int deltaBackoff = 2)
         {
             _connectionString = connectionString;
             _logger = logger;
             _persistPreAggregatedBuckets = PersistPreAggregatedBuckets = persistPreAggregatedBuckets;
             _convertToUTC = convertToUTC;
             _maxRetries = maxRetries;
-            _initialRetry = initialRetry;
-            _incrementalRetry = incrementalRetry;
+            _minBackoff = minBackoff;
+            _maxBackoff = maxBackoff;
+            _deltaBackoff = deltaBackoff;
         }
 
         public void Persist(TrackerData trackerData)
@@ -57,7 +60,20 @@ namespace Graphene.SQLServer
 
         private void Persist(TrackerData trackerData, int retryCount)
         {
-            persitTracker(trackerData);
+            try
+            {
+                persitTracker(trackerData);
+            }
+            catch (DbException ex)
+            {
+                if (retryCount < 1)
+                {
+                    _logger.Warn(ex.Message + ". Retrying database transaction...");
+                    Persist(trackerData, retryCount + 1);
+                }
+
+                throw;
+            }
         }
 
         public bool PersistPreAggregatedBuckets { get; set; }
@@ -67,8 +83,9 @@ namespace Graphene.SQLServer
             if (trackerData.MinResolution == Resolution.NA || trackerData.TimeSlot.Kind == DateTimeKind.Local)
                 trackerData.TimeSlot = trackerData.TimeSlot.ToUniversalTime();
 
-            var retryStrategy = new Incremental(_maxRetries, TimeSpan.FromMilliseconds(_initialRetry), TimeSpan.FromSeconds(_incrementalRetry));
+            var retryStrategy = new ExponentialBackoff(_maxRetries, TimeSpan.FromMilliseconds(_minBackoff), TimeSpan.FromSeconds(_maxBackoff), TimeSpan.FromSeconds(_deltaBackoff));
             var retryPolicy = new RetryPolicy<SqlDatabaseTransientErrorDetectionStrategy>(retryStrategy);
+            retryPolicy.Retrying += (sender, args) => onTransientErrorOccurred(sender, args, trackerData);
 
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -79,7 +96,7 @@ namespace Graphene.SQLServer
                     command.CommandType = CommandType.StoredProcedure;
 
                     command.Parameters.Add("@TrackerID", SqlDbType.NVarChar);
-                    command.Parameters["@TrackerID"].Value = String.Format("{0}{1}",trackerData.TypeName, trackerData.KeyFilter).Replace(" ", "");
+                    command.Parameters["@TrackerID"].Value = string.Format("{0}{1}",trackerData.TypeName, trackerData.KeyFilter).Replace(" ", "");
 
                     command.Parameters.Add("@Name", SqlDbType.NVarChar);
                     command.Parameters["@Name"].Value = trackerData.Name;
@@ -96,13 +113,11 @@ namespace Graphene.SQLServer
                     command.Parameters.Add("@TimeSlot", SqlDbType.DateTime);
                     command.Parameters["@TimeSlot"].Value = _convertToUTC ? trackerData.TimeSlot.ToUniversalTime() : trackerData.TimeSlot;
 
-                    SqlParameter flParameter;
-                    flParameter = command.Parameters.AddWithValue("@FilterList", createFilterDataTable(trackerData));
+                    var flParameter = command.Parameters.AddWithValue("@FilterList", createFilterDataTable(trackerData));
                     flParameter.SqlDbType = SqlDbType.Structured;
                     flParameter.TypeName = "dbo.FilterList";
 
-                    SqlParameter mParameter;
-                    mParameter = command.Parameters.AddWithValue("@Measurement", createMeasurementDataTable(trackerData));
+                    var mParameter = command.Parameters.AddWithValue("@Measurement", createMeasurementDataTable(trackerData));
                     mParameter.SqlDbType = SqlDbType.Structured;
                     mParameter.TypeName = "dbo.Measurement";
 
@@ -117,11 +132,22 @@ namespace Graphene.SQLServer
             }
         }
 
+        private void onTransientErrorOccurred(object sender, RetryingEventArgs args, TrackerData trackerData)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine(string.Format("Transient error has occurred while performing the database operation. Retried {0} times. The next attempt will be in {1} ms.", args.CurrentRetryCount, args.Delay.TotalMilliseconds));
+            builder.AppendLine(string.Format("Tracker Data: TypeName: {0} KeyFilter: {1} TimeSlot: {2}", trackerData.TypeName, trackerData.KeyFilter, trackerData.TimeSlot));
+            builder.AppendLine(args.LastException.Message);
+            builder.AppendLine(args.LastException.StackTrace);
+
+            _logger.Warn(builder.ToString());
+        }
+
         private DataTable createFilterDataTable(TrackerData trackerData)
         {
             var table = new DataTable();
             table.Columns.Add("Filter", typeof(string));
-            foreach (string filter in trackerData.SearchFilters)
+            foreach (var filter in trackerData.SearchFilters)
             {
                 table.Rows.Add(filter);
             }

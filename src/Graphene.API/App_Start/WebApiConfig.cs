@@ -89,16 +89,19 @@ namespace Graphene.API
             {
                 var tempNumber = 5;
                 var maxRetries = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_MaxRetries"], 5);
-                var initialRetry = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_InitialRetryTime"], 200);
-                var incrementalRetry = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_IncrementalRetryTime"], 400);
-                var commandTimeout = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_CommandTimeout"], 300);
+                var minBackoff = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_PersistMinBackoff"], 1);
+                var maxBackoff = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_PersistMaxBackoff"], 30);
+                var deltaBackoff = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_PersistDeltaBackoff"], 2);
+                var initialRetry = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_ReportInitialRetryTime"], 200);
+                var incrementalRetry = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_ReportIncrementalRetryTime"], 400);
+                var commandTimeout = tempNumber.TryParse(ConfigurationManager.AppSettings["SQLServer_ReportCommandTimeout"], 300);
 
                 builder.Register(x =>
                 {
                     var _logger = x.Resolve<ILogger>();
                     var sqlPersister =
                         new PersistToSQLServer(
-                            _sqlConnectionStringSettings.ConnectionString, _logger, maxRetries: maxRetries, initialRetry: initialRetry, incrementalRetry: incrementalRetry);
+                            _sqlConnectionStringSettings.ConnectionString, _logger, maxRetries: maxRetries, minBackoff: minBackoff, maxBackoff: maxBackoff, deltaBackoff: deltaBackoff);
                     return sqlPersister;
                 }).As<IPersist>();
 
