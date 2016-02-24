@@ -7,12 +7,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 using System;
-using System.Configuration;
+using System.ComponentModel;
 using Graphene.Configuration;
 using Graphene.Publishing;
 using Graphene.Reporting;
-using System.Collections.Generic;
-using System.ComponentModel;
+using Microsoft.Azure;
 
 namespace Graphene.Configuration
 {
@@ -59,12 +58,8 @@ namespace Graphene
                 configuration.Logger = new SysDiagLogger();
             _configurator = configuration;
             TimespanRoundingMethod roundMethod;
-            Enum.TryParse(ConfigurationManager.AppSettings["RoundingMethod"],true, out roundMethod);
-            if (Enum.IsDefined(typeof (TimespanRoundingMethod), roundMethod))
-            {
-                _configurator.GrapheneRoundingMethod = roundMethod;
-            }
-
+            
+            _configurator.GrapheneRoundingMethod = Enum.TryParse(CloudConfigurationManager.GetSetting("RoundingMethod"), true, out roundMethod) ? roundMethod : TimespanRoundingMethod.Start;
             _configurator.DayTotalTZOffset = getDayTotalTimeZoneOffset();
             _configurator.UseBuckets = getConfiguration<bool>(APP_SETTINGS_USEBUCKETS);
             _configurator.DefaultReportSource = getDefaultReportSource();
@@ -149,8 +144,7 @@ namespace Graphene
         internal static ReportSourceType getDefaultReportSource()
         {
             ReportSourceType defaultReportSource;
-            Enum.TryParse(ConfigurationManager.AppSettings["DefaultReportSource"], out defaultReportSource);
-            return defaultReportSource;
+            return Enum.TryParse(CloudConfigurationManager.GetSetting("DefaultReportSource"), out defaultReportSource) ? defaultReportSource : ReportSourceType.SQLReportGenerator;
         }
 
         internal static T getConfiguration<T>(string name)
@@ -158,7 +152,7 @@ namespace Graphene
             try
             {
                 var converter = TypeDescriptor.GetConverter(typeof (T));
-                var converted = converter.ConvertFrom(ConfigurationManager.AppSettings[name]);
+                var converted = converter.ConvertFrom(CloudConfigurationManager.GetSetting(name));
                 return (T) converted;
             }
             catch
