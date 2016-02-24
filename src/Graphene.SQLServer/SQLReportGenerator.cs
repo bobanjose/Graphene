@@ -110,7 +110,8 @@ namespace Graphene.SQLServer
 
                             if (!sqlReader.IsDBNull(timeSlotC))
                             {
-                                measurementDate = sqlReader.GetDateTime(timeSlotC);
+                                measurementDate = new DateTimeOffset(sqlReader.GetDateTime(timeSlotC),
+                                    specification.OffsetTotalsByHours.Negate()).UtcDateTime;
 
                                 string typeName = null;
                                 if (sqlReader["TypeName"] != DBNull.Value)
