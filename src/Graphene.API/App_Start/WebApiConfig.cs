@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Web.Http;
 using Autofac;
 using Autofac.Integration.WebApi;
-using Graphene.API.Controllers;
 using Graphene.API.Models;
 using Graphene.Configuration;
 using Graphene.Mongo.Publishing;
@@ -47,18 +46,25 @@ namespace Graphene.API
             builder.RegisterApiControllers(Assembly.GetExecutingAssembly());
 
 
-            
-
-
             builder.RegisterType<GrapheneLog4NetLogger>().As<ILogger>();
 
             // Build the container.
 
             // Configure Web API with the dependency resolver.
 
+            var offsetHours = 0;
+            var useBuckets = false;
+            TimespanRoundingMethod roundingMethod;
+            ReportSourceType reportSourceType;
 
+            Configurator.Initialize(new Settings
+            {
+                DefaultReportSource = Enum.TryParse(ConfigurationManager.AppSettings["RoundingMethod"], out reportSourceType) ? reportSourceType : ReportSourceType.SQLReportGenerator,
+                GrapheneRoundingMethod = Enum.TryParse(ConfigurationManager.AppSettings["RoundingMethod"], out roundingMethod) ? roundingMethod : TimespanRoundingMethod.Start,
+                UseBuckets = bool.TryParse(ConfigurationManager.AppSettings["UseBuckets"], out useBuckets) ? useBuckets : false,
+                DayTotalTZOffset = int.TryParse(ConfigurationManager.AppSettings["MidnightOffsetForTotals"], out offsetHours) ? getDayTotalTimeZoneOffset(offsetHours) : getDayTotalTimeZoneOffset(8)
+            });
 
-            // Graphene.Configurator.Initialize(new Settings() { Persister = new PersistToMongo(container.Resolve<IConfiguration>().ReportingStoreConnectionString), Logger = container.Resolve<ILogger>() });
 
             _mongoConnectionStringSettings = ConfigurationManager.ConnectionStrings["MongoConnectionString"];
             if (_mongoConnectionStringSettings != null && !string.IsNullOrWhiteSpace(
@@ -123,6 +129,20 @@ namespace Graphene.API
             GlobalConfiguration.Configuration.DependencyResolver = resolver;
             
             container.Resolve<ILogger>().Info("Autofac Registered");
+        }
+
+        private static TimeSpan getDayTotalTimeZoneOffset(int offsetHours)
+        {
+            TimeSpan dayTotalTzOffset;
+            if (offsetHours >= -11 && offsetHours <= 14)
+            {
+                dayTotalTzOffset = new TimeSpan(offsetHours, 0, 0);
+            }
+            else
+            {
+                dayTotalTzOffset = new TimeSpan(0, 0, 0);
+            }
+            return dayTotalTzOffset;
         }
     }
 
