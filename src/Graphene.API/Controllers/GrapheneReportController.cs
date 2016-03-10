@@ -37,7 +37,7 @@ namespace Graphene.API.Controllers
             {
                 reportGenerator = _reportGenerator.Count() == 1
                     ? _reportGenerator.FirstOrDefault()
-                    : getReportGeneratorByType(Configurator.DefaultReportSource.ToString());
+                    : getReportGeneratorByType(Configurator.Configuration.DefaultReportSource.ToString());
             }
 
             return reportGenerator;

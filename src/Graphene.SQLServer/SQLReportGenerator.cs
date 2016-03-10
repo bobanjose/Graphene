@@ -51,8 +51,8 @@ namespace Graphene.SQLServer
 
                     using (var command = connection.CreateCommand())
                     {
-                        if (Configurator.UseBuckets && (specification.OffsetTotalsByHours == TimeSpan.Zero |
-                                                        specification.OffsetTotalsByHours.Hours != Configurator.DayTotalTZOffset().Hours))
+                        if (Configurator.Configuration.UseBuckets && (specification.OffsetTotalsByHours == TimeSpan.Zero |
+                                                        specification.OffsetTotalsByHours.Hours != Configurator.Configuration.DayTotalTZOffset.Hours))
                         {
                             command.CommandText = "dbo.GenerateReportUsingBuckets";
                         }
