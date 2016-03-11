@@ -11,11 +11,12 @@ namespace Graphene.Reporting
     public class RestReportGenerator : IReportGenerator
     {
         private readonly Uri _serviceUri;
+        private readonly TimeSpan _commandTimeout;
 
-
-        public RestReportGenerator(Uri serviceUri)
+        public RestReportGenerator(Uri serviceUri, int commandTimeoutSeconds = 600)
         {
             _serviceUri = serviceUri;
+            _commandTimeout = TimeSpan.FromSeconds(commandTimeoutSeconds);
         }
 
         #region Implementation
@@ -23,6 +24,7 @@ namespace Graphene.Reporting
         {
             using (var httpClient = new HttpClient())
             {
+                httpClient.Timeout = _commandTimeout;
                 Task<ITrackerReportResults> task = httpClient.PostAsJsonAsync(_serviceUri.ToString(),
                     specification).ContinueWith(x =>
                     {
