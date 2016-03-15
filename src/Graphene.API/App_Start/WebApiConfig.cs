@@ -57,14 +57,6 @@ namespace Graphene.API
             TimespanRoundingMethod roundingMethod;
             ReportSourceType reportSourceType;
 
-            Configurator.Initialize(new Settings
-            {
-                DefaultReportSource = Enum.TryParse(ConfigurationManager.AppSettings["RoundingMethod"], out reportSourceType) ? reportSourceType : ReportSourceType.SQLReportGenerator,
-                GrapheneRoundingMethod = Enum.TryParse(ConfigurationManager.AppSettings["RoundingMethod"], out roundingMethod) ? roundingMethod : TimespanRoundingMethod.Start,
-                UseBuckets = bool.TryParse(ConfigurationManager.AppSettings["UseBuckets"], out useBuckets) ? useBuckets : false,
-                DayTotalTZOffset = int.TryParse(ConfigurationManager.AppSettings["MidnightOffsetForTotals"], out offsetHours) ? getDayTotalTimeZoneOffset(offsetHours) : getDayTotalTimeZoneOffset(8)
-            });
-
 
             _mongoConnectionStringSettings = ConfigurationManager.ConnectionStrings["MongoConnectionString"];
             if (_mongoConnectionStringSettings != null && !string.IsNullOrWhiteSpace(
@@ -122,6 +114,15 @@ namespace Graphene.API
             }
             
             var container = builder.Build();
+
+            Configurator.Initialize(new Settings
+            {
+                Persister = container.Resolve<IPersist>(),
+                DefaultReportSource = Enum.TryParse(ConfigurationManager.AppSettings["DefaultReportSource"], out reportSourceType) ? reportSourceType : ReportSourceType.SQLReportGenerator,
+                GrapheneRoundingMethod = Enum.TryParse(ConfigurationManager.AppSettings["RoundingMethod"], out roundingMethod) ? roundingMethod : TimespanRoundingMethod.Start,
+                UseBuckets = bool.TryParse(ConfigurationManager.AppSettings["UseBuckets"], out useBuckets) ? useBuckets : false,
+                DayTotalTZOffset = int.TryParse(ConfigurationManager.AppSettings["MidnightOffsetForTotals"], out offsetHours) ? getDayTotalTimeZoneOffset(offsetHours) : getDayTotalTimeZoneOffset(8)
+            });
 
             // Create the depenedency resolver.
             var resolver = new AutofacWebApiDependencyResolver(container);
