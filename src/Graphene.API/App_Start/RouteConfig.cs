@@ -1,17 +1,10 @@
-﻿using System.Web.Mvc;
-using System.Web.Routing;
-
-namespace Graphene.API
+﻿namespace Graphene.API
 {
-    public class RouteConfig
+    public static class RouteConfig
     {
-        public static void RegisterRoutes(RouteCollection routes)
+        public static void RegisterRoutes(object routes = null)
         {
-            routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
-
-            routes.MapRoute("Default", "{controller}/{action}/{id}",
-                new {controller = "Home", action = "Index", id = UrlParameter.Optional}
-                );
+            // No-op for ASP.NET Core. Routing configured in Program.cs.
         }
     }
 }

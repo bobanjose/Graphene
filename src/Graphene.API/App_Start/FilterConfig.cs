@@ -1,12 +1,10 @@
-﻿using System.Web.Mvc;
-
-namespace Graphene.API
+﻿namespace Graphene.API
 {
-    public class FilterConfig
+    public static class FilterConfig
     {
-        public static void RegisterGlobalFilters(GlobalFilterCollection filters)
+        public static void RegisterGlobalFilters(object filters = null)
         {
-            filters.Add(new HandleErrorAttribute());
+            // No-op for ASP.NET Core. Filters can be registered in Startup if needed.
         }
     }
 }

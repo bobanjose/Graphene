@@ -1,12 +1,10 @@
-﻿using System.Web.Optimization;
-
-namespace Graphene.API
+﻿namespace Graphene.API
 {
-    public class BundleConfig
+    public static class BundleConfig
     {
-        // For more information on Bundling, visit http://go.microsoft.com/fwlink/?LinkId=254725
-        public static void RegisterBundles(BundleCollection bundles)
+        public static void RegisterBundles(object bundles = null)
         {
+            // Bundling not used in ASP.NET Core by default.
         }
     }
 }

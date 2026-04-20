@@ -8,6 +8,7 @@
 
 using System.Collections.Generic;
 using System.Data;
+using System.Threading.Tasks;
 using Graphene.Data;
 using Microsoft.SqlServer.Server;
 
@@ -15,7 +16,7 @@ namespace Graphene.Publishing
 {
     public interface IPersist
     {
-        void Persist(TrackerData trackerData);
+        Task PersistAsync(TrackerData trackerData);
 
         bool PersistPreAggregatedBuckets { get; }
     }

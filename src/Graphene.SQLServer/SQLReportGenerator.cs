@@ -9,10 +9,10 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using Graphene.Configuration;
 using Graphene.Reporting;
+using Microsoft.Data.SqlClient;
 using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 
 namespace Graphene.SQLServer

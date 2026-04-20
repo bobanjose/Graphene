@@ -1,28 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Graphene.Configuration;
 using Graphene.Reporting;
 
 namespace Graphene.API.Controllers
 {
-    public class GrapheneReportController : ApiController
+    [ApiController]
+    [Route("api/[controller]")]
+    public class GrapheneReportController : ControllerBase
     {
-        private readonly ILogger _logger;
+        private readonly Graphene.Configuration.ILogger _logger;
         private readonly IEnumerable<IReportGenerator> _reportGenerator;
 
-        public GrapheneReportController(ILogger logger, IEnumerable<IReportGenerator>  reportGenerator)
+        public GrapheneReportController(Graphene.Configuration.ILogger logger, IEnumerable<IReportGenerator>  reportGenerator)
         {
             _logger = logger;
             _reportGenerator = reportGenerator;
         }
 
-        public ITrackerReportResults Post(IReportSpecification reportSpecification)
+        [HttpPost]
+        public ActionResult<ITrackerReportResults> Post([FromBody] IReportSpecification reportSpecification)
         {
             var reportGenerator = getReportGenerator(reportSpecification.ReportSourceType);
             var returnResult = reportGenerator.BuildReport(reportSpecification);
-            return returnResult;
+            return Ok(returnResult);
         }
 
         private IReportGenerator getReportGenerator(ReportSourceType? reportSourceType)

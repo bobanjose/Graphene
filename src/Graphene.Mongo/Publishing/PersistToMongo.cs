@@ -7,6 +7,7 @@ using Graphene.Publishing;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
+using System.Threading.Tasks;
 
 namespace Graphene.Mongo.Publishing
 {
@@ -53,6 +54,12 @@ namespace Graphene.Mongo.Publishing
             {
                 _logger.Error(ex.Message, ex);
             }
+        }
+
+        public Task PersistAsync(TrackerData trackerData)
+        {
+            Persist(trackerData);
+            return Task.CompletedTask;
         }
 
         public bool PersistPreAggregatedBuckets { get; private set; }

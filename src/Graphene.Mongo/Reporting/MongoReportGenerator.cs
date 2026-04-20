@@ -47,9 +47,9 @@ namespace Graphene.Mongo.Reporting
             BsonDocument projection = buildProjection(specification);
             BsonDocument group = buildResultGroup(specification);
             var pipeline = new[] {match, projection, group};
-            AggregateResult queryResults = _mongoCollection.Value.Aggregate(pipeline);
+            var queryResults = _mongoCollection.Value.Aggregate(new AggregateArgs { Pipeline = pipeline }).ToList();
 
-            if (!(queryResults.Ok && queryResults.ResultDocuments.Any()))
+            if (!queryResults.Any())
                 _logger.Debug(string.Format("No Results Returned for Aggregation Pipeline: {0} {1}", pipeline.ToJson(),
                     System.Environment.NewLine));
             else
@@ -92,7 +92,7 @@ namespace Graphene.Mongo.Reporting
         }
 
         private static ITrackerReportResults ToMongoAggregationResult(IReportSpecification specification,
-            AggregateResult queryResults)
+            IEnumerable<BsonDocument> queryResults)
         {
             const string utcDateKey = "UtcDateTime";
             const string totalKey = "_Total";
@@ -103,14 +103,15 @@ namespace Graphene.Mongo.Reporting
 
             var results = new MongoTrackerResults(specification);
 
-            if (! queryResults.ResultDocuments.Any())
+            var resultDocuments = queryResults.ToList();
+
+            if (!resultDocuments.Any())
                 return results;
 
-            int count = queryResults.ResultDocuments.Count();
             List<string> names =
-                queryResults.ResultDocuments.First().Names.Where(x => !(x == utcDateKey || x == "_id")).ToList();
+                resultDocuments.First().Names.Where(x => !(x == utcDateKey || x == "_id")).ToList();
 
-            foreach (BsonDocument document in queryResults.ResultDocuments)
+            foreach (BsonDocument document in resultDocuments)
             {
                 BsonDocument dateTime = document[utcDateKey].AsBsonDocument;
 

@@ -67,7 +67,7 @@ namespace Graphene
             {
                 Publisher.FlushTrackers();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }

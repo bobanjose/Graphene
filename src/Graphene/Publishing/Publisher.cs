@@ -52,7 +52,7 @@ namespace Graphene.Publishing
             try
             {
                 _lastPersistanceComplete = false;
-                Configurator.Configuration.Persister.Persist(tc);
+                Configurator.Configuration.Persister.PersistAsync(tc);
                 _lastPersistanceComplete = true;
                 lastPersistTime = DateTime.UtcNow;
             }

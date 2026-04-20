@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Graphene.Data;
+using System;
 using System.Net.Http;
-using Graphene.Data;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace Graphene.Publishing
 {
@@ -13,21 +15,25 @@ namespace Graphene.Publishing
             _serviceUrl = serviceUrl;
         }
 
-        public void Persist(TrackerData trackerData)
+        public async Task PersistAsync(TrackerData trackerData)
         {
             // setup the client
             // -   with a custome handler to approve all server certificates
-            var handler = new WebRequestHandler
+            var handler = new HttpClientHandler
             {
-                ServerCertificateValidationCallback =
-                    (sender, certificate, chain, errors) => true
+                ServerCertificateCustomValidationCallback =
+                (httpRequestMessage, certificate, chain, sslPolicyErrors) => true
             };
+
+            var httpClient = new HttpClient(handler);
+
             try
             {
                 using (var client = new HttpClient(handler))
                 {
                     // post it
-                    HttpResponseMessage httpResponseMessage = client.PostAsJsonAsync(_serviceUrl, trackerData).Result;
+                    HttpResponseMessage httpResponseMessage = await client.PostAsJsonAsync(_serviceUrl, trackerData);
+
                     if (!httpResponseMessage.IsSuccessStatusCode)
                     {
                         Configurator.Configuration.Logger.Warn(string.Format("Data not persisted with status {0}",
@@ -40,6 +46,7 @@ namespace Graphene.Publishing
                 Configurator.Configuration.Logger.Error(ex.Message, ex);
             }
         }
+        
 
         public bool PersistPreAggregatedBuckets { get; set; }
     }

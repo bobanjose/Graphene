@@ -10,12 +10,13 @@
 using System;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Text;
+using System.Threading.Tasks;
 using Graphene.Configuration;
 using Graphene.Data;
 using Graphene.Publishing;
 using Graphene.Tracking;
+using Microsoft.Data.SqlClient;
 using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 
 namespace Graphene.SQLServer
@@ -56,6 +57,12 @@ namespace Graphene.SQLServer
                 message.AppendFormat("Tracker Data: TypeName: {0} KeyFilter: {1} TimeSlot: {2}", trackerData.TypeName, trackerData.KeyFilter, trackerData.TimeSlot);
                 _logger.Error(message.ToString(), ex);
             }
+        }
+
+        public Task PersistAsync(TrackerData trackerData)
+        {
+            Persist(trackerData);
+            return Task.CompletedTask;
         }
 
         private void Persist(TrackerData trackerData, int retryCount)

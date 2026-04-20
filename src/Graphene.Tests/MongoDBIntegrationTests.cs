@@ -30,8 +30,9 @@ namespace Graphene.Tests
         private object _lock = new object();
         private List<TrackerData> _trackingDate = new List<TrackerData>();
 
-        public async void Persist(TrackerData trackerData)
+        public Task PersistAsync(TrackerData trackerData)
         {
+            return Task.CompletedTask;
         }
 
         public bool PersistPreAggregatedBuckets { get; set; }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace Graphene.Reporting
 {
@@ -25,13 +26,13 @@ namespace Graphene.Reporting
                         Configurator.Configuration.Logger.Warn(string.Format("Getting report data failed {0}",
                             httpResponseMessage.StatusCode));
                     }
-                    return httpResponseMessage.Content.ReadAsAsync<ITrackerReportResults>().Result;
+                    return httpResponseMessage.Content.ReadFromJsonAsync<ITrackerReportResults>().Result;
                 }
             }
             catch (Exception ex)
             {
                 Configurator.Configuration.Logger.Error(ex.Message, ex);
-                throw ex;
+                throw;
             }
         }
     }

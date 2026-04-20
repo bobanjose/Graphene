@@ -1,14 +1,12 @@
 ﻿using System.Reflection;
-using System.Web.Mvc;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Graphene.API.Controllers
 {
     public class HomeController : Controller
     {
-        //
-        // GET: /Home/
-
-        public string Index()
+        [HttpGet]
+        public ActionResult<string> Index()
         {
             return Assembly.GetExecutingAssembly().FullName;
         }
